@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Appointments - Medicio</title>
+
+    <link th:href="@{/img/favicon.png}" rel="icon">
+    <link th:href="@{/img/apple-touch-icon.png}" rel="apple-touch-icon">
+
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+    <link th:href="@{/vendor/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/vendor/bootstrap-icons/bootstrap-icons.css}" rel="stylesheet">
+    <link th:href="@{/vendor/boxicons/css/boxicons.min.css}" rel="stylesheet">
+    <link th:href="@{/vendor/remixicon/remixicon.css}" rel="stylesheet">
+
+    <link th:href="@{/css/main.css}" rel="stylesheet">
+
+    <style>
+        /* CSS cho bảng quản lý */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(1, 41, 112, 0.1);
+        }
+        .card-title {
+            padding: 20px 0 15px 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #012970;
+        }
+        .table thead {
+            background-color: #f6f9ff;
+        }
+        .table th {
+            font-weight: 600;
+            color: #444;
+            border-bottom: 2px solid #eee;
+            padding: 15px;
+        }
+        .table td {
+            vertical-align: middle;
+            padding: 15px;
+            color: #555;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 50px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-pending { background-color: #fff3cd; color: #ffc107; }
+        .status-confirmed { background-color: #d1e7dd; color: #198754; }
+        .status-cancelled { background-color: #f8d7da; color: #dc3545; }
+
+        /* Action Buttons */
+        .btn-action {
+            padding: 5px 12px;
+            font-size: 13px;
+            border-radius: 50px;
+            margin-right: 5px;
+            transition: 0.3s;
+        }
+        .btn-accept {
+            background-color: #d1e7dd;
+            color: #198754;
+            border: none;
+        }
+        .btn-accept:hover {
+            background-color: #198754;
+            color: white;
+        }
+        .btn-decline {
+            background-color: #f8d7da;
+            color: #dc3545;
+            border: none;
+        }
+        .btn-decline:hover {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .empty-state {
+            padding: 50px;
+            text-align: center;
+            color: #999;
+        }
+        .empty-state i { font-size: 48px; margin-bottom: 15px; display: block; }
+    </style>
+</head>
+
+<body>
+
+<div th:replace="~{fragments/doctor/header :: header}"></div>
+
+<main id="main" class="main" style="padding-top: 120px; background-color: #f6f9ff; min-height: 100vh; padding-bottom: 60px;">
+
+    <div class="container">
+
+        <div class="pagetitle mb-4 d-flex justify-content-between align-items-center">
+            <div>
+                <h1>Appointment Requests</h1>
+                <nav>
+                    <ol class="breadcrumb mt-2">
+                        <li class="breadcrumb-item"><a th:href="@{/doctor/index}">Home</a></li>
+                        <li class="breadcrumb-item active">Manage Appointments</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="card overflow-auto">
+                <div class="card-body">
+                    <h5 class="card-title">Patient Appointments <span>| Today</span></h5>
+
+                    <table class="table table-hover table-borderless" th:if="${doctorAppointment != null and !doctorAppointment.isEmpty()}">
+                        <thead>
+                        <tr>
+                            <th scope="col">#ID</th>
+                            <th scope="col">Patient Name</th>
+                            <th scope="col">Schedule Time</th>
+                            <th scope="col">Status</th>
+                            <th scope="col" class="text-center">Action</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="appointment : ${doctorAppointment}">
+                            <th scope="row">
+                                <a href="#" class="text-primary fw-bold" th:text="'#' + ${appointment.id}">#1</a>
+                            </th>
+
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="ps-2">
+                                        <div class="fw-bold" th:text="${appointment.patient.firstName + ' ' + appointment.patient.lastName}">John Doe</div>
+                                        <small class="text-muted" th:text="${appointment.patient.phone}">0987...</small>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td th:text="${#temporals.format(appointment.scheduleTime, 'dd MMM yyyy - HH:mm')}">20 Oct 2024</td>
+
+                            <td>
+                                <span class="status-badge status-pending" th:if="${#strings.toString(appointment.status) == 'PENDING'}">Pending</span>
+                                <span class="status-badge status-confirmed" th:if="${#strings.toString(appointment.status) == 'CONFIRMED'}">Confirmed</span>
+                                <span class="status-badge status-cancelled" th:if="${#strings.toString(appointment.status) == 'CANCELLED'}">Cancelled</span>
+                            </td>
+
+                            <td class="text-center">
+                                <div th:if="${#strings.toString(appointment.status) == 'PENDING'}">
+
+                                    <form th:action="@{/doctor/appointment/update/{id}/CONFIRMED(id=${appointment.id})}" method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-action btn-accept" title="Accept">
+                                            <i class="bi bi-check-lg me-1"></i> Accept
+                                        </button>
+                                    </form>
+
+                                    <form th:action="@{/doctor/appointment/update/{id}/CANCELLED(id=${appointment.id})}" method="post" style="display: inline;">
+                                        <button type="submit" class="btn btn-action btn-decline" title="Decline">
+                                            <i class="bi bi-x-lg me-1"></i> Decline
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <div th:unless="${#strings.toString(appointment.status) == 'PENDING'}">
+                                    <span class="text-muted small"><i class="bi bi-check2-all"></i> Processed</span>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <div th:if="${doctorAppointment == null or doctorAppointment.isEmpty()}" class="empty-state">
+                        <i class="bi bi-calendar-x"></i>
+                        <h4>No Appointments Yet</h4>
+                        <p>You don't have any appointments scheduled at the moment.</p>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<div th:replace="~{fragments/doctor/footer :: footer}"></div>
+
+<script th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/main.js}"></script>
+
+</body>
+</html>

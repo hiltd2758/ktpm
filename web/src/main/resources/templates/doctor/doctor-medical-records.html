@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Medical Record - Medicio</title>
+
+    <link th:href="@{/img/favicon.png}" rel="icon">
+    <link th:href="@{/img/apple-touch-icon.png}" rel="apple-touch-icon">
+
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+    <link th:href="@{/vendor/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/vendor/bootstrap-icons/bootstrap-icons.css}" rel="stylesheet">
+    <link th:href="@{/vendor/boxicons/css/boxicons.min.css}" rel="stylesheet">
+    <link th:href="@{/vendor/remixicon/remixicon.css}" rel="stylesheet">
+
+    <link th:href="@{/css/main.css}" rel="stylesheet">
+
+    <style>
+        .card { border: none; border-radius: 12px; box-shadow: 0 5px 30px rgba(1, 41, 112, 0.08); margin-bottom: 20px; }
+        .card-header { background-color: #fff; border-bottom: 1px solid #f0f2f5; padding: 20px 25px; border-radius: 12px 12px 0 0 !important; }
+
+        /* Patient Card Left */
+        .profile-card h3 { font-size: 22px; margin-top: 15px; }
+        .patient-meta-label { font-size: 12px; color: #899bbd; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; display: block; }
+        .patient-meta-value { font-size: 15px; color: #444; font-weight: 600; margin-bottom: 15px; }
+
+        /* Form Edit Right */
+        .form-label { font-weight: 600; color: #012970; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .form-control { padding: 12px 15px; border-radius: 8px; border: 1px solid #dee2e6; font-size: 15px; line-height: 1.6; }
+        .form-control:focus { border-color: #4154f1; box-shadow: 0 0 0 4px rgba(65, 84, 241, 0.1); }
+
+        /* Highlight Blood Type */
+        .blood-type-input { font-weight: 800; color: #dc3545; letter-spacing: 1px; background-color: #fff5f5; border-color: #ffc9c9; }
+
+        /* Helper text */
+        .input-helper { font-size: 13px; color: #6c757d; font-style: italic; margin-top: 5px; }
+
+        /* Timestamp Badge */
+        .update-badge { font-size: 12px; background-color: #e0f8e9; color: #0f5132; padding: 5px 10px; border-radius: 20px; font-weight: 600; }
+        .section-icon { font-size: 22px; color: #4154f1; margin-right: 10px; vertical-align: bottom; }
+    </style>
+</head>
+
+<body>
+
+<div th:replace="~{fragments/doctor/header :: header}"></div>
+
+<main id="main" class="main" style="padding-top: 120px; background-color: #f6f9ff; min-height: 100vh; padding-bottom: 60px;">
+    <div class="container">
+
+        <div class="pagetitle mb-4 text-center">
+            <h1>Clinical Record Management</h1>
+            <nav class="d-flex justify-content-center">
+                <ol class="breadcrumb mt-2">
+                    <li class="breadcrumb-item"><a th:href="@{/doctor/index}">Home</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/doctor/dashboard}">Patient List</a></li>
+                    <li class="breadcrumb-item active">Medical Record</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="row justify-content-center">
+
+            <div class="col-lg-4">
+                <div class="card sticky-top" style="top: 120px; z-index: 1;">
+                    <div class="card-body profile-card pt-4 pb-4 px-4 d-flex flex-column align-items-center">
+
+                        <img th:src="@{${patientDTO.avatar != null && !patientDTO.avatar.isEmpty() ? '/img/avatars/' + patientDTO.avatar : '/img/default-avatar.png'}}"
+                             alt="Profile" class="rounded-circle mb-3"
+                             style="width: 120px; height: 120px; object-fit: cover; border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.1);"
+                             onerror="this.src='/img/default-avatar.png'">
+
+                        <h3 th:text="${patientDTO.firstName + ' ' + patientDTO.lastName}" class="text-center text-primary fw-bold">User Name</h3>
+                        <span class="badge bg-light text-dark border mt-1">ID: <span th:text="${patientDTO.id}"></span></span>
+
+                        <div class="w-100 mt-4 border-top pt-4">
+                            <span class="patient-meta-label"><i class="bi bi-calendar-event me-1"></i> Date of Birth</span>
+                            <div class="patient-meta-value" th:text="${patientDTO.dateOfBirth != null ? #temporals.format(patientDTO.dateOfBirth, 'dd MMM yyyy') : 'N/A'}"></div>
+
+                            <span class="patient-meta-label"><i class="bi bi-telephone me-1"></i> Phone</span>
+                            <div class="patient-meta-value" th:text="${patientDTO.phone}"></div>
+
+                            <span class="patient-meta-label"><i class="bi bi-envelope me-1"></i> Email</span>
+                            <div class="patient-meta-value text-break" th:text="${patientDTO.email}"></div>
+
+                            <span class="patient-meta-label"><i class="bi bi-geo-alt me-1"></i> Address</span>
+                            <div class="patient-meta-value mb-0" th:text="${patientDTO.address}"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title m-0"><i class="bi bi-clipboard-pulse section-icon"></i>Medical Chart</h5>
+                        <span class="update-badge" th:if="${clinicalInforDTO.lastUpDatedTime != null}">
+                                <i class="bi bi-clock-history me-1"></i> Last Updated:
+                                <span th:text="${#temporals.format(clinicalInforDTO.lastUpDatedTime, 'dd-MM-yyyy HH:mm')}"></span>
+                            </span>
+                    </div>
+
+                    <div class="card-body p-4">
+
+                        <div th:if="${param.success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle me-1"></i> Medical record updated successfully!
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+
+                        <form th:action="@{/doctor/patient/{id}(id=${patientDTO.id})}" th:object="${clinicalInforDTO}" method="post">
+                            <input type="hidden" th:field="*{patientId}" />
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label text-danger">Blood Type <i class="bi bi-droplet-fill"></i></label>
+                                    <input type="text" class="form-control blood-type-input" th:field="*{bloodType}" placeholder="Example: A+, O-, AB+">
+                                    <div class="input-helper">Critical information. Please verify carefully.</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <span>Allergies & Reactions <i class="bi bi-exclamation-triangle-fill text-warning ms-1"></i></span>
+                                    <span class="badge bg-light text-secondary border fw-normal">History</span>
+                                </label>
+                                <textarea class="form-control" rows="4" th:field="*{allergies}" placeholder="Describe patient allergies here..."></textarea>
+                                <div class="input-helper">Review previous allergies above. Add new reactions or notes on a new line.</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <span>Chronic Diseases <i class="bi bi-activity text-info ms-1"></i></span>
+                                    <span class="badge bg-light text-secondary border fw-normal">Ongoing</span>
+                                </label>
+                                <textarea class="form-control" rows="5" th:field="*{chronicDiseases}" placeholder="List chronic conditions (e.g., Diabetes, Hypertension)..."></textarea>
+                                <div class="input-helper">Maintain a list of ongoing chronic conditions.</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <span>Family Medical History <i class="bi bi-people-fill text-primary ms-1"></i></span>
+                                </label>
+                                <textarea class="form-control" rows="4" th:field="*{familyMedicalHistory}" placeholder="Relevant family history..."></textarea>
+                                <div class="input-helper">Note any hereditary conditions or significant family medical history.</div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a th:href="@{/doctor/dashboard}" class="btn btn-light border px-4">Cancel</a>
+                                <button type="submit" class="btn btn-primary px-4 rounded-pill shadow-sm">
+                                    <i class="bi bi-save me-1"></i> Save Updates
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<div th:replace="~{fragments/doctor/footer :: footer}"></div>
+
+<a href="#" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+<script th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/main.js}"></script>
+
+</body>
+</html>

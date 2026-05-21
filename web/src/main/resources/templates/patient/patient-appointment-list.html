@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Appointments - Medicio</title>
+
+    <link th:href="@{/img/favicon.png}" rel="icon">
+    <link th:href="@{/img/apple-touch-icon.png}" rel="apple-touch-icon">
+
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+    <link th:href="@{/vendor/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/vendor/bootstrap-icons/bootstrap-icons.css}" rel="stylesheet">
+    <link th:href="@{/vendor/boxicons/css/boxicons.min.css}" rel="stylesheet">
+    <link th:href="@{/vendor/glightbox/css/glightbox.min.css}" rel="stylesheet">
+    <link th:href="@{/vendor/remixicon/remixicon.css}" rel="stylesheet">
+
+    <link th:href="@{/css/main.css}" rel="stylesheet">
+    <link th:href="@{/css/patient-style.css}" rel="stylesheet">
+
+</head>
+
+<body>
+
+<div th:replace="~{fragments/patient/header :: header}"></div>
+
+<main id="main" class="main" style="padding-top: 120px; background-color: #f6f9ff; min-height: 100vh; padding-bottom: 60px;">
+
+    <div class="container">
+
+        <div class="pagetitle d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1>My Appointments</h1>
+                <nav>
+                    <ol class="breadcrumb mt-2">
+                        <li class="breadcrumb-item"><a th:href="@{/patient/index}">Home</a></li>
+                        <li class="breadcrumb-item active">Appointments</li>
+                    </ol>
+                </nav>
+            </div>
+            <a th:href="@{/patient/appointment/book}" class="btn btn-primary rounded-pill px-4">
+                <i class="bi bi-plus-lg me-1"></i> Book Appointment
+            </a>
+        </div>
+
+        <div class="col-12">
+            <div class="card overflow-auto">
+                <div class="card-body">
+                    <h5 class="card-title">Appointment History</h5>
+
+                    <table class="table table-hover table-borderless" th:if="${appointments != null and !appointments.isEmpty()}">
+                        <thead>
+                        <tr>
+                            <th scope="col">#ID</th>
+                            <th scope="col">Doctor</th>
+                            <th scope="col">Specialty</th> <th scope="col">Date & Time</th>
+                            <th scope="col">Status</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="appointment : ${appointments}">
+                            <th scope="row"><a href="#" class="text-primary fw-bold" th:text="'#' + ${appointment.id}">#2457</a></th>
+
+                            <td>
+                                <div class="doctor-info">
+                                    <img th:src="@{/img/doctors/doctors-1.jpg}" onerror="this.src='https://via.placeholder.com/35'" class="doctor-avatar-small" alt="">
+                                    <span class="fw-bold" th:text="${'Dr. ' + appointment.doctor.lastName}">Dr. Smith</span>
+                                </div>
+                            </td>
+
+                            <td>General Health</td>
+
+                            <td th:text="${#temporals.format(appointment.scheduleTime, 'dd MMM yyyy - HH:mm')}">12 Oct 2024 - 09:30</td>
+
+                            <td>
+                                        <span class="status-badge status-confirmed"
+                                              th:if="${#strings.toString(appointment.status) == 'CONFIRMED'}">Confirmed</span>
+
+                                <span class="status-badge status-pending"
+                                      th:if="${#strings.toString(appointment.status) == 'PENDING'}">Pending</span>
+
+                                <span class="status-badge status-cancelled"
+                                      th:if="${#strings.toString(appointment.status) == 'CANCELLED'}">Cancelled</span>
+
+                                <span class="badge bg-secondary rounded-pill"
+                                      th:if="${#strings.toString(appointment.status) != 'CONFIRMED' and #strings.toString(appointment.status) != 'PENDING' and #strings.toString(appointment.status) != 'CANCELLED'}"
+                                      th:text="${appointment.status}">Other</span>
+                            </td>
+
+
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <div th:if="${appointments == null or appointments.isEmpty()}" class="empty-state">
+                        <i class="bi bi-calendar-x"></i>
+                        <h4>No Appointments Found</h4>
+                        <p class="text-muted">You haven't booked any appointments yet.</p>
+                        <a th:href="@{/patient/appointment/book}" class="btn btn-outline-primary mt-2">Book Now</a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<div th:replace="~{fragments/patient/footer :: footer}"></div>
+
+<script th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/main.js}"></script>
+
+</body>
+</html>
