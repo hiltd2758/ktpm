@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>E-Health-Care Chat</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div id="app-container">
+        <div id="conversations-list">
+            <h3>Conversations</h3>
+            <ul id="users-to-chat"></ul>
+        </div>
+
+        <div id="chat-container">
+            <div id="chat-area">
+                <div id="chat-header">
+                    Chatting with: <span id="chat-partner-name"></span>
+                </div>
+                <div id="chat-window">
+                    <ul id="messages"></ul>
+                </div>
+                <form id="form" action="">
+                    <input id="input" autocomplete="off" placeholder="Type a message..." /><button>Send</button>
+                </form>
+            </div>
+            <div id="select-prompt">
+                <p>Welcome to the chat.</p>
+                <p>Please select a conversation to begin.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/chat.js"></script>
+</body>
+</html>

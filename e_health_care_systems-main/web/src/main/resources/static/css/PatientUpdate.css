@@ -1,0 +1,208 @@
+* {
+    box-sizing: border-box;
+    font-family: "Segoe UI", sans-serif;
+}
+
+.form-container {
+    background: #fff;
+    padding: 30px 40px;
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    animation: fadeIn 0.6s ease;
+    margin:50px auto;
+    width: 500px;
+}
+
+.form-container h2 {
+    text-align: center;
+    margin-bottom: 25px;
+    color: #0077b6;
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: #333;
+}
+
+input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    outline: none;
+    transition: 0.3s;
+    font-size: 15px;
+}
+
+input:focus {
+    border-color: #0077b6;
+    box-shadow: 0 0 5px rgba(0, 119, 182, 0.4);
+}
+
+.btn-upp{
+    color: var(#3fbbc0);
+    background: var(#3fbbc0);
+    font-size: 14px;
+    padding: 8px 20px;
+    margin: 0 5px 0 0px;
+    border-radius: 4px;
+    transition: 0.3s;
+    border: #0a53be 2px solid;
+}
+
+.btn-upp:hover,
+.btn-upp:focus:hover {
+    color: var(#ffff);
+    background: color-mix(in srgb, var(#3fbbc0), transparent 15%);
+}
+
+.btn-upp:hover {
+    background-color: #0096c7;
+    transform: scale(1.02);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper input {
+    width: 100%;
+    padding-right: 40px; /* chừa chỗ cho icon */
+    box-sizing: border-box;
+}
+
+.toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    color: #555;
+}
+
+.toggle-password:hover {
+    color: #0077b6;
+}
+/* profile.css */
+
+/* Tạo khoảng cách cho phần thân để không bị Header che mất */
+.profile-section {
+    padding-top: 120px; /* Điều chỉnh tùy theo chiều cao header của bạn */
+    padding-bottom: 60px;
+    background-color: #f6f9ff; /* Màu nền nhẹ nhàng */
+    min-height: 100vh;
+}
+
+.profile-card {
+    background-color: #fff;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0px 0 30px rgba(1, 41, 112, 0.1);
+    margin-bottom: 30px;
+    overflow: hidden;
+}
+
+.profile-card .card-body {
+    padding: 30px;
+}
+
+/* Cột bên trái (Avatar) */
+.profile-card .profile-image {
+    text-align: center;
+}
+
+.profile-card img {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%; /* Bo tròn ảnh */
+    border: 4px solid #fff;
+    box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.1);
+    object-fit: cover;
+    margin-bottom: 20px;
+}
+
+.profile-card h2 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c384e;
+    margin: 10px 0 5px 0;
+}
+
+.profile-card h3 {
+    font-size: 18px;
+    color: #8fa0bc;
+    margin-bottom: 20px;
+}
+
+/* Cột bên phải (Chi tiết) */
+.profile-details .row {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.profile-details .row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.profile-details .label {
+    color: rgba(1, 41, 112, 0.6);
+    font-weight: 600;
+    font-family: "Poppins", sans-serif;
+}
+
+.profile-details .value {
+    color: #012970;
+    font-weight: 500;
+}
+
+/* Phần nút bấm hành động */
+.profile-actions {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.profile-actions .btn {
+    padding: 10px 25px;
+    border-radius: 50px; /* Nút bo tròn */
+    margin: 5px;
+    transition: 0.3s;
+    font-weight: 500;
+}
+
+.btn-edit {
+    background-color: #3fbbc0; /* Màu xanh của Medicio */
+    color: #fff;
+    border: none;
+}
+
+.btn-edit:hover {
+    background-color: #2daab0;
+    color: #fff;
+}
+
+.btn-record {
+    background-color: #4154f1;
+    color: #fff;
+    border: none;
+}
+
+.btn-record:hover {
+    background-color: #2a3fd8;
+    color: #fff;
+}

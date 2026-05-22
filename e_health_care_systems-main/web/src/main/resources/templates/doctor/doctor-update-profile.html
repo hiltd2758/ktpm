@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Profile - Medicio</title>
+
+    <link th:href="@{/img/favicon.png}" rel="icon">
+    <link th:href="@{/img/apple-touch-icon.png}" rel="apple-touch-icon">
+
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+    <link th:href="@{/vendor/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/vendor/bootstrap-icons/bootstrap-icons.css}" rel="stylesheet">
+    <link th:href="@{/vendor/boxicons/css/boxicons.min.css}" rel="stylesheet">
+
+    <link th:href="@{/css/main.css}" rel="stylesheet">
+
+    <style>
+        .card { border: none; border-radius: 8px; box-shadow: 0 0 30px rgba(1, 41, 112, 0.1); }
+        .form-label { font-weight: 600; color: #4154f1; margin-bottom: 5px; }
+        .form-control:focus { border-color: #4154f1; box-shadow: 0 0 0 0.25rem rgba(65, 84, 241, 0.25); }
+        .btn-update { background-color: #4154f1; color: white; padding: 10px 30px; border-radius: 50px; transition: 0.3s; }
+        .btn-update:hover { background-color: #2a3fd8; color: white; }
+        .btn-cancel { background-color: #6c757d; color: white; padding: 10px 30px; border-radius: 50px; margin-left: 10px; }
+        .btn-cancel:hover { background-color: #5a6268; color: white; }
+    </style>
+</head>
+
+<body>
+
+<div th:replace="~{fragments/doctor/header :: header}"></div>
+
+<main id="main" class="main" style="padding-top: 120px; background-color: #f6f9ff; min-height: 100vh; padding-bottom: 60px;">
+    <div class="container">
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body p-5">
+                        <form th:action="@{/doctor/profile/update}"
+                              th:object="${doctorDTO}"
+                              method="post"
+                              enctype="multipart/form-data">
+
+                            <input type="hidden" th:field="*{id}" />
+                            <input type="hidden" th:field="*{avatar}" />
+
+                            <h5 class="card-title text-primary border-bottom pb-3 mb-4">Personal Information</h5>
+
+                            <div class="row mb-3 align-items-center">
+
+                                <div class="col-md-12">
+                                    <label for="avatarFile" class="form-label">Change Avatar</label>
+                                    <input type="file" class="form-control" id="avatarFile" th:field="*{avatarFile}" accept="image/png, image/jpeg, image/jpg">
+                                    <div class="form-text small text-muted">Allowed file types: png, jpg, jpeg.</div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="firstName" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="firstName" th:field="*{firstName}" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="lastName" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="lastName" th:field="*{lastName}" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <input type="email" class="form-control" id="email" th:field="*{email}" readonly style="background-color: #e9ecef;">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="phone" class="form-label">Phone Number</label>
+                                    <input type="tel" class="form-control" id="phone" th:field="*{phone}" required>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="field" class="form-label">Specialization</label>
+                                    <input type="text" class="form-control" id="field" th:field="*{field}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="address" class="form-label">Address</label>
+                                    <input type="text" class="form-control" id="address" th:field="*{address}">
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-update">Save Changes</button>
+                                <a th:href="@{/doctor/profile}" class="btn btn-cancel text-decoration-none">Cancel</a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<div th:replace="~{fragments/doctor/footer :: footer}"></div>
+
+<script th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/main.js}"></script>
+
+</body>
+</html>

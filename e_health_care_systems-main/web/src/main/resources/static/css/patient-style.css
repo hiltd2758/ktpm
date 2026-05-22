@@ -1,0 +1,60 @@
+/*Appoiment list*/
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 30px rgba(1, 41, 112, 0.1);
+}
+.card-title {
+    padding: 20px 0 15px 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: #012970;
+    font-family: "Poppins", sans-serif;
+}
+.table thead {
+    background-color: #f6f9ff;
+    color: #444444;
+}
+.table th {
+    border-bottom: 2px solid #e1e6f1;
+    font-weight: 600;
+    padding: 15px;
+}
+.table td {
+    vertical-align: middle;
+    padding: 15px;
+    color: #444444;
+}
+.doctor-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.doctor-avatar-small {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #eee;
+}
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+.status-pending { background-color: #fff3cd; color: #ffc107; }
+.status-confirmed { background-color: #d1e7dd; color: #198754; }
+.status-cancelled { background-color: #f8d7da; color: #dc3545; }
+
+.empty-state {
+    padding: 50px;
+    text-align: center;
+}
+.empty-state i {
+    font-size: 60px;
+    color: #ced4da;
+    margin-bottom: 20px;
+}
+/*Appoiment list*/

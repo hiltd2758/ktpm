@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Book Appointment - Medicio</title>
+
+    <link th:href="@{/img/favicon.png}" rel="icon">
+    <link th:href="@{/img/apple-touch-icon.png}" rel="apple-touch-icon">
+
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+    <link th:href="@{/vendor/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/vendor/bootstrap-icons/bootstrap-icons.css}" rel="stylesheet">
+    <link th:href="@{/vendor/boxicons/css/boxicons.min.css}" rel="stylesheet">
+    <link th:href="@{/vendor/remixicon/remixicon.css}" rel="stylesheet">
+
+    <link th:href="@{/css/main.css}" rel="stylesheet">
+
+    <style>
+        /* CSS tùy chỉnh cho form đẹp hơn */
+        .appointment-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(1, 41, 112, 0.1);
+        }
+        .form-label {
+            font-weight: 600;
+            color: #444444;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: #4154f1;
+            box-shadow: 0 0 0 0.25rem rgba(65, 84, 241, 0.25);
+        }
+        .readonly-field {
+            background-color: #e9ecef;
+            cursor: not-allowed;
+        }
+        .btn-confirm {
+            background-color: #4154f1;
+            color: white;
+            padding: 10px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .btn-confirm:hover {
+            background-color: #2a3fd8;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<div th:replace="~{fragments/patient/header :: header}"></div>
+
+<main id="main" class="main" style="padding-top: 120px; background-color: #f6f9ff; min-height: 100vh; padding-bottom: 60px;">
+    <div class="container">
+
+        <div class="pagetitle mb-4 text-center">
+            <h1>Make an Appointment</h1>
+            <nav class="d-flex justify-content-center">
+                <ol class="breadcrumb mt-2">
+                    <li class="breadcrumb-item"><a th:href="@{/patient/index}">Home</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/patient/appointment/list}">Appointments</a></li>
+                    <li class="breadcrumb-item active">Book Now</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-octagon me-1"></i>
+                    <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+
+                <div class="card appointment-card">
+                    <div class="card-body p-5">
+
+                        <h5 class="card-title text-primary border-bottom pb-3 mb-4">Appointment Details</h5>
+
+                        <form th:action="@{/patient/appointment/book}" th:object="${request}" method="post">
+
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label">Patient Name</label>
+                                    <input type="text" class="form-control readonly-field"
+                                           th:value="${patient.firstName + ' ' + patient.lastName}" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="patientId" class="form-label">Patient ID</label>
+                                    <input type="text" class="form-control readonly-field" id="patientId" th:field="*{patientId}" readonly>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="doctorId" class="form-label">Select Doctor</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person-badge-fill"></i></span>
+                                    <select class="form-select" id="doctorId" th:field="*{doctorId}" required>
+                                        <option value="">-- Choose a Specialist --</option>
+                                        <option th:each="doctor : ${doctors}"
+                                                th:value="${doctor.id}"
+                                                th:text="${'Dr. ' + doctor.lastName + ' ' + doctor.firstName + ' (' + doctor.field + ')'}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="form-text">Choose the doctor you wish to see.</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="scheduleTime" class="form-label">Preferred Date & Time</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-calendar-event"></i></span>
+                                    <input type="datetime-local" class="form-control" id="scheduleTime" th:field="*{scheduleTime}" required>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-5">
+                                <button type="submit" class="btn btn-confirm px-5">
+                                    Confirm Booking
+                                </button>
+                                <a th:href="@{/patient/appointment/list}" class="btn btn-light rounded-pill px-4 ms-2">Cancel</a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<div th:replace="~{fragments/patient/footer :: footer}"></div>
+
+<a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center">
+    <i class="bi bi-arrow-up-short"></i>
+</a>
+
+<script th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/main.js}"></script>
+
+</body>
+</html>

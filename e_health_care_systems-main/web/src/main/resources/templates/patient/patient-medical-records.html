@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Records - Medicio</title>
+
+    <link th:href="@{/img/favicon.png}" rel="icon">
+    <link th:href="@{/img/apple-touch-icon.png}" rel="apple-touch-icon">
+
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+    <link th:href="@{/vendor/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/vendor/bootstrap-icons/bootstrap-icons.css}" rel="stylesheet">
+    <link th:href="@{/vendor/boxicons/css/boxicons.min.css}" rel="stylesheet">
+    <link th:href="@{/vendor/remixicon/remixicon.css}" rel="stylesheet">
+
+    <link th:href="@{/css/main.css}" rel="stylesheet">
+
+    <style>
+        /* Custom CSS cho trang Medical Record */
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(1, 41, 112, 0.1);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #eee;
+            padding: 20px;
+        }
+        .card-title {
+            color: #012970;
+            font-weight: 700;
+            margin: 0;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #4154f1;
+            margin-bottom: 5px;
+        }
+        .info-value {
+            color: #444;
+            font-size: 15px;
+            padding: 8px 12px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+        /* Style riêng cho các ô textarea ở chế độ xem (readonly) */
+        textarea.info-value-box {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            color: #444;
+            resize: none; /* Không cho kéo giãn nếu chỉ xem */
+        }
+        textarea.info-value-box:focus {
+            box-shadow: none;
+            border-color: #e9ecef;
+        }
+        .section-icon {
+            font-size: 24px;
+            color: #4154f1;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+
+<body>
+
+<div th:replace="~{fragments/patient/header :: header}"></div>
+
+<main id="main" class="main" style="padding-top: 120px; background-color: #f6f9ff; min-height: 100vh; padding-bottom: 60px;">
+
+    <div class="container">
+
+        <div class="pagetitle mb-4 text-center">
+            <h1>My Medical Records</h1>
+            <nav class="d-flex justify-content-center">
+                <ol class="breadcrumb mt-2">
+                    <li class="breadcrumb-item"><a th:href="@{/patient/index}">Home</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/patient/profile}">Profile</a></li>
+                    <li class="breadcrumb-item active">Medical Record</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-body profile-card pt-4 d-flex flex-column align-items-center">
+                        <img th:src="${patient.avatar != null && !patient.avatar.isEmpty() ? '/img/avatars/' + patient.avatar : '/img/avatars/default-avatar.png'}"
+                             alt="Profile" class="rounded-circle mb-3"
+                             style="width: 120px; height: 120px; object-fit: cover; border: 4px solid #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+
+                        <h3 th:text="${patient.firstName + ' ' + patient.lastName}" class="text-center text-primary fw-bold mb-1">Full Name</h3>
+                        <span class="text-muted">Patient ID: <span th:text="${patient.id}"></span></span>
+
+                        <div class="w-100 mt-4 px-3">
+                            <div class="mb-3">
+                                <label class="small text-muted fw-bold">DATE OF BIRTH</label>
+                                <div th:text="${patient.dateOfBirth != null ? #temporals.format(patient.dateOfBirth, 'dd MMM yyyy') : 'N/A'}" class="fw-bold"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="small text-muted fw-bold">PHONE</label>
+                                <div th:text="${patient.phone}" class="fw-bold"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="small text-muted fw-bold">EMAIL</label>
+                                <div th:text="${patient.email}" class="fw-bold text-break"></div>
+                            </div>
+                            <div class="mb-0">
+                                <label class="small text-muted fw-bold">ADDRESS</label>
+                                <div th:text="${patient.address}" class="fw-bold"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title"><i class="bi bi-file-earmark-medical section-icon"></i>Clinical Information</h5>
+                    </div>
+
+                    <div class="card-body p-4">
+
+                        <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle me-1"></i> <span th:text="${success}"></span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+
+                        <form th:object="${clinicalInforDTO}">
+
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <label class="info-label"><i class="bi bi-droplet-fill me-2 text-danger"></i>Blood Type</label>
+                                    <input type="text" class="form-control info-value fw-bold text-danger" th:field="*{bloodType}" readonly
+                                           style="background-color: #fff5f5; border-color: #f5c2c7; max-width: 150px;">
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <label class="info-label"><i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>Allergies</label>
+                                    <textarea class="form-control info-value-box" rows="2" th:field="*{allergies}" readonly></textarea>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <label class="info-label"><i class="bi bi-activity me-2 text-info"></i>Chronic Diseases</label>
+                                    <textarea class="form-control info-value-box" rows="3" th:field="*{chronicDiseases}" readonly></textarea>
+                                </div>
+                            </div>
+
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <label class="info-label"><i class="bi bi-people-fill me-2 text-primary"></i>Family Medical History</label>
+                                    <textarea class="form-control info-value-box" rows="3" th:field="*{familyMedicalHistory}" readonly></textarea>
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                <a th:href="@{/patient/profile}" class="btn btn-secondary rounded-pill px-4">
+                                    <i class="bi bi-arrow-left me-1"></i> Back to Profile
+                                </a>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<div th:replace="~{fragments/patient/footer :: footer}"></div>
+
+<a href="#" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+<script th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/main.js}"></script>
+
+</body>
+</html>

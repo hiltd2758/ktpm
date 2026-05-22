@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Register</title>
+    <!-- The path must be relative to the static directory -->
+    <link rel="stylesheet" th:href="@{/css/login.css}">
+</head>
+<body>
+    <div class="login-container">
+        <!-- This form will POST to /doctor/login, which Spring Security handles -->
+        <form th:action="@{/patient/register}" th:object="${patient}" method="post" class="patient-register-form">
+            <h2>Patient Portal</h2>
+            <!-- Display error message if login fails -->
+            <p th:if="${param.error}" class="error-message" style="display: block;">
+                Invalid email or password.
+            </p>
+            <!-- Display message if session expired -->
+            <p th:if="${param.expired}" class="error-message" style="display: block;">
+                Your session has expired. Please log in again.
+            </p>
+            <div class="input-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" th:field="*{email}" required>
+            </div>
+            <div class="input-group">
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" th:field="*{firstName}" required>
+            </div>
+            <div class="input-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName" th:field="*{lastName}" required>
+            </div>
+            <div class="input-group">
+                <label for="address">Address</label>
+                <input type="text" id="address" th:field="*{address}" required>
+            </div>
+            <div class="input-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" th:field="*{phone}" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" th:field="*{password}" required>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+</body>
+</html>

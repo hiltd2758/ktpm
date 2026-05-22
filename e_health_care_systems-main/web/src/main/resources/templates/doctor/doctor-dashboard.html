@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient List - Medicio</title>
+
+    <link th:href="@{/img/favicon.png}" rel="icon">
+    <link th:href="@{/img/apple-touch-icon.png}" rel="apple-touch-icon">
+    <link href="https://fonts.googleapis.com" rel="preconnect">
+    <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i" rel="stylesheet">
+
+    <link th:href="@{/vendor/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+    <link th:href="@{/vendor/bootstrap-icons/bootstrap-icons.css}" rel="stylesheet">
+    <link th:href="@{/vendor/boxicons/css/boxicons.min.css}" rel="stylesheet">
+    <link th:href="@{/css/main.css}" rel="stylesheet">
+
+    <style>
+        .card { border: none; border-radius: 10px; box-shadow: 0 0 30px rgba(1, 41, 112, 0.1); }
+        .card-title { color: #012970; font-weight: 600; padding: 20px 0 15px 0; }
+        .table thead { background-color: #f6f9ff; }
+        .table th { color: #444; font-weight: 600; }
+        .table td { vertical-align: middle; color: #555; }
+        .btn-view { background-color: #4154f1; color: #fff; border-radius: 50px; padding: 5px 15px; font-size: 14px; transition: 0.3s; }
+        .btn-view:hover { background-color: #2a3fd8; color: #fff; }
+        .patient-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; margin-right: 10px; }
+    </style>
+</head>
+
+<body>
+
+<div th:replace="~{fragments/doctor/header :: header}"></div>
+
+<main id="main" class="main" style="padding-top: 120px; background-color: #f6f9ff; min-height: 100vh; padding-bottom: 60px;">
+    <div class="container">
+
+        <div class="pagetitle mb-4">
+            <h1>Patient Management</h1>
+            <nav>
+                <ol class="breadcrumb mt-2">
+                    <li class="breadcrumb-item"><a th:href="@{/doctor/index}">Home</a></li>
+                    <li class="breadcrumb-item active">Patient List</li>
+                </ol>
+            </nav>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">All Patients</h5>
+
+                <table class="table table-hover table-borderless" th:if="${patients != null and !patients.isEmpty()}">
+                    <thead>
+                    <tr>
+                        <th>#ID</th>
+                        <th>Patient Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Date of Birth</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="patient : ${patients}">
+                        <td th:text="${'#' + patient.id}" class="fw-bold text-primary"></td>
+
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <img th:src="@{${patient.avatar != null && !patient.avatar.isEmpty() ? '/img/avatars/' + patient.avatar : '/img/default-avatar.png'}}" class="patient-avatar" alt="">
+                                <div>
+                                    <div class="fw-bold" th:text="${patient.firstName + ' ' + patient.lastName}">Name</div>
+                                    <div class="small text-muted" th:text="${patient.address}">Address</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td th:text="${patient.email}">email@example.com</td>
+                        <td th:text="${patient.phone}">098...</td>
+                        <td th:text="${patient.dateOfBirth != null ? #temporals.format(patient.dateOfBirth, 'dd-MM-yyyy') : 'N/A'}"></td>
+
+                        <td class="text-center">
+                            <a th:href="@{/doctor/patient/{id}(id=${patient.id})}" class="btn btn-view" title="View Medical Record">
+                                <i class="bi bi-file-earmark-medical me-1"></i> View Records
+                            </a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+
+                <div th:if="${patients == null or patients.isEmpty()}" class="text-center py-5">
+                    <i class="bi bi-people text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">No patients found.</p>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<div th:replace="~{fragments/doctor/footer :: footer}"></div>
+
+<a href="#" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+<script th:src="@{/vendor/bootstrap/js/bootstrap.bundle.min.js}"></script>
+<script th:src="@{/js/main.js}"></script>
+
+</body>
+</html>
