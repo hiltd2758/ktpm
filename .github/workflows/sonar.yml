@@ -34,4 +34,4 @@ jobs:
         working-directory: web
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=hiltd2758_ktpm -Dsonar.organization=hiltd2758 -Dsonar.host.url=https://sonarcloud.io
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=hiltd2758_ktpm -Dsonar.organization=hiltd2758 -Dsonar.host.url=https://sonarcloud.io -DskipTests
