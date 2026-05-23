@@ -79,4 +79,7 @@ public class PatientAppointmentService {
         appointment.setStatus(status);
         return appointmentRepository.save(appointment);
     }
+    public List<Appointment> getAllAppointments() {
+        return appointmentRepository.findAll();
+    }
 }

@@ -25,7 +25,56 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+app.use(express.json());
 
+// Middleware xác thực token cho REST endpoints
+const authMiddleware = (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return res.status(401).json({ error: 'Token not found' });
+    }
+    const token = authHeader.substring(7);
+
+    jwt.verify(token, doctorSecret, { algorithms: ['HS384'] }, (errDoc, decodedDoc) => {
+        if (!errDoc && decodedDoc) {
+            req.user = { ...decodedDoc, token };
+            return next();
+        }
+        jwt.verify(token, patientSecret, { algorithms: ['HS384'] }, (errPat, decodedPat) => {
+            if (!errPat && decodedPat) {
+                req.user = { ...decodedPat, token };
+                return next();
+            }
+            return res.status(401).json({ error: 'Invalid token' });
+        });
+    });
+};
+
+// GET lịch sử chat của 1 room
+app.get('/api/chat/history/:room', authMiddleware, async (req, res) => {
+    try {
+        const [history] = await dbPool.query(
+            'SELECT id, room, sender, message, timestamp FROM messages WHERE room = ? ORDER BY timestamp ASC',
+            [req.params.room]
+        );
+        res.json(history);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET danh sách room của user hiện tại
+app.get('/api/chat/rooms', authMiddleware, async (req, res) => {
+    try {
+        const [rooms] = await dbPool.query(
+            'SELECT DISTINCT room FROM messages WHERE room LIKE ?',
+            [`%${req.user.sub}%`]
+        );
+        res.json(rooms);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 // --- Serve static files from the 'public' directoy ---
 app.use(express.static(path.join(__dirname, 'public')));
 

@@ -22,8 +22,13 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes; // NEW
 
 import java.security.Principal;
 import java.util.List;
+import com.e_health_care.web.patient.service.PatientAppointmentService;
+import com.e_health_care.web.patient.model.Appointment;
+import org.springframework.http.ResponseEntity;
+import java.util.Map;
 
 @Controller
+
 @RequestMapping("/admin")
 public class AdminDashboardController {
 
@@ -173,5 +178,30 @@ public class AdminDashboardController {
         }
         // Redirect back to the edit page to show status
         return "redirect:/admin/patient/edit/" + id;
+    }
+    @Autowired
+    private PatientAppointmentService appointmentService;
+
+    @GetMapping("/statistics")
+    public ResponseEntity<?> getStatistics() {
+        long totalDoctors = doctorRepository.count();
+        long totalPatients = patientRepository.count();
+
+        List<Appointment> allAppointments = appointmentService.getAllAppointments();
+        long pending = allAppointments.stream()
+                .filter(a -> "PENDING".equals(a.getStatus())).count();
+        long confirmed = allAppointments.stream()
+                .filter(a -> "CONFIRMED".equals(a.getStatus())).count();
+        long cancelled = allAppointments.stream()
+                .filter(a -> "CANCELLED".equals(a.getStatus())).count();
+
+        return ResponseEntity.ok(Map.of(
+                "totalDoctors", totalDoctors,
+                "totalPatients", totalPatients,
+                "totalAppointments", allAppointments.size(),
+                "pending", pending,
+                "confirmed", confirmed,
+                "cancelled", cancelled
+        ));
     }
 }

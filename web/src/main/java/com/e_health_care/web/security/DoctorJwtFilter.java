@@ -45,34 +45,38 @@ public class DoctorJwtFilter extends OncePerRequestFilter{
                     .findFirst()
                     .orElse(null);
         }
+        if (token == null) {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                token = authHeader.substring(7);
+            }
+        }
 
         try {
             if (token != null) {
                 username = jwtService.extractEmail(token);
-            }   
+            }
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = context.getBean(DoctorDetailsService.class).loadUserByUsername(username);
                 if (jwtService.validateToken(token, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken = 
+                    UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    
-                    // Add the token to the request attribute so controllers can access it
                     request.setAttribute("doctorToken", token);
                 }
             }
             filterChain.doFilter(request, response);
         } catch (ExpiredJwtException e) {
-            // Token has expired. Clear the cookie and redirect to the login page.
             Cookie cookie = new Cookie("jwt-doctor-token", null);
             cookie.setHttpOnly(true);
             cookie.setPath("/");
             cookie.setMaxAge(0);
             response.addCookie(cookie);
-            
-            // Redirect to login page with an 'expired' parameter
             response.sendRedirect("/doctor/login?expired");
+        } catch (Exception e) {
+            // Token không phải của doctor, bỏ qua
+            filterChain.doFilter(request, response);
         }
     }
     

@@ -47,15 +47,23 @@ public class PatientJwtFilter extends OncePerRequestFilter {
             }
         }
 
+        // 2. Fallback: đọc từ Authorization header (cho Postman)
+        if (jwt == null) {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                jwt = authHeader.substring(7);
+            }
+        }
+
         if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 2. Extract email from token
+        // 3. Extract email from token
         userEmail = jwtServicePatient.extractEmail(jwt);
 
-        // 3. Validate token and set security context
+        // 4. Validate token and set security context
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.patientDetailsService.loadUserByUsername(userEmail);
 
@@ -65,7 +73,6 @@ public class PatientJwtFilter extends OncePerRequestFilter {
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                // Add the token to the request attribute so controllers can access it
                 request.setAttribute("patientToken", jwt);
             }
         }
