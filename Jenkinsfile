@@ -1,0 +1,60 @@
+pipeline {
+    agent any
+
+    tools {
+        maven 'Maven 3.9'
+        jdk 'JDK 21'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build & Test') {
+            steps {
+                dir('web') {
+                    sh 'mvn -B verify'
+                }
+            }
+            post {
+                always {
+                    junit 'web/target/surefire-reports/*.xml'
+
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                dir('web') {
+                    sh 'docker build -t e-health-care:${BUILD_NUMBER} .'
+                }
+            }
+        }
+
+        stage('Run Container') {
+            steps {
+                sh '''
+                    docker stop e-health-care || true
+                    docker rm e-health-care || true
+                    docker run -d \
+                        --name e-health-care \
+                        -p 8080:8080 \
+                        e-health-care:${BUILD_NUMBER}
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
