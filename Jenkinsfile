@@ -22,7 +22,23 @@ pipeline {
             post {
                 always {
                     junit 'web/target/surefire-reports/*.xml'
+                }
+            }
+        }
 
+        stage('SonarQube Analysis') {
+            steps {
+                dir('web') {
+                    withCredentials([string(credentialsId: 'SONAR_TOKEN', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                            mvn -B sonar:sonar \
+                                -Dsonar.projectKey=hiltd2758_ktpm \
+                                -Dsonar.organization=hiltd2758 \
+                                -Dsonar.host.url=https://sonarcloud.io \
+                                -Dsonar.token=$SONAR_TOKEN \
+                                -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+                        '''
+                    }
                 }
             }
         }
