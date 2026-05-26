@@ -20,6 +20,9 @@
             <p th:if="${param.expired}" class="error-message" style="display: block;">
                 Your session has expired. Please log in again.
             </p>
+            <!-- Display backend error message (e.g. duplicate email) -->
+            <p th:if="${errorMessage}" class="error-message" style="display: block; color: red; font-weight: bold;" th:text="${errorMessage}">
+            </p>
             <div class="input-group">
                 <label for="email">Email</label>
                 <input type="email" id="email" th:field="*{email}" required>
