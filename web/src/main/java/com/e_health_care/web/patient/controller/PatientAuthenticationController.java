@@ -35,7 +35,8 @@ public class PatientAuthenticationController {
             model.addAttribute("errorMessage", "Email này đã được đăng ký!");
             return "patient/patient-register";
         } catch (Exception e) {
-            model.addAttribute("errorMessage", "Đã xảy ra lỗi hệ thống, vui lòng thử lại!");
+            e.printStackTrace();
+            model.addAttribute("errorMessage", "Không thể đăng ký: " + e.getMessage());
             return "patient/patient-register";
         }
     }
