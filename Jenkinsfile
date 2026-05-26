@@ -22,7 +22,16 @@ pipeline {
             post {
                 always {
                     junit 'web/target/surefire-reports/*.xml'
+                }
+            }
+        }
 
+        stage('SonarQube Analysis') {
+            steps {
+                dir('web') {
+                    withSonarQubeEnv('sonar-server') {
+                        sh 'mvn sonar:sonar'
+                    }
                 }
             }
         }
@@ -30,21 +39,21 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 dir('web') {
-                    sh 'docker build -t e-health-care:${BUILD_NUMBER} .'
+                    sh "docker build -t e-health-care:${BUILD_NUMBER} ."
                 }
             }
         }
 
         stage('Run Container') {
             steps {
-                sh '''
+                sh """
                     docker stop e-health-care || true
                     docker rm e-health-care || true
-                    docker run -d \
-                        --name e-health-care \
-                        -p 8080:8080 \
+                    docker run -d \\
+                        --name e-health-care \\
+                        -p 8080:8080 \\
                         e-health-care:${BUILD_NUMBER}
-                '''
+                """
             }
         }
     }
