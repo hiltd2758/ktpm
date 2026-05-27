@@ -4,6 +4,10 @@ import com.e_health_care.web.doctor.dto.DoctorDTO;
 import com.e_health_care.web.doctor.model.Doctor;
 import com.e_health_care.web.doctor.repository.DoctorRepository;
 import com.e_health_care.web.doctor.service.DoctorAuthenticationService;
+import com.e_health_care.web.doctor.service.DoctorViewPatientService;
+import com.e_health_care.web.patient.dto.PatientClinicalInforDTO;
+import com.e_health_care.web.patient.dto.PatientDTO;
+import com.e_health_care.web.patient.dto.PatientSummaryDTO;
 import com.e_health_care.web.patient.model.Appointment;
 import com.e_health_care.web.patient.service.PatientAppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +32,6 @@ public class DoctorApiController {
 
     @Autowired
     private PatientAppointmentService patientAppointmentService;
-
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody DoctorDTO doctorDTO) {
         String token = authService.verify(doctorDTO);
@@ -37,7 +40,6 @@ public class DoctorApiController {
         }
         return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
     }
-
     @GetMapping("/appointment/list")
     public ResponseEntity<?> getAppointments() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
@@ -80,6 +82,14 @@ public class DoctorApiController {
     @PutMapping("/profile/update")
     public ResponseEntity<?> updateProfile(@RequestBody DoctorDTO doctorDTO) {
         try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null) return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+
+            // Lấy doctor hiện tại từ token để có id
+            Doctor doctor = doctorRepository.findByEmail(auth.getName());
+            if (doctor == null) return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+
+            doctorDTO.setId(doctor.getId()); // set id từ token
             doctorService.updateDoctorProfile(doctorDTO);
             return ResponseEntity.ok(Map.of("message", "Cập nhật hồ sơ thành công"));
         } catch (Exception e) {

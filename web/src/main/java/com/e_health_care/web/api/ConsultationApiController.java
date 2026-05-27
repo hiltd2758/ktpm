@@ -62,7 +62,12 @@ public class ConsultationApiController {
         Doctor doctor = getCurrentDoctor();
         if (doctor == null) return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
 
-        doctorViewPatientService.updatePatientClinicalInfo(id, clinicalInforDTO, doctor.getEmail());
-        return ResponseEntity.ok(Map.of("message", "Cập nhật bệnh án thành công"));
-    }
+        try {
+            clinicalInforDTO.setPatientId(id);
+            doctorViewPatientService.updatePatientClinicalInfo(id, clinicalInforDTO, doctor.getEmail());
+            return ResponseEntity.ok(Map.of("message", "Cập nhật bệnh án thành công"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
+        }
+}
 }

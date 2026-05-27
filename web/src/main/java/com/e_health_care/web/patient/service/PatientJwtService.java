@@ -15,24 +15,22 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 
-
 @Service
 public class PatientJwtService {
-    
+
     @Value("${jwt.patient.secret}")
     private String SECRET;
 
     public String generateToken(String email) {
         Map<String, Object> claims = new HashMap<>();
-        // Add the role claim for the patient
         claims.put("role", "ROLE_PATIENT");
-            return Jwts.builder()
-                    .claims(claims)
-                    .subject(email)
-                    .issuedAt(new Date(System.currentTimeMillis()))
-                    .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
-                    .signWith(getKey())
-                    .compact();
+        return Jwts.builder()
+                .claims(claims)
+                .subject(email)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
+                .signWith(getKey())
+                .compact();
     }
 
     public Key getKey() {
@@ -41,13 +39,24 @@ public class PatientJwtService {
     }
 
     public String extractEmail(String token) {
-        // Extract the subject (email) from the JWT token
         return extractClaim(token, Claims::getSubject);
     }
 
     public String extractRole(String token) {
-        // Extract the role claim from the JWT token
         return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
+    public String extractRoleWithoutVerification(String token) {
+        try {
+            String[] parts = token.split("\\.");
+            String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
+            if (payload.contains("\"ROLE_PATIENT\"")) return "ROLE_PATIENT";
+            if (payload.contains("\"ROLE_DOCTOR\"")) return "ROLE_DOCTOR";
+            if (payload.contains("\"ROLE_ADMIN\"")) return "ROLE_ADMIN";
+            return null;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimResolver) {
@@ -57,7 +66,6 @@ public class PatientJwtService {
 
     @Deprecated
     private Claims extractAllClaims(String token) {
-        // Use the parser compatible with the project's jjwt version
         return Jwts.parser()
                 .setSigningKey(getKey())
                 .build()
@@ -68,9 +76,8 @@ public class PatientJwtService {
     public boolean validateToken(String token, UserDetails userDetails) {
         final String email = extractEmail(token);
         final String role = extractRole(token);
-        // Check if email matches, token is not expired, AND the role is correct
-        return email.equals(userDetails.getUsername()) 
-                && "ROLE_PATIENT".equals(role) 
+        return email.equals(userDetails.getUsername())
+                && "ROLE_PATIENT".equals(role)
                 && !isTokenExpired(token);
     }
 

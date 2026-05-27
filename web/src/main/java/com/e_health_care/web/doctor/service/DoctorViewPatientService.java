@@ -98,7 +98,9 @@ public class DoctorViewPatientService {
         clinicalInfor.setLastUpDatedTime(LocalDateTime.now());
 
         if (clinicalInfor.getPatient() == null) {
-            patientRepository.findById(patientId).ifPresent(clinicalInfor::setPatient);
+            Patient patient = patientRepository.findById(patientId)
+                    .orElseThrow(() -> new RuntimeException("Patient not found with id: " + patientId));
+            clinicalInfor.setPatient(patient);
         }
 
         patientClinicalInforRepository.save(clinicalInfor);

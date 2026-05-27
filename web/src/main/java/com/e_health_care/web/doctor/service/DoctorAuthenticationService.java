@@ -23,18 +23,18 @@ public class DoctorAuthenticationService {
 
     @Autowired
     private DoctorJwtService jwtService;
-    
+
     public String verify(DoctorDTO doctorDTO) {
         try {
             DaoAuthenticationProvider provider = new DaoAuthenticationProvider(doctorDetailsService);
             provider.setPasswordEncoder(passwordEncoder);
-            
+
             AuthenticationManager authManager = new ProviderManager(provider);
 
             authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(doctorDTO.getEmail(), 
-                                                        doctorDTO.getPassword(),
-                                                        java.util.Collections.singletonList(new SimpleGrantedAuthority(doctorDTO.getUppercase_role()))
+                    new UsernamePasswordAuthenticationToken(
+                            doctorDTO.getEmail(),
+                            doctorDTO.getPassword()
                     )
             );
             return jwtService.generateToken(doctorDTO.getEmail());

@@ -60,10 +60,22 @@ public class PatientJwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 3. Extract email from token
+        // 3. Kiểm tra role mà không verify signature
+        try {
+            String role = jwtServicePatient.extractRoleWithoutVerification(jwt);
+            if (!"ROLE_PATIENT".equals(role)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+        } catch (Exception e) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // 4. Extract email from token
         userEmail = jwtServicePatient.extractEmail(jwt);
 
-        // 4. Validate token and set security context
+        // 5. Validate token and set security context
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.patientDetailsService.loadUserByUsername(userEmail);
 
@@ -72,7 +84,6 @@ public class PatientJwtFilter extends OncePerRequestFilter {
                         userDetails, null, userDetails.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-
                 request.setAttribute("patientToken", jwt);
             }
         }
