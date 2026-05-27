@@ -10,6 +10,7 @@ import com.e_health_care.web.patient.repository.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,7 +32,8 @@ public class AdminApiController {
 
     @Autowired
     private PatientRepository patientRepository;
-
+    @Autowired
+    private PasswordEncoder passwordEncoder;
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AdminDTO adminDTO) {
         String token = authService.login(adminDTO);
@@ -144,5 +146,9 @@ public class AdminApiController {
                 "confirmed", confirmed,
                 "cancelled", cancelled
         ));
+    }
+    @GetMapping("/generate-hash")
+    public ResponseEntity<?> generateHash(@RequestParam String password) {
+        return ResponseEntity.ok(Map.of("hash", passwordEncoder.encode(password)));
     }
 }

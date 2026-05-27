@@ -29,7 +29,8 @@ public class ApiSecurityConfiguration {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/patient/login", "/api/patient/register",
-                                "/api/doctor/login", "/api/admin/login").permitAll()
+                                "/api/doctor/login", "/api/admin/login",
+                                "/api/admin/generate-hash").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(patientJwtFilter, UsernamePasswordAuthenticationFilter.class)
