@@ -51,7 +51,7 @@ pipeline {
                     docker rm e-health-care || true
                     docker run -d \\
                         --name e-health-care \\
-                        -p 8080:8080 \\
+                        -p 8085:8080 \\
                         e-health-care:${BUILD_NUMBER}
                 """
             }
