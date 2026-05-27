@@ -32,7 +32,7 @@ public class PatientAuthenticationController {
             authServicePatient.register(patientDTO);
             return "redirect:/patient/login";
         } catch (org.springframework.dao.DataIntegrityViolationException e) {
-            model.addAttribute("errorMessage", "Email này đã được đăng ký!");
+            model.addAttribute("errorMessage", "Email này đã được sử dụng");
             return "patient/patient-register";
         } catch (Exception e) {
             e.printStackTrace();
