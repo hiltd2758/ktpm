@@ -1,5 +1,6 @@
 {
   "java.compile.nullAnalysis.mode": "automatic",
   "liveServer.settings.port": 5501,
-  "java.configuration.updateBuildConfiguration": "interactive"
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "liveServer.settings.multiRootWorkspaceName": "e_health_care_systems"
 }

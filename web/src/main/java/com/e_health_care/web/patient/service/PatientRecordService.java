@@ -27,7 +27,7 @@ public class PatientRecordService {
             })
             .orElseGet(() -> {
                 PatientClinicalInforDTO dto = new PatientClinicalInforDTO();
-                dto.setId(patientId);
+                dto.setPatientId(patientId);
                 return dto;
             }); 
     }

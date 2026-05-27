@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.e_health_care.web.exception.ResourceNotFoundException;
 import com.e_health_care.web.patient.dto.PatientClinicalInforDTO;
 import com.e_health_care.web.patient.model.Patient; // Import model Patient
 import com.e_health_care.web.patient.repository.PatientRepository; // Import Repository
@@ -30,7 +31,8 @@ public class PatientClinicalInforController {
 
         // 2. [QUAN TRỌNG] Lấy thông tin Patient để hiển thị Header
         // Header cần biến ${patient} để render link Medical Records
-        Patient patient = patientRepository.findById(id).orElse(new Patient());
+        Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
         // Hoặc nếu DTO đã có đủ thông tin, bạn có thể map từ DTO,
         // nhưng an toàn nhất là query lấy object Patient gốc.
 

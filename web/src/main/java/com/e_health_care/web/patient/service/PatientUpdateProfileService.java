@@ -1,5 +1,6 @@
 package com.e_health_care.web.patient.service;
 
+import com.e_health_care.web.exception.ResourceNotFoundException;
 import com.e_health_care.web.patient.dto.PatientDTO;
 import com.e_health_care.web.patient.model.Patient;
 import com.e_health_care.web.patient.repository.PatientRepository;
@@ -28,7 +29,7 @@ public class PatientUpdateProfileService {
     public PatientDTO getPatientById(Long id) {
         // 1. Tìm bệnh nhân trong DB
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
 
         // 2. Tạo DTO rỗng
         PatientDTO dto = new PatientDTO();
@@ -53,7 +54,7 @@ public class PatientUpdateProfileService {
     // Hàm update (Sửa lại để xử lý ảnh)
     public void updatePatient(PatientDTO patientDTO, Long id) {
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Patient not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
 
         // Cập nhật thông tin cơ bản
         patient.setFirstName(patientDTO.getFirstName());

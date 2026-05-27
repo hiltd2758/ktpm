@@ -10,6 +10,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes; // Import thêm cái này để truyền message khi redirect
+import org.springframework.validation.BindingResult;
+import jakarta.validation.Valid;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.beans.PropertyEditorSupport;
@@ -47,8 +49,15 @@ public class PatientUpdateProfileController {
 
     @PostMapping("/update/{id}")
     public String updatePatient(@PathVariable("id") Long id,
-                                @ModelAttribute("patient") PatientDTO patientDTO,
-                                RedirectAttributes redirectAttributes) { // Dùng RedirectAttributes thay vì Model
+                                @Valid @ModelAttribute("patient") PatientDTO patientDTO,
+                                BindingResult bindingResult,
+                                RedirectAttributes redirectAttributes,
+                                Model model) { // Thêm Model
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("patient", patientDTO);
+            return "patient/patient-update-profile";
+        }
+
         try {
             patientService.updatePatient(patientDTO, id);
             // Thông báo thành công sẽ được chuyển sang trang sau khi redirect
