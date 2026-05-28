@@ -52,17 +52,31 @@ public class AdminApiController {
     }
 
     // --- DOCTOR MANAGEMENT ---
-    @DeleteMapping("/doctor/delete/{id}")
-    public ResponseEntity<?> deleteDoctor(@PathVariable long id) {
+    @PostMapping("/doctor/delete")
+    public ResponseEntity<?> deleteDoctor(
+            @RequestBody Map<String, Long> body
+    ) {
+
         try {
+
+            Long id = body.get("id");
+
             adminManagementService.deleteDoctor(id);
-            return ResponseEntity.ok(Map.of("message", "Xóa doctor thành công"));
+
+            return ResponseEntity.ok(Map.of(
+                    "message",
+                    "Xóa doctor thành công"
+            ));
+
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+
+            return ResponseEntity.badRequest().body(
+                    Map.of("error", e.getMessage())
+            );
         }
     }
 
-    @PutMapping("/doctor/update/info")
+    @PostMapping("/doctor/update")
     public ResponseEntity<?> updateDoctorInfo(@RequestBody Doctor doctor) {
         try {
             Doctor existing = adminManagementService.getDoctorById(doctor.getId()).orElse(null);
@@ -76,27 +90,75 @@ public class AdminApiController {
         }
     }
 
-    @PutMapping("/doctor/update/password/{id}")
-    public ResponseEntity<?> updateDoctorPassword(@PathVariable long id, @RequestBody Map<String, String> body) {
+    @PostMapping("/doctor/change-password")
+    public ResponseEntity<?> updateDoctorPassword(
+            @RequestBody Map<String, String> body
+    ) {
+
+        Long id = Long.parseLong(
+                body.get("id")
+        );
+
         String newPassword = body.get("newPassword");
+
         if (adminManagementService.updateDoctorPassword(id, newPassword)) {
-            return ResponseEntity.ok(Map.of("message", "Đổi mật khẩu doctor thành công"));
+
+            return ResponseEntity.ok(Map.of(
+                    "message",
+                    "Đổi mật khẩu doctor thành công"
+            ));
         }
-        return ResponseEntity.badRequest().body(Map.of("error", "Doctor not found"));
+
+        return ResponseEntity.badRequest().body(
+                Map.of("error", "Doctor not found")
+        );
     }
 
     // --- PATIENT MANAGEMENT ---
-    @DeleteMapping("/patient/delete/{id}")
-    public ResponseEntity<?> deletePatient(@PathVariable long id) {
+    @PostMapping("/patient/create")
+    public ResponseEntity<?> createPatient(
+            @RequestBody Patient patient
+    ){
+
+        patient.setPassword(
+                passwordEncoder.encode(
+                        patient.getPassword()
+                )
+        );
+
+        patientRepository.save(patient);
+
+        return ResponseEntity.ok(Map.of(
+                "message",
+                "Tạo patient thành công"
+        ));
+    }
+
+    @PostMapping("/patient/delete")
+    public ResponseEntity<?> deletePatient(
+            @RequestBody Map<String, Long> body
+    ) {
+
         try {
+
+            Long id = body.get("id");
+
             adminManagementService.deletePatient(id);
-            return ResponseEntity.ok(Map.of("message", "Xóa patient thành công"));
+
+            return ResponseEntity.ok(Map.of(
+                    "message",
+                    "Xóa patient thành công"
+            ));
+
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+
+            return ResponseEntity.badRequest().body(
+                    Map.of("error", e.getMessage())
+            );
         }
     }
 
-    @PutMapping("/patient/update/info")
+    @PostMapping("/patient/update")
     public ResponseEntity<?> updatePatientInfo(@RequestBody Patient patient) {
         try {
             Patient existing = adminManagementService.getPatientById(patient.getId()).orElse(null);
@@ -109,14 +171,30 @@ public class AdminApiController {
         }
     }
 
-    @PutMapping("/patient/update/password/{id}")
-    public ResponseEntity<?> updatePatientPassword(@PathVariable long id, @RequestBody Map<String, String> body) {
+    @PostMapping("/patient/change-password")
+    public ResponseEntity<?> updatePatientPassword(
+            @RequestBody Map<String, String> body
+    ) {
+
+        Long id = Long.parseLong(
+                body.get("id")
+        );
+
         String newPassword = body.get("newPassword");
+
         if (adminManagementService.updatePatientPassword(id, newPassword)) {
-            return ResponseEntity.ok(Map.of("message", "Đổi mật khẩu patient thành công"));
+
+            return ResponseEntity.ok(Map.of(
+                    "message",
+                    "Đổi mật khẩu patient thành công"
+            ));
         }
-        return ResponseEntity.badRequest().body(Map.of("error", "Patient not found"));
+
+        return ResponseEntity.badRequest().body(
+                Map.of("error", "Patient not found")
+        );
     }
+
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         SecurityContextHolder.clearContext();
