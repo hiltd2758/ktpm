@@ -38,12 +38,12 @@ public class AdminSecurityConfiguration {
     @Bean
     public SecurityFilterChain adminSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            .securityMatcher("/admin/**")
+            .securityMatcher("/api/admin/**")
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/admin/login").permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/admin/login").permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
             )
             // FIX 2: Add exception handling to redirect unauthenticated users
             .exceptionHandling(e -> e

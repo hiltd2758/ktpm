@@ -61,7 +61,12 @@ public class PatientJwtFilter extends OncePerRequestFilter {
         }
 
         // 3. Extract email from token
-        userEmail = jwtServicePatient.extractEmail(jwt);
+            try {
+                userEmail = jwtServicePatient.extractEmail(jwt);
+            } catch (Exception e) {
+                filterChain.doFilter(request, response);
+                return;
+            }
 
         // 4. Validate token and set security context
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
