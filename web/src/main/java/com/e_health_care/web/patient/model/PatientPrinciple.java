@@ -22,7 +22,7 @@ public class PatientPrinciple implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority("PATIENT"));
+        return Collections.singleton(new SimpleGrantedAuthority("ROLE_PATIENT"));
     }
 
     @Override

@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import com.e_health_care.web.doctor.dto.DoctorDTO;
 import com.e_health_care.web.doctor.service.DoctorService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 @RestController
 @RequestMapping("/api/doctor")
 public class DoctorApiController {
@@ -33,10 +35,13 @@ public class DoctorApiController {
     @Autowired
     private PatientAppointmentService patientAppointmentService;
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody DoctorDTO doctorDTO) {
+    public ResponseEntity<?> login(@RequestBody DoctorDTO doctorDTO, HttpServletResponse response) {
         String token = authService.verify(doctorDTO);
         if (token != null) {
-            return ResponseEntity.ok(Map.of("token", token));
+            response.setHeader("Set-Cookie",
+                    "jwt-doctor-token=" + token +
+                            "; Path=/; HttpOnly; Max-Age=86400; SameSite=Lax");
+            return ResponseEntity.ok(Map.of("message", "Login successful"));
         }
         return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
     }
@@ -64,8 +69,15 @@ public class DoctorApiController {
         }
     }
     @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
+    public ResponseEntity<?> logout(HttpServletResponse response) {
         SecurityContextHolder.clearContext();
+
+        Cookie cookie = new Cookie("jwt-doctor-token", null);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
+
         return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
     }
     @Autowired

@@ -13,18 +13,22 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import java.util.Map;
 import com.e_health_care.web.patient.dto.PatientClinicalInforDTO;
 import com.e_health_care.web.patient.service.PatientRecordService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 @RestController
 @RequestMapping("/api/patient")
 public class PatientAuthApiController {
 
     @Autowired
     private PatientAuthenticationService authServicePatient;
-
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody PatientDTO patientDTO) {
-        String token = authServicePatient.verify(patientDTO);
+    public ResponseEntity<?> login(@RequestBody PatientDTO patientDTO, HttpServletResponse response) {
+        String token = authServicePatient.  verify(patientDTO);
         if (token != null) {
-            return ResponseEntity.ok(Map.of("token", token));
+            response.setHeader("Set-Cookie",
+                    "jwt-patient-token=" + token +
+                            "; Path=/; HttpOnly; Max-Age=86400; SameSite=Lax");
+            return ResponseEntity.ok(Map.of("message", "Login successful"));
         }
         return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
     }
@@ -63,8 +67,15 @@ public class PatientAuthApiController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout() {
+    public ResponseEntity<?> logout(HttpServletResponse response) {
         SecurityContextHolder.clearContext();
+
+        Cookie cookie = new Cookie("jwt-patient-token", null);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
+
         return ResponseEntity.ok(Map.of("message", "Logged out successfully"));
     }
 

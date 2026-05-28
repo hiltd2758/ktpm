@@ -2,6 +2,7 @@ package com.e_health_care.web.security;
 
 import java.io.IOException;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,7 +20,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 @Component
 public class PatientJwtFilter extends OncePerRequestFilter {
 
@@ -36,9 +36,8 @@ public class PatientJwtFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
         String jwt = null;
-        String userEmail = null;
 
-        // 1. Extract token from cookie
+        // 1. Đọc từ cookie
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
                 if ("jwt-patient-token".equals(cookie.getName())) {
@@ -47,7 +46,7 @@ public class PatientJwtFilter extends OncePerRequestFilter {
             }
         }
 
-        // 2. Fallback: đọc từ Authorization header (cho Postman)
+        // 2. Fallback: Authorization header
         if (jwt == null) {
             String authHeader = request.getHeader("Authorization");
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -60,7 +59,7 @@ public class PatientJwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 3. Kiểm tra role mà không verify signature
+        // 3. Kiểm tra role không cần verify signature
         try {
             String role = jwtServicePatient.extractRoleWithoutVerification(jwt);
             if (!"ROLE_PATIENT".equals(role)) {
@@ -72,21 +71,32 @@ public class PatientJwtFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 4. Extract email from token
-        userEmail = jwtServicePatient.extractEmail(jwt);
+        // 4. Xác thực token đầy đủ
+        try {
+            String userEmail = jwtServicePatient.extractEmail(jwt);
 
-        // 5. Validate token and set security context
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.patientDetailsService.loadUserByUsername(userEmail);
-
-            if (jwtServicePatient.validateToken(jwt, userDetails)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities());
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
-                request.setAttribute("patientToken", jwt);
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = patientDetailsService.loadUserByUsername(userEmail);
+                if (jwtServicePatient.validateToken(jwt, userDetails)) {
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities());
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    request.setAttribute("patientToken", jwt);
+                }
             }
+            filterChain.doFilter(request, response);
+
+        } catch (ExpiredJwtException e) {
+            sendJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "Token expired");
+        } catch (Exception e) {
+            filterChain.doFilter(request, response);
         }
-        filterChain.doFilter(request, response);
+    }
+
+    private void sendJsonError(HttpServletResponse response, int status, String message) throws IOException {
+        response.setStatus(status);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
     }
 }
