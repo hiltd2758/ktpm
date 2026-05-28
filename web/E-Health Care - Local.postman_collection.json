@@ -1,0 +1,429 @@
+{
+  "info": {
+    "_postman_id": "4fd82b43-5dcd-4211-b7a6-ecfc88198f6d",
+    "name": "E-Health Care - Local",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "49192319",
+    "_collection_link": "https://go.postman.co/collection/49192319-4fd82b43-5dcd-4211-b7a6-ecfc88198f6d?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Login",
+      "item": [
+        {
+          "name": "Admin-login",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "email",
+                  "value": "truong@gmail.com",
+                  "type": "text",
+                  "uuid": "cdd26eb5-800c-41f5-82f5-cb6d16354681"
+                },
+                {
+                  "key": "password",
+                  "value": "123456",
+                  "type": "text",
+                  "uuid": "58d6ac4e-dc69-4881-a1ce-70ef0205957a"
+                }
+              ]
+            },
+            "url": {
+              "raw": "POST\nhttp://localhost:8080/api/admin/login",
+              "protocol": "POST\nhttp",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "api",
+                "admin",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Dashboard",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "email",
+                  "value": "truong@gmail.com",
+                  "type": "text",
+                  "uuid": "ede665e9-530a-4d29-bfbc-3f35ae5b1b82"
+                },
+                {
+                  "key": "password",
+                  "value": "123456",
+                  "type": "text",
+                  "uuid": "bed1409b-0d2f-4385-856c-bb724b045d91"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/dashboard",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "dashboard"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Doctor Management",
+      "item": [
+        {
+          "name": "view",
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          },
+          "request": {
+            "method": "GET",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "type": "text",
+                  "uuid": "085c163f-25bd-4c06-bdde-5fc2f7e79606"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/doctor/edit/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "doctor",
+                "edit",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "newPassword",
+                  "value": "123456",
+                  "type": "text",
+                  "uuid": "6b7ff7f3-6d9a-4ce2-9a65-7d2fae9f661d"
+                }
+              ]
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/doctor/update/password/1?id=1&name=Doctor&email=doctor@gmail.com&phone=0123456789",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "doctor",
+                "update",
+                "password",
+                "1"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "name",
+                  "value": "Doctor",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "doctor@gmail.com",
+                  "type": "text"
+                },
+                {
+                  "key": "phone",
+                  "value": "0123456789",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "delete",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/admin/doctor/delete/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "doctor",
+                "delete",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Doctor Password",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/doctor/update/password/1?newPassword=123456",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "doctor",
+                "update",
+                "password",
+                "1"
+              ],
+              "query": [
+                {
+                  "key": "newPassword",
+                  "value": "123456",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Patient",
+      "item": [
+        {
+          "name": "create",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8080/admin/patient/edit/1?id =1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "patient",
+                "edit",
+                "1"
+              ],
+              "query": [
+                {
+                  "key": "id ",
+                  "value": "1",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "update",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/patient/update/info?id=1&name=Patient Test&email=truongnv2561@ut.edu.vn&phone=0334327457",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "patient",
+                "update",
+                "info"
+              ],
+              "query": [
+                {
+                  "key": "id",
+                  "value": "1",
+                  "type": "text"
+                },
+                {
+                  "key": "name",
+                  "value": "Patient Test",
+                  "type": "text"
+                },
+                {
+                  "key": "email",
+                  "value": "truongnv2561@ut.edu.vn",
+                  "type": "text"
+                },
+                {
+                  "key": "phone",
+                  "value": "0334327457",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/patient/delete/1",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "patient",
+                "delete",
+                "1"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Change Patient Password",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "http://localhost:8080/admin/patient/update/password/1?newPassword=123456",
+              "protocol": "http",
+              "host": [
+                "localhost"
+              ],
+              "port": "8080",
+              "path": [
+                "admin",
+                "patient",
+                "update",
+                "password",
+                "1"
+              ],
+              "query": [
+                {
+                  "key": "newPassword",
+                  "value": "123456",
+                  "type": "text"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
