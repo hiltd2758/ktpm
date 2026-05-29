@@ -41,7 +41,9 @@ public class DoctorApiController {
             response.setHeader("Set-Cookie",
                     "jwt-doctor-token=" + token +
                             "; Path=/; HttpOnly; Max-Age=86400; SameSite=Lax");
-            return ResponseEntity.ok(Map.of("message", "Login successful"));
+//            return ResponseEntity.ok(Map.of("message", "Login successful"));
+            return ResponseEntity.ok(Map.of("message", "Login successful", "token", token));
+
         }
         return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
     }
