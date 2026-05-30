@@ -1,0 +1,489 @@
+{
+  "info": {
+    "name": "E-Health Admin Patient CRUD & Dashboard",
+    "description": "Postman Collection for testing patient management endpoints (CRUD operations and dashboard statistics) - Admin panel",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication Setup",
+      "item": [
+        {
+          "name": "Set Admin Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "login"
+              ]
+            },
+            "description": "Set the admin token for authentication. Replace with your actual admin credentials."
+          },
+          "response": []
+        }
+      ],
+      "description": "Setup admin authentication token"
+    },
+    {
+      "name": "Dashboard & Statistics",
+      "item": [
+        {
+          "name": "Get Dashboard (All Patients)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "disabled": false
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/dashboard",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "dashboard"
+              ]
+            },
+            "description": "Retrieve all patients and dashboard data"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains patients array', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('patients');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Dashboard Statistics",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "disabled": false
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/statistics",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "statistics"
+              ]
+            },
+            "description": "Retrieve dashboard statistics including total patients, doctors, and appointment status counts"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains required statistics fields', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('totalPatients');",
+                  "    pm.expect(jsonData).to.have.property('totalDoctors');",
+                  "    pm.expect(jsonData).to.have.property('totalAppointments');",
+                  "});",
+                  "",
+                  "pm.test('Statistics values are numbers', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.totalPatients).to.be.a('number');",
+                  "    pm.expect(jsonData.totalDoctors).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Dashboard and statistics endpoints"
+    },
+    {
+      "name": "Patient READ Operations",
+      "item": [
+        {
+          "name": "Get Patient by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "disabled": false
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/patient/edit/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "patient",
+                "edit",
+                "1"
+              ]
+            },
+            "description": "Retrieve a specific patient by ID. Replace '1' with the actual patient ID."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains patient object', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "    pm.expect(jsonData).to.have.property('firstName');",
+                  "    pm.expect(jsonData).to.have.property('lastName');",
+                  "});",
+                  "",
+                  "pm.test('Patient ID matches request', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.id).to.equal(parseInt(pm.request.url.path[3]));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Retrieve patient information"
+    },
+    {
+      "name": "Patient CREATE Operations",
+      "item": [
+        {
+          "name": "Create New Patient (via Dashboard)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "disabled": false
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"patient.new@example.com\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"address\": \"123 Health Street, Medical City, MC 12345\",\n  \"password\": \"SecurePassword123!\",\n  \"phone\": \"+1-555-0123\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"medicalHistory\": \"No significant medical history\",\n  \"avatar\": \"https://example.com/avatars/patient1.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/patient/create",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "patient",
+                "create"
+              ]
+            },
+            "description": "Create a new patient record (if endpoint is available)"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 201 or 200', function () {",
+                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test('Response contains patient ID', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('id');",
+                  "    if (jsonData.id) {",
+                  "        pm.globals.set('patientId', jsonData.id);",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('Patient email matches request', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.email).to.equal('patient.new@example.com');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Create new patient records"
+    },
+    {
+      "name": "Patient UPDATE Operations",
+      "item": [
+        {
+          "name": "Update Patient Information",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "disabled": false
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": 1,\n  \"email\": \"patient.updated@example.com\",\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"address\": \"456 Wellness Avenue, Health City, HC 67890\",\n  \"phone\": \"+1-555-9876\",\n  \"dateOfBirth\": \"1992-03-20\",\n  \"medicalHistory\": \"Treated for diabetes in 2020\",\n  \"avatar\": \"https://example.com/avatars/patient1-updated.jpg\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/patient/update/info",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "patient",
+                "update",
+                "info"
+              ]
+            },
+            "description": "Update patient information (excluding password). Password is preserved from existing record."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response indicates success', function () {",
+                  "    let responseText = pm.response.text();",
+                  "    pm.expect(responseText).to.include('success').or.to.include('updated').or.to.include('Success');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Patient Password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "disabled": false
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "newPassword",
+                  "value": "NewSecurePassword456!",
+                  "type": "text"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/patient/update/password/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "patient",
+                "update",
+                "password",
+                "1"
+              ]
+            },
+            "description": "Update password for a specific patient by ID. Replace '1' with actual patient ID."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response indicates password updated', function () {",
+                  "    let responseText = pm.response.text();",
+                  "    pm.expect(responseText).to.include('success').or.to.include('updated').or.to.include('Success').or.to.include('password');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Update existing patient records"
+    },
+    {
+      "name": "Patient DELETE Operations",
+      "item": [
+        {
+          "name": "Delete Patient by ID",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "disabled": false
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/patient/delete/1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "patient",
+                "delete",
+                "1"
+              ]
+            },
+            "description": "Delete a patient record by ID. Replace '1' with actual patient ID. This operation is irreversible."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 204', function () {",
+                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test('Response indicates deletion success', function () {",
+                  "    if (pm.response.code === 200) {",
+                  "        let responseText = pm.response.text();",
+                  "        pm.expect(responseText).to.include('success').or.to.include('deleted').or.to.include('Success');",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Delete patient records"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global pre-request setup if needed"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Global test setup if needed"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string",
+      "description": "Base URL for the API server. Update this to match your server (e.g., http://localhost:8080, https://api.example.com)"
+    },
+    {
+      "key": "adminToken",
+      "value": "",
+      "type": "string",
+      "description": "Admin authentication token. Set this after successful login via the 'Set Admin Token' request."
+    },
+    {
+      "key": "patientId",
+      "value": "1",
+      "type": "string",
+      "description": "Patient ID for use in other requests. This is automatically set after creating a new patient."
+    }
+  ]
+}
