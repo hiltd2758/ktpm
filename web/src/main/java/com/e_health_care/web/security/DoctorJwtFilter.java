@@ -15,12 +15,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.e_health_care.web.doctor.service.DoctorDetailsService;
 import com.e_health_care.web.doctor.service.DoctorJwtService;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import io.jsonwebtoken.ExpiredJwtException;
 
 @Component
 public class DoctorJwtFilter extends OncePerRequestFilter {
@@ -32,13 +32,28 @@ public class DoctorJwtFilter extends OncePerRequestFilter {
     private ApplicationContext context;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return !request.getServletPath().startsWith("/api/doctor");
+    }
+
+    @Override
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
             throws ServletException, IOException {
 
         String token = null;
 
-        // 1. Đọc từ cookie
-        if (request.getCookies() != null) {
+        // Ưu tiên Authorization Header
+        String authHeader = request.getHeader("Authorization");
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        }
+
+        // Fallback Cookie
+        if (token == null && request.getCookies() != null) {
             token = Arrays.stream(request.getCookies())
                     .filter(c -> c.getName().equals("jwt-doctor-token"))
                     .map(Cookie::getValue)
@@ -46,64 +61,73 @@ public class DoctorJwtFilter extends OncePerRequestFilter {
                     .orElse(null);
         }
 
-        // 2. Fallback: Authorization header
-        if (token == null) {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                token = authHeader.substring(7);
-            }
-        }
-
+        // Không có token -> cho đi tiếp
         if (token == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 3. Check role không cần verify signature — bỏ qua nếu không phải ROLE_DOCTOR
         try {
+
             String role = jwtService.extractRoleWithoutVerification(token);
+
             if (!"ROLE_DOCTOR".equals(role)) {
                 filterChain.doFilter(request, response);
                 return;
             }
+
+            String username = jwtService.extractEmail(token);
+
+            if (username != null
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                UserDetails userDetails = context
+                        .getBean(DoctorDetailsService.class)
+                        .loadUserByUsername(username);
+
+                if (jwtService.validateToken(token, userDetails)) {
+
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities());
+
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request));
+
+                    // QUAN TRỌNG
+                    SecurityContextHolder
+                            .getContext()
+                            .setAuthentication(authToken);
+
+                    System.out.println("DOCTOR AUTH SUCCESS");
+                    System.out.println(userDetails.getAuthorities());
+
+                } else {
+
+                    System.out.println("TOKEN INVALID");
+                }
+            }
+
+        } catch (ExpiredJwtException e) {
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"Token expired\"}");
+            return;
+
         } catch (Exception e) {
-            filterChain.doFilter(request, response);
+
+            e.printStackTrace();
+
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\":\"Invalid token\"}");
             return;
         }
 
-        // 4. Xác thực token đầy đủ
-        try {
-            String username = jwtService.extractEmail(token);
-
-            // Override auth nếu chưa có hoặc đang là role khác (ví dụ PATIENT đã set trước)
-            boolean alreadyDoctor = SecurityContextHolder.getContext().getAuthentication() != null &&
-                    SecurityContextHolder.getContext().getAuthentication().getAuthorities()
-                            .stream().anyMatch(a -> a.getAuthority().equals("ROLE_DOCTOR"));
-
-            if (username != null && !alreadyDoctor) {
-                UserDetails userDetails = context.getBean(DoctorDetailsService.class)
-                        .loadUserByUsername(username);
-                if (jwtService.validateToken(token, userDetails)) {
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails, null, userDetails.getAuthorities());
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(authToken);
-                    request.setAttribute("doctorToken", token);
-                }
-            }
-            filterChain.doFilter(request, response);
-
-        } catch (ExpiredJwtException e) {
-            sendJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "Token expired");
-        } catch (Exception e) {
-            filterChain.doFilter(request, response);
-        }
-    }
-
-    private void sendJsonError(HttpServletResponse response, int status, String message) throws IOException {
-        response.setStatus(status);
-        response.setContentType("application/json");
-        response.getWriter().write("{\"error\": \"" + message + "\"}");
+        filterChain.doFilter(request, response);
     }
 }
