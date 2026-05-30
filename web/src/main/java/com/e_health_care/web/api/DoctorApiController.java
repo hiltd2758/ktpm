@@ -12,6 +12,7 @@ import com.e_health_care.web.patient.model.Appointment;
 import com.e_health_care.web.patient.service.PatientAppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,7 @@ import com.e_health_care.web.doctor.dto.DoctorDTO;
 import com.e_health_care.web.doctor.service.DoctorService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+
 @RestController
 @RequestMapping("/api/doctor")
 public class DoctorApiController {
@@ -85,12 +87,69 @@ public class DoctorApiController {
     @Autowired
     private DoctorService doctorService;
 
+
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
-        DoctorDTO doctor = doctorService.getDoctorByEmail(auth.getName());
-        return ResponseEntity.ok(doctor);
+        System.out.println(">>> ENTER DOCTOR PROFILE <<<");
+
+        try {
+
+            Authentication authentication =
+                    SecurityContextHolder
+                            .getContext()
+                            .getAuthentication();
+
+            System.out.println("AUTH = " + authentication);
+            
+
+            if (authentication == null
+                    || authentication instanceof AnonymousAuthenticationToken
+                    || !authentication.isAuthenticated()) {
+
+                return ResponseEntity
+                        .status(401)
+                        .body(Map.of("error", "Unauthorized"));
+            }
+
+            String email = authentication.getName();
+
+            System.out.println("EMAIL = " + email);
+
+            // LẤY TRỰC TIẾP TỪ DB
+            Doctor doctor =
+                    doctorRepository.findByEmail(email);
+
+            if (doctor == null) {
+
+                return ResponseEntity
+                        .status(404)
+                        .body(Map.of("error", "Doctor not found"));
+            }
+
+            // TEST JSON THỦ CÔNG
+            return ResponseEntity.ok(
+                    Map.of(
+                            "id", doctor.getId(),
+                            "email", doctor.getEmail(),
+                            "firstName", doctor.getFirstName(),
+                            "lastName", doctor.getLastName(),
+                            "field", doctor.getField(),
+                            "phone", doctor.getPhone(),
+                            "address", doctor.getAddress()
+                    )
+            );
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+            return ResponseEntity
+                    .status(500)
+                    .body(Map.of(
+                            "error",
+                            e.getMessage()
+                    ));
+        }
     }
 
     @PutMapping("/profile/update")

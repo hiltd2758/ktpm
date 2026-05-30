@@ -3,6 +3,8 @@ package com.e_health_care.web.doctor.dto;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.web.multipart.MultipartFile;
 import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 
 @Data
 public class DoctorDTO {
@@ -30,6 +32,7 @@ public class DoctorDTO {
 
     private MultipartFile avatarFile;
 
+    @JsonIgnore
     public String getUppercase_role() {
         return this.role.toUpperCase();
     }

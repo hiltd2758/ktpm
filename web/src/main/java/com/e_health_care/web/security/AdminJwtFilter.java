@@ -24,39 +24,64 @@ public class AdminJwtFilter extends OncePerRequestFilter {
     private final AdminJwtService jwtService;
     private final ApplicationContext context;
 
-    public AdminJwtFilter(AdminJwtService jwtService, ApplicationContext context) {
+    public AdminJwtFilter(AdminJwtService jwtService,
+                          ApplicationContext context) {
         this.jwtService = jwtService;
         this.context = context;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
             throws ServletException, IOException {
 
         String token = null;
         String email = null;
 
-        // Đọc token từ Authorization header
         String authHeader = request.getHeader("Authorization");
 
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+        if (authHeader != null &&
+                authHeader.startsWith("Bearer ")) {
+
             token = authHeader.substring(7);
+        }
+
+        // Không có token -> bỏ qua
+        if (token == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
+        // Chỉ xử lý token ADMIN
+        try {
+
+            String role =
+                    jwtService.extractRole(token);
+
+            if (!"ROLE_ADMIN".equals(role)) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
+        } catch (Exception e) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
         try {
 
-            if (token != null) {
-                email = jwtService.extractEmail(token);
-            }
+            email = jwtService.extractEmail(token);
 
-            if (email != null &&
-                    SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (email != null
+                    && SecurityContextHolder
+                    .getContext()
+                    .getAuthentication() == null) {
 
-                UserDetails userDetails = context
-                        .getBean(AdminDetailsService.class)
-                        .loadUserByUsername(email);
+                UserDetails userDetails =
+                        context.getBean(AdminDetailsService.class)
+                                .loadUserByUsername(email);
 
                 if (jwtService.validateToken(token, userDetails)) {
 
@@ -72,20 +97,22 @@ public class AdminJwtFilter extends OncePerRequestFilter {
                                     .buildDetails(request)
                     );
 
-                    SecurityContextHolder.getContext()
+                    SecurityContextHolder
+                            .getContext()
                             .setAuthentication(authToken);
 
-                    request.setAttribute("adminToken", token);
+                    request.setAttribute(
+                            "adminToken",
+                            token
+                    );
                 }
             }
 
-            filterChain.doFilter(request, response);
-
         } catch (Exception e) {
-
-            // React/API trả về 401 thay vì redirect
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-
+            e.printStackTrace();
         }
+
+        filterChain.doFilter(request, response);
     }
+    
 }
