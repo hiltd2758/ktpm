@@ -9,23 +9,43 @@
   "item": [
     {
       "name": "GET Patient Profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is less than 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response body contains correct patient info\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    \r",
+              "    // Kiểm tra phải có trường email và email phải khớp với tài khoản test\r",
+              "    pm.expect(jsonData).to.have.property('email');\r",
+              "    pm.expect(jsonData.email).to.eql(\"patient0123@gmail.com\");\r",
+              "    \r",
+              "    // Kiểm tra họ và tên không được để trống\r",
+              "    pm.expect(jsonData.firstName).to.not.be.null;\r",
+              "    pm.expect(jsonData.lastName).to.not.be.null;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "auth": {
           "type": "noauth"
         },
         "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9QQVRJRU5UIiwic3ViIjoicGF0aWVudDAxMjNAZ21haWwuY29tIiwiaWF0IjoxNzgwMTI1NzgyLCJleHAiOjE3ODAyMTIxODJ9.4tJlcilkPbvx4nZ3zld9qQeBJldmoBxB5SYvM70BOaCaFGLBGX2XyJv9VE1nRlhn",
-            "type": "text"
-          },
-          {
-            "key": "Cookie",
-            "value": "jwt-patient-token=eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9QQVRJRU5UIiwic3ViIjoicGF0aWVudDAxMjNAZ21haWwuY29tIiwiaWF0IjoxNzgwMTI1NzgyLCJleHAiOjE3ODAyMTIxODJ9.4tJlcilkPbvx4nZ3zld9qQeBJldmoBxB5SYvM70BOaCaFGLBGX2XyJv9VE1nRlhn",
-            "type": "text"
-          }
-        ],
+        "header": [],
         "url": {
           "raw": "{{base_url}}/api/patient/profile",
           "host": [
@@ -42,32 +62,51 @@
     },
     {
       "name": "PUT Update Patient Profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Update successful message\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.message).to.eql(\"Cập nhật thành công\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "auth": {
           "type": "noauth"
         },
-        "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9QQVRJRU5UIiwic3ViIjoicGF0aWVudDAxMjNAZ21haWwuY29tIiwiaWF0IjoxNzgwMTI1NzgyLCJleHAiOjE3ODAyMTIxODJ9.4tJlcilkPbvx4nZ3zld9qQeBJldmoBxB5SYvM70BOaCaFGLBGX2XyJv9VE1nRlhn",
-            "type": "text"
-          },
-          {
-            "key": "Cookie",
-            "value": "jwt-patient-token=eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9QQVRJRU5UIiwic3ViIjoicGF0aWVudDAxMjNAZ21haWwuY29tIiwiaWF0IjoxNzgwMTI1NzgyLCJleHAiOjE3ODAyMTIxODJ9.4tJlcilkPbvx4nZ3zld9qQeBJldmoBxB5SYvM70BOaCaFGLBGX2XyJv9VE1nRlhn",
-            "type": "text"
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"firstName\": \"Nguyen\",\r\n    \"lastName\": \"Van A\",\r\n    \"phone\": \"0999888777\",\r\n    \"address\": \"456 Le Loi, Quan 1, HCM\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
           }
-        ],
+        },
         "url": {
-          "raw": "{{base_url}}/api/patient/profile",
+          "raw": "{{base_url}}/api/patient/update/5",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
             "patient",
-            "profile"
+            "update",
+            "5"
           ]
         }
       },
@@ -75,32 +114,41 @@
     },
     {
       "name": "GET Patient Clinical Info",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is less than 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "auth": {
           "type": "noauth"
         },
         "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9QQVRJRU5UIiwic3ViIjoicGF0aWVudDAxMjNAZ21haWwuY29tIiwiaWF0IjoxNzgwMTI1NzgyLCJleHAiOjE3ODAyMTIxODJ9.4tJlcilkPbvx4nZ3zld9qQeBJldmoBxB5SYvM70BOaCaFGLBGX2XyJv9VE1nRlhn",
-            "type": "text"
-          },
-          {
-            "key": "Cookie",
-            "value": "jwt-patient-token=eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9QQVRJRU5UIiwic3ViIjoicGF0aWVudDAxMjNAZ21haWwuY29tIiwiaWF0IjoxNzgwMTI1NzgyLCJleHAiOjE3ODAyMTIxODJ9.4tJlcilkPbvx4nZ3zld9qQeBJldmoBxB5SYvM70BOaCaFGLBGX2XyJv9VE1nRlhn",
-            "type": "text"
-          }
-        ],
+        "header": [],
         "url": {
-          "raw": "{{base_url}}/api/patient/profile",
+          "raw": "{{base_url}}/api/patient/clinical-info/5",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
             "patient",
-            "profile"
+            "clinical-info",
+            "5"
           ]
         }
       },
@@ -108,32 +156,46 @@
     },
     {
       "name": "GET Patient Appointment List",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is less than 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response is a List of appointments\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(Array.isArray(jsonData)).to.be.true;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
       "request": {
         "auth": {
           "type": "noauth"
         },
         "method": "GET",
-        "header": [
-          {
-            "key": "Authorization",
-            "value": "Bearer eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9QQVRJRU5UIiwic3ViIjoicGF0aWVudDAxMjNAZ21haWwuY29tIiwiaWF0IjoxNzgwMTI1NzgyLCJleHAiOjE3ODAyMTIxODJ9.4tJlcilkPbvx4nZ3zld9qQeBJldmoBxB5SYvM70BOaCaFGLBGX2XyJv9VE1nRlhn",
-            "type": "text"
-          },
-          {
-            "key": "Cookie",
-            "value": "jwt-patient-token=eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9QQVRJRU5UIiwic3ViIjoicGF0aWVudDAxMjNAZ21haWwuY29tIiwiaWF0IjoxNzgwMTI1NzgyLCJleHAiOjE3ODAyMTIxODJ9.4tJlcilkPbvx4nZ3zld9qQeBJldmoBxB5SYvM70BOaCaFGLBGX2XyJv9VE1nRlhn",
-            "type": "text"
-          }
-        ],
+        "header": [],
         "url": {
-          "raw": "{{base_url}}/api/patient/profile",
+          "raw": "{{base_url}}/api/patient/appointment/list",
           "host": [
             "{{base_url}}"
           ],
           "path": [
             "api",
             "patient",
-            "profile"
+            "appointment",
+            "list"
           ]
         }
       },
