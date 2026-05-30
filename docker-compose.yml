@@ -1,18 +1,17 @@
-version: '3.8'
-
 services:
   mysql-local:
     image: mysql:8.0
     container_name: mysql-local
     environment:
-      MYSQL_ROOT_PASSWORD: 123456
-      MYSQL_DATABASE: e_health_care
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: e_health
     ports:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
       interval: 10s
       timeout: 5s
       retries: 5
