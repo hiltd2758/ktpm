@@ -1,3 +1,4 @@
+```java
 package com.e_health_care.web.security;
 
 import java.io.IOException;
@@ -28,6 +29,12 @@ public class AdminJwtFilter extends OncePerRequestFilter {
                           ApplicationContext context) {
         this.jwtService = jwtService;
         this.context = context;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+        return !path.startsWith("/api/admin/") && !path.startsWith("/admin/");
     }
 
     @Override
@@ -114,5 +121,6 @@ public class AdminJwtFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-    
+
 }
+```

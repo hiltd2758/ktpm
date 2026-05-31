@@ -20,6 +20,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
 @Component
 public class PatientJwtFilter extends OncePerRequestFilter {
 
@@ -28,6 +29,12 @@ public class PatientJwtFilter extends OncePerRequestFilter {
 
     @Autowired
     private PatientDetailsService patientDetailsService;
+
+    @Override
+    protected boolean shouldNotFilter(@NonNull HttpServletRequest request) throws ServletException {
+        String path = request.getServletPath();
+        return !path.startsWith("/api/patient/") && !path.startsWith("/patient/");
+    }
 
     @Override
     protected void doFilterInternal(

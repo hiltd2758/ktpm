@@ -1,0 +1,293 @@
+{
+  "info": {
+    "_postman_id": "849059c1-e843-4b00-90ea-d47f69e23e1a",
+    "name": "T8_Patient_Profile_History",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "51181979",
+    "_collection_link": "https://go.postman.co/collection/51181979-849059c1-e843-4b00-90ea-d47f69e23e1a?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "GET Patient Profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();\r",
+              "pm.collectionVariables.set(\"patient_id\", jsonData.id);\r",
+              "\r",
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is less than 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response body contains correct patient info\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    \r",
+              "    // Kiểm tra phải có trường email và email phải khớp với tài khoản test\r",
+              "    pm.expect(jsonData).to.have.property('email');\r",
+              "    pm.expect(jsonData.email).to.eql(\"patient0123@gmail.com\");\r",
+              "    \r",
+              "    // Kiểm tra họ và tên không được để trống\r",
+              "    pm.expect(jsonData.firstName).to.not.be.null;\r",
+              "    pm.expect(jsonData.lastName).to.not.be.null;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "jwt-patient-token={{patient_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/patient/profile",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "patient",
+            "profile"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "PUT Update Patient Profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Update successful message\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(jsonData.message).to.eql(\"Cập nhật thành công\");\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{patient_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "jwt-patient-token={{patient_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"firstName\": \"Nguyen\",\r\n    \"lastName\": \"Van A\",\r\n    \"phone\": \"0999888777\",\r\n    \"address\": \"456 Le Loi, Quan 1, HCM\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/patient/update/{{patient_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "patient",
+            "update",
+            "{{patient_id}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET Patient Clinical Info",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is less than 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{patient_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "jwt-patient-token={{patient_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/patient/clinical-info/{{patient_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "patient",
+            "clinical-info",
+            "{{patient_id}}"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET Patient Appointment List",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response time is less than 1000ms\", function () {\r",
+              "    pm.expect(pm.response.responseTime).to.be.below(1000);\r",
+              "});\r",
+              "\r",
+              "pm.test(\"Response is a List of appointments\", function () {\r",
+              "    var jsonData = pm.response.json();\r",
+              "    pm.expect(Array.isArray(jsonData)).to.be.true;\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{patient_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "jwt-patient-token={{patient_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/patient/appointment/list",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "patient",
+            "appointment",
+            "list"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9QQVRJRU5UIiwic3ViIjoicGF0aWVudDAxMjNAZ21haWwuY29tIiwiaWF0IjoxNzgwMTI1MjAzLCJleHAiOjE3ODAyMTE2MDN9.DPUuE4irZzAuLNiHRsQehDxPGvlBfXqp6OjtQ8olWAt6RROQLMaFR4wtVG6I8TjQ",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "patient_id",
+      "value": ""
+    }
+  ]
+}
