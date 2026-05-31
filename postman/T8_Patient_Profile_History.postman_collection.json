@@ -14,6 +14,9 @@
           "listen": "test",
           "script": {
             "exec": [
+              "var jsonData = pm.response.json();\r",
+              "pm.collectionVariables.set(\"patient_id\", jsonData.id);\r",
+              "\r",
               "pm.test(\"Status code is 200 OK\", function () {\r",
               "    pm.response.to.have.status(200);\r",
               "});\r",
@@ -45,7 +48,13 @@
           "type": "noauth"
         },
         "method": "GET",
-        "header": [],
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "jwt-patient-token={{patient_token}}",
+            "type": "text"
+          }
+        ],
         "url": {
           "raw": "{{base_url}}/api/patient/profile",
           "host": [
@@ -84,10 +93,23 @@
       ],
       "request": {
         "auth": {
-          "type": "noauth"
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{patient_token}}",
+              "type": "string"
+            }
+          ]
         },
         "method": "PUT",
-        "header": [],
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "jwt-patient-token={{patient_token}}",
+            "type": "text"
+          }
+        ],
         "body": {
           "mode": "raw",
           "raw": "{\r\n    \"firstName\": \"Nguyen\",\r\n    \"lastName\": \"Van A\",\r\n    \"phone\": \"0999888777\",\r\n    \"address\": \"456 Le Loi, Quan 1, HCM\"\r\n}",
@@ -98,7 +120,7 @@
           }
         },
         "url": {
-          "raw": "{{base_url}}/api/patient/update/5",
+          "raw": "{{base_url}}/api/patient/update/{{patient_id}}",
           "host": [
             "{{base_url}}"
           ],
@@ -106,7 +128,7 @@
             "api",
             "patient",
             "update",
-            "5"
+            "{{patient_id}}"
           ]
         }
       },
@@ -135,12 +157,25 @@
       ],
       "request": {
         "auth": {
-          "type": "noauth"
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{patient_token}}",
+              "type": "string"
+            }
+          ]
         },
         "method": "GET",
-        "header": [],
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "jwt-patient-token={{patient_token}}",
+            "type": "text"
+          }
+        ],
         "url": {
-          "raw": "{{base_url}}/api/patient/clinical-info/5",
+          "raw": "{{base_url}}/api/patient/clinical-info/{{patient_id}}",
           "host": [
             "{{base_url}}"
           ],
@@ -148,7 +183,7 @@
             "api",
             "patient",
             "clinical-info",
-            "5"
+            "{{patient_id}}"
           ]
         }
       },
@@ -182,10 +217,23 @@
       ],
       "request": {
         "auth": {
-          "type": "noauth"
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{patient_token}}",
+              "type": "string"
+            }
+          ]
         },
         "method": "GET",
-        "header": [],
+        "header": [
+          {
+            "key": "Cookie",
+            "value": "jwt-patient-token={{patient_token}}",
+            "type": "text"
+          }
+        ],
         "url": {
           "raw": "{{base_url}}/api/patient/appointment/list",
           "host": [
@@ -234,6 +282,12 @@
           ""
         ]
       }
+    }
+  ],
+  "variable": [
+    {
+      "key": "patient_id",
+      "value": ""
     }
   ]
 }
