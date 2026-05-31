@@ -7,7 +7,7 @@
   "values": [
     {
       "key": "base_url",
-      "value": "http://localhost:8081",
+      "value": "http://localhost:8080",
       "type": "default",
       "enabled": true
     },
