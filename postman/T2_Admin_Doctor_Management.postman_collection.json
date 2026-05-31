@@ -1,0 +1,151 @@
+{
+  "info": {
+    "name": "T2_Admin_Doctor_Management",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "GET /api/admin/dashboard",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/dashboard",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "dashboard"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Response has doctors\", () => pm.response.json().doctors !== undefined);",
+              "pm.test(\"Response has patients\", () => pm.response.json().patients !== undefined);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUT /api/admin/doctor/update/info",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"id\": 1,\n  \"email\": \"doctor1@ehealth.com\",\n  \"firstName\": \"Nguyễn\",\n  \"lastName\": \"Văn A\",\n  \"field\": \"Cardiology\",\n  \"phone\": \"+84912345678\",\n  \"address\": \"123 Đường ABC, TP HCM\",\n  \"avatar\": \"\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/admin/doctor/update/info",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "doctor", "update", "info"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Success message\", () => pm.response.json().message.includes('thành công'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUT /api/admin/doctor/update/password/1",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"newPassword\": \"newPassword123\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/admin/doctor/update/password/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "doctor", "update", "password", "1"]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Password updated\", () => pm.response.json().message.includes('thành công'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE /api/admin/doctor/delete/1",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/doctor/delete/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "doctor", "delete", "1"]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status 200 OK\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Doctor deleted\", () => pm.response.json().message.includes('thành công'));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
