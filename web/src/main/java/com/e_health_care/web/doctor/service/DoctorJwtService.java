@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +33,7 @@ public class DoctorJwtService {
                 .compact();
     }
 
-    private Key getKey() {
+    private SecretKey getKey() {
         byte[] keyBytes = Decoders.BASE64.decode(SECRET);
         return Keys.hmacShaKeyFor(keyBytes);
     }
@@ -46,7 +46,7 @@ public class DoctorJwtService {
         return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
-    // Thêm mới: đọc role từ payload mà không verify signature
+    // Đọc role từ payload mà không verify signature
     public String extractRoleWithoutVerification(String token) {
         String[] parts = token.split("\\.");
         if (parts.length < 2) throw new IllegalArgumentException("Invalid JWT");
@@ -66,13 +66,13 @@ public class DoctorJwtService {
         return claimResolver.apply(claims);
     }
 
-    @Deprecated
+    // FIX: dùng verifyWith() thay vì setSigningKey() đã deprecated
     private Claims extractAllClaims(String token) {
         return Jwts.parser()
-                .setSigningKey(getKey())
+                .verifyWith(getKey())
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     public boolean validateToken(String token, UserDetails userDetails) {

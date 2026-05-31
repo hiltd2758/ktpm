@@ -58,7 +58,11 @@ pipeline {
                     docker rm e-health-care || true
                     docker run -d \
                         --name e-health-care \
-                        -p 8081:8080 \
+                        --link mysql-ehealth:mysql-ehealth \
+                        -p 8080:8080 \
+                        -e SPRING_DATASOURCE_URL="jdbc:mysql://mysql-ehealth:3306/e_health" \
+                        -e SPRING_DATASOURCE_USERNAME="root" \
+                        -e SPRING_DATASOURCE_PASSWORD="root" \
                         e-health-care:${BUILD_NUMBER}
                 '''
             }

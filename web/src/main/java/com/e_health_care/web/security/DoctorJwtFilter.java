@@ -1,3 +1,4 @@
+```java
 package com.e_health_care.web.security;
 
 import java.io.IOException;
@@ -8,6 +9,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -15,12 +17,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.e_health_care.web.doctor.service.DoctorDetailsService;
 import com.e_health_care.web.doctor.service.DoctorJwtService;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import io.jsonwebtoken.ExpiredJwtException;
 
 @Component
 public class DoctorJwtFilter extends OncePerRequestFilter {
@@ -31,20 +35,50 @@ public class DoctorJwtFilter extends OncePerRequestFilter {
     @Autowired
     private ApplicationContext context;
 
+    // Các endpoint không cần token
+    private static final String[] PUBLIC_PATHS = {
+            "/api/doctor/login",
+            "/api/patient/login",
+            "/api/patient/register",
+            "/api/admin/login"
+    };
+
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+    protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return !path.startsWith("/api/doctor/") && !path.startsWith("/doctor/");
+
+        // Bỏ qua nếu không phải /api/doctor
+        if (!path.startsWith("/api/doctor")) {
+            return true;
+        }
+
+        // Bỏ qua public paths
+        for (String publicPath : PUBLIC_PATHS) {
+            if (path.equals(publicPath)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain)
             throws ServletException, IOException {
 
         String token = null;
 
-        // 1. Đọc từ cookie
-        if (request.getCookies() != null) {
+        // Ưu tiên Authorization Header
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7);
+        }
+
+        // Fallback Cookie
+        if (token == null && request.getCookies() != null) {
             token = Arrays.stream(request.getCookies())
                     .filter(c -> c.getName().equals("jwt-doctor-token"))
                     .map(Cookie::getValue)
@@ -52,64 +86,76 @@ public class DoctorJwtFilter extends OncePerRequestFilter {
                     .orElse(null);
         }
 
-        // 2. Fallback: Authorization header
-        if (token == null) {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                token = authHeader.substring(7);
-            }
-        }
-
+        // Không có token -> cho đi tiếp (Security config sẽ xử lý 401)
         if (token == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 3. Check role không cần verify signature — bỏ qua nếu không phải ROLE_DOCTOR
         try {
             String role = jwtService.extractRoleWithoutVerification(token);
+
+            // Token không phải của doctor -> cho đi tiếp
             if (!"ROLE_DOCTOR".equals(role)) {
                 filterChain.doFilter(request, response);
                 return;
             }
-        } catch (Exception e) {
-            filterChain.doFilter(request, response);
-            return;
-        }
 
-        // 4. Xác thực token đầy đủ
-        try {
             String username = jwtService.extractEmail(token);
 
-            // Override auth nếu chưa có hoặc đang là role khác (ví dụ PATIENT đã set trước)
-            boolean alreadyDoctor = SecurityContextHolder.getContext().getAuthentication() != null &&
-                    SecurityContextHolder.getContext().getAuthentication().getAuthorities()
-                            .stream().anyMatch(a -> a.getAuthority().equals("ROLE_DOCTOR"));
+            if (username != null
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-            if (username != null && !alreadyDoctor) {
-                UserDetails userDetails = context.getBean(DoctorDetailsService.class)
+                UserDetails userDetails = context
+                        .getBean(DoctorDetailsService.class)
                         .loadUserByUsername(username);
+
                 if (jwtService.validateToken(token, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(
-                                    userDetails, null, userDetails.getAuthorities());
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                                    userDetails,
+                                    null,
+                                    userDetails.getAuthorities());
+
+                    authToken.setDetails(
+                            new WebAuthenticationDetailsSource()
+                                    .buildDetails(request));
+
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                    request.setAttribute("doctorToken", token);
+                    System.out.println("DOCTOR AUTH SUCCESS: " + username);
+                } else {
+                    System.out.println("TOKEN INVALID for: " + username);
+                    sendUnauthorized(response, "Invalid token");
+                    return;
                 }
             }
-            filterChain.doFilter(request, response);
 
         } catch (ExpiredJwtException e) {
-            sendJsonError(response, HttpServletResponse.SC_UNAUTHORIZED, "Token expired");
-        } catch (Exception e) {
+            sendUnauthorized(response, "Token expired");
+            return;
+
+        } catch (MalformedJwtException | UnsupportedJwtException | IllegalArgumentException e) {
+            sendUnauthorized(response, "Invalid token format");
+            return;
+
+        } catch (UsernameNotFoundException e) {
+            // User trong token không còn tồn tại trong DB -> cho đi tiếp, Security xử lý
             filterChain.doFilter(request, response);
+            return;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            sendUnauthorized(response, "Authentication error");
+            return;
         }
+
+        filterChain.doFilter(request, response);
     }
 
-    private void sendJsonError(HttpServletResponse response, int status, String message) throws IOException {
-        response.setStatus(status);
+    private void sendUnauthorized(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
-        response.getWriter().write("{\"error\": \"" + message + "\"}");
+        response.getWriter().write("{\"error\":\"" + message + "\"}");
     }
 }
+```
