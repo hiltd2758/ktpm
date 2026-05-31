@@ -1,49 +1,15 @@
 {
   "info": {
-    "name": "E-Health Admin Patient CRUD & Dashboard",
-    "description": "Postman Collection for testing patient management endpoints (CRUD operations and dashboard statistics) - Admin panel",
+    "name": "E-Health Admin Patient REST API CRUD",
+    "description": "Postman Collection for testing patient management REST API endpoints (CRUD operations) - Updated for new RESTful Controller",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Authentication Setup",
+      "name": "Patient READ Operations",
       "item": [
         {
-          "name": "Set Admin Token",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"123456\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/admin/login",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "admin",
-                "login"
-              ]
-            },
-            "description": "Set the admin token for authentication. Replace with your actual admin credentials."
-          },
-          "response": []
-        }
-      ],
-      "description": "Setup admin authentication token"
-    },
-    {
-      "name": "Dashboard & Statistics",
-      "item": [
-        {
-          "name": "Get Dashboard (All Patients)",
+          "name": "GET All Patients",
           "request": {
             "method": "GET",
             "header": [
@@ -58,16 +24,17 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/admin/dashboard",
+              "raw": "{{baseUrl}}/admin/api/patients",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "admin",
-                "dashboard"
+                "api",
+                "patients"
               ]
             },
-            "description": "Retrieve all patients and dashboard data"
+            "description": "Retrieve all patients. Returns array of patients with success flag and message."
           },
           "response": [],
           "event": [
@@ -79,9 +46,16 @@
                   "    pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('Response contains patients array', function () {",
+                  "pm.test('Response contains success flag and data', function () {",
                   "    let jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('patients');",
+                  "    pm.expect(jsonData).to.have.property('success', true);",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test('Data contains array of patients', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.be.an('array');",
                   "});"
                 ]
               }
@@ -89,7 +63,7 @@
           ]
         },
         {
-          "name": "Get Dashboard Statistics",
+          "name": "GET Patient by ID",
           "request": {
             "method": "GET",
             "header": [
@@ -104,16 +78,18 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/admin/statistics",
+              "raw": "{{baseUrl}}/admin/api/patients/{{patientId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "admin",
-                "statistics"
+                "api",
+                "patients",
+                "{{patientId}}"
               ]
             },
-            "description": "Retrieve dashboard statistics including total patients, doctors, and appointment status counts"
+            "description": "Retrieve a specific patient by ID. Replace {{patientId}} with the actual patient ID."
           },
           "response": [],
           "event": [
@@ -121,83 +97,25 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
+                  "pm.test('Status code is 200 or 404', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
                   "});",
                   "",
-                  "pm.test('Response contains required statistics fields', function () {",
+                  "pm.test('Response contains success flag and message', function () {",
                   "    let jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('totalPatients');",
-                  "    pm.expect(jsonData).to.have.property('totalDoctors');",
-                  "    pm.expect(jsonData).to.have.property('totalAppointments');",
+                  "    pm.expect(jsonData).to.have.property('success');",
+                  "    pm.expect(jsonData).to.have.property('message');",
+                  "    pm.expect(jsonData).to.have.property('data');",
                   "});",
                   "",
-                  "pm.test('Statistics values are numbers', function () {",
-                  "    let jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.totalPatients).to.be.a('number');",
-                  "    pm.expect(jsonData.totalDoctors).to.be.a('number');",
-                  "});"
-                ]
-              }
-            }
-          ]
-        }
-      ],
-      "description": "Dashboard and statistics endpoints"
-    },
-    {
-      "name": "Patient READ Operations",
-      "item": [
-        {
-          "name": "Get Patient by ID",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{adminToken}}",
-                "disabled": false
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/admin/patient/edit/1",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "admin",
-                "patient",
-                "edit",
-                "1"
-              ]
-            },
-            "description": "Retrieve a specific patient by ID. Replace '1' with the actual patient ID."
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status code is 200', function () {",
-                  "    pm.response.to.have.status(200);",
-                  "});",
-                  "",
-                  "pm.test('Response contains patient object', function () {",
-                  "    let jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('id');",
-                  "    pm.expect(jsonData).to.have.property('email');",
-                  "    pm.expect(jsonData).to.have.property('firstName');",
-                  "    pm.expect(jsonData).to.have.property('lastName');",
-                  "});",
-                  "",
-                  "pm.test('Patient ID matches request', function () {",
-                  "    let jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.id).to.equal(parseInt(pm.request.url.path[3]));",
+                  "pm.test('Valid response has patient object with ID, email, firstName, lastName', function () {",
+                  "    if (pm.response.code === 200) {",
+                  "        let jsonData = pm.response.json();",
+                  "        pm.expect(jsonData.data).to.have.property('id');",
+                  "        pm.expect(jsonData.data).to.have.property('email');",
+                  "        pm.expect(jsonData.data).to.have.property('firstName');",
+                  "        pm.expect(jsonData.data).to.have.property('lastName');",
+                  "    }",
                   "});"
                 ]
               }
@@ -211,7 +129,7 @@
       "name": "Patient CREATE Operations",
       "item": [
         {
-          "name": "Create New Patient (via Dashboard)",
+          "name": "POST Create New Patient",
           "request": {
             "method": "POST",
             "header": [
@@ -227,20 +145,20 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"patient.new@example.com\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"address\": \"123 Health Street, Medical City, MC 12345\",\n  \"password\": \"SecurePassword123!\",\n  \"phone\": \"+1-555-0123\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"medicalHistory\": \"No significant medical history\",\n  \"avatar\": \"https://example.com/avatars/patient1.jpg\"\n}"
+              "raw": "{\n  \"email\": \"newpatient@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"address\": \"123 Main Street, Health City, HC 12345\",\n  \"phone\": \"+1-555-1234\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"medicalHistory\": \"No significant medical history\",\n  \"avatar\": \"https://example.com/avatars/default.jpg\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/admin/patient/create",
+              "raw": "{{baseUrl}}/admin/api/patients",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "admin",
-                "patient",
-                "create"
+                "api",
+                "patients"
               ]
             },
-            "description": "Create a new patient record (if endpoint is available)"
+            "description": "Create a new patient. Email and password are required fields. Returns 201 on success, 400 on validation error."
           },
           "response": [],
           "event": [
@@ -248,21 +166,78 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status code is 201 or 200', function () {",
-                  "    pm.expect([200, 201]).to.include(pm.response.code);",
+                  "pm.test('Status code is 201 (Created)', function () {",
+                  "    pm.response.to.have.status(201);",
                   "});",
                   "",
-                  "pm.test('Response contains patient ID', function () {",
+                  "pm.test('Response indicates successful creation', function () {",
                   "    let jsonData = pm.response.json();",
-                  "    pm.expect(jsonData).to.have.property('id');",
-                  "    if (jsonData.id) {",
-                  "        pm.globals.set('patientId', jsonData.id);",
-                  "    }",
+                  "    pm.expect(jsonData.success).to.equal(true);",
+                  "    pm.expect(jsonData.message).to.include('created');",
                   "});",
                   "",
-                  "pm.test('Patient email matches request', function () {",
+                  "pm.test('Response contains created patient object with ID', function () {",
                   "    let jsonData = pm.response.json();",
-                  "    pm.expect(jsonData.email).to.equal('patient.new@example.com');",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('email');",
+                  "    pm.expect(jsonData.data.email).to.equal('newpatient@example.com');",
+                  "});",
+                  "",
+                  "pm.test('Save patient ID for later use', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.environment.set('patientId', jsonData.data.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST Create Patient - Missing Email (Error)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "disabled": false
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"password\": \"SecurePassword123!\",\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/api/patients",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "api",
+                "patients"
+              ]
+            },
+            "description": "Test validation error when email is missing. Should return 400."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400 (Bad Request)', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Response indicates validation error', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(false);",
+                  "    pm.expect(jsonData.message).to.include('Email').or.to.include('required');",
                   "});"
                 ]
               }
@@ -276,9 +251,9 @@
       "name": "Patient UPDATE Operations",
       "item": [
         {
-          "name": "Update Patient Information",
+          "name": "PUT Update Patient Information",
           "request": {
-            "method": "POST",
+            "method": "PUT",
             "header": [
               {
                 "key": "Authorization",
@@ -292,21 +267,21 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"id\": 1,\n  \"email\": \"patient.updated@example.com\",\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"address\": \"456 Wellness Avenue, Health City, HC 67890\",\n  \"phone\": \"+1-555-9876\",\n  \"dateOfBirth\": \"1992-03-20\",\n  \"medicalHistory\": \"Treated for diabetes in 2020\",\n  \"avatar\": \"https://example.com/avatars/patient1-updated.jpg\"\n}"
+              "raw": "{\n  \"email\": \"patient.updated@example.com\",\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith Updated\",\n  \"address\": \"456 Wellness Avenue, Health City, HC 67890\",\n  \"phone\": \"+1-555-9876\",\n  \"dateOfBirth\": \"1992-03-20\",\n  \"medicalHistory\": \"Treated for diabetes in 2020\",\n  \"avatar\": \"https://example.com/avatars/patient-updated.jpg\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/admin/patient/update/info",
+              "raw": "{{baseUrl}}/admin/api/patients/{{patientId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "admin",
-                "patient",
-                "update",
-                "info"
+                "api",
+                "patients",
+                "{{patientId}}"
               ]
             },
-            "description": "Update patient information (excluding password). Password is preserved from existing record."
+            "description": "Update patient information (excluding password). All fields are optional - only provided fields are updated."
           },
           "response": [],
           "event": [
@@ -318,9 +293,16 @@
                   "    pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('Response indicates success', function () {",
-                  "    let responseText = pm.response.text();",
-                  "    pm.expect(responseText).to.include('success').or.to.include('updated').or.to.include('Success');",
+                  "pm.test('Response indicates successful update', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(true);",
+                  "    pm.expect(jsonData.message).to.include('updated');",
+                  "});",
+                  "",
+                  "pm.test('Updated patient data is returned', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data).to.have.property('id');",
+                  "    pm.expect(jsonData.data).to.have.property('lastName', 'Smith Updated');",
                   "});"
                 ]
               }
@@ -328,9 +310,9 @@
           ]
         },
         {
-          "name": "Update Patient Password",
+          "name": "PUT Update Patient Password",
           "request": {
-            "method": "POST",
+            "method": "PUT",
             "header": [
               {
                 "key": "Authorization",
@@ -339,33 +321,27 @@
               },
               {
                 "key": "Content-Type",
-                "value": "application/x-www-form-urlencoded"
+                "value": "application/json"
               }
             ],
             "body": {
-              "mode": "urlencoded",
-              "urlencoded": [
-                {
-                  "key": "newPassword",
-                  "value": "NewSecurePassword456!",
-                  "type": "text"
-                }
-              ]
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"NewSecurePassword456!\"\n}"
             },
             "url": {
-              "raw": "{{baseUrl}}/admin/patient/update/password/1",
+              "raw": "{{baseUrl}}/admin/api/patients/{{patientId}}/password",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "admin",
-                "patient",
-                "update",
-                "password",
-                "1"
+                "api",
+                "patients",
+                "{{patientId}}",
+                "password"
               ]
             },
-            "description": "Update password for a specific patient by ID. Replace '1' with actual patient ID."
+            "description": "Update patient password. Only the password endpoint accepts password updates."
           },
           "response": [],
           "event": [
@@ -377,9 +353,63 @@
                   "    pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('Response indicates password updated', function () {",
-                  "    let responseText = pm.response.text();",
-                  "    pm.expect(responseText).to.include('success').or.to.include('updated').or.to.include('Success').or.to.include('password');",
+                  "pm.test('Response indicates successful password update', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(true);",
+                  "    pm.expect(jsonData.message).to.include('password').and.to.include('updated');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT Update Patient - Not Found (Error)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "disabled": false
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/api/patients/99999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "api",
+                "patients",
+                "99999"
+              ]
+            },
+            "description": "Test 404 error when patient ID does not exist."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404 (Not Found)', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Response indicates patient not found', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(false);",
+                  "    pm.expect(jsonData.message).to.include('not found');",
                   "});"
                 ]
               }
@@ -393,9 +423,9 @@
       "name": "Patient DELETE Operations",
       "item": [
         {
-          "name": "Delete Patient by ID",
+          "name": "DELETE Patient by ID",
           "request": {
-            "method": "POST",
+            "method": "DELETE",
             "header": [
               {
                 "key": "Authorization",
@@ -408,18 +438,18 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/admin/patient/delete/1",
+              "raw": "{{baseUrl}}/admin/api/patients/{{patientId}}",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "admin",
-                "patient",
-                "delete",
-                "1"
+                "api",
+                "patients",
+                "{{patientId}}"
               ]
             },
-            "description": "Delete a patient record by ID. Replace '1' with actual patient ID. This operation is irreversible."
+            "description": "Delete a patient record by ID. This operation is irreversible. Returns 200 on success, 404 if not found."
           },
           "response": [],
           "event": [
@@ -427,15 +457,63 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('Status code is 200 or 204', function () {",
-                  "    pm.expect([200, 204]).to.include(pm.response.code);",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
                   "});",
                   "",
-                  "pm.test('Response indicates deletion success', function () {",
-                  "    if (pm.response.code === 200) {",
-                  "        let responseText = pm.response.text();",
-                  "        pm.expect(responseText).to.include('success').or.to.include('deleted').or.to.include('Success');",
-                  "    }",
+                  "pm.test('Response indicates successful deletion', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(true);",
+                  "    pm.expect(jsonData.message).to.include('deleted');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "DELETE Patient - Not Found (Error)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{adminToken}}",
+                "disabled": false
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/api/patients/99999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "api",
+                "patients",
+                "99999"
+              ]
+            },
+            "description": "Test 404 error when patient ID does not exist."
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 404 (Not Found)', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "",
+                  "pm.test('Response indicates patient not found', function () {",
+                  "    let jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.success).to.equal(false);",
+                  "    pm.expect(jsonData.message).to.include('not found');",
                   "});"
                 ]
               }
@@ -477,7 +555,7 @@
       "key": "adminToken",
       "value": "",
       "type": "string",
-      "description": "Admin authentication token. Set this after successful login via the 'Set Admin Token' request."
+      "description": "Admin authentication token. Set this after successful login via the admin authentication endpoint."
     },
     {
       "key": "patientId",
