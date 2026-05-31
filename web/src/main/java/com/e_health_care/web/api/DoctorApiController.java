@@ -42,7 +42,7 @@ public class DoctorApiController {
         if (token != null) {
             response.setHeader("Set-Cookie",
                     "jwt-doctor-token=" + token +
-                            "; Path=/; HttpOnly; Max-Age=86400; SameSite=Lax");
+                            "; Pa   th=/; HttpOnly; Max-Age=86400; SameSite=Lax");
 //            return ResponseEntity.ok(Map.of("message", "Login successful"));
             return ResponseEntity.ok(Map.of("message", "Login successful", "token", token));
 
@@ -93,62 +93,38 @@ public class DoctorApiController {
         System.out.println(">>> ENTER DOCTOR PROFILE <<<");
 
         try {
-
-            Authentication authentication =
-                    SecurityContextHolder
-                            .getContext()
-                            .getAuthentication();
-
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             System.out.println("AUTH = " + authentication);
-            
 
             if (authentication == null
                     || authentication instanceof AnonymousAuthenticationToken
                     || !authentication.isAuthenticated()) {
-
-                return ResponseEntity
-                        .status(401)
-                        .body(Map.of("error", "Unauthorized"));
+                return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
             }
 
             String email = authentication.getName();
-
             System.out.println("EMAIL = " + email);
 
-            // LẤY TRỰC TIẾP TỪ DB
-            Doctor doctor =
-                    doctorRepository.findByEmail(email);
-
+            Doctor doctor = doctorRepository.findByEmail(email);
             if (doctor == null) {
-
-                return ResponseEntity
-                        .status(404)
-                        .body(Map.of("error", "Doctor not found"));
+                return ResponseEntity.status(404).body(Map.of("error", "Doctor not found"));
             }
 
-            // TEST JSON THỦ CÔNG
-            return ResponseEntity.ok(
-                    Map.of(
-                            "id", doctor.getId(),
-                            "email", doctor.getEmail(),
-                            "firstName", doctor.getFirstName(),
-                            "lastName", doctor.getLastName(),
-                            "field", doctor.getField(),
-                            "phone", doctor.getPhone(),
-                            "address", doctor.getAddress()
-                    )
-            );
+            DoctorDTO dto = new DoctorDTO();
+            dto.setId(doctor.getId());
+            dto.setEmail(doctor.getEmail());
+            dto.setFirstName(doctor.getFirstName());
+            dto.setLastName(doctor.getLastName());
+            dto.setField(doctor.getField());
+            dto.setPhone(doctor.getPhone());
+            dto.setAddress(doctor.getAddress());
+            dto.setAvatar(doctor.getAvatar());
+
+            return ResponseEntity.ok(dto);
 
         } catch (Exception e) {
-
             e.printStackTrace();
-
-            return ResponseEntity
-                    .status(500)
-                    .body(Map.of(
-                            "error",
-                            e.getMessage()
-                    ));
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
 
