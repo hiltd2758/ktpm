@@ -1,207 +1,348 @@
 package com.e_health_care.web.admin.controller;
 
-import com.e_health_care.web.admin.model.Admin;
-import com.e_health_care.web.admin.repository.AdminRepository;
-import com.e_health_care.web.admin.service.AdminManagementService; // NEW
-import com.e_health_care.web.doctor.model.Doctor;
-import com.e_health_care.web.doctor.repository.DoctorRepository;
+import com.e_health_care.web.admin.dto.*;
+import com.e_health_care.web.admin.service.AdminManagementService;
 import com.e_health_care.web.patient.model.Patient;
 import com.e_health_care.web.patient.repository.PatientRepository;
-
-import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute; // NEW
-import org.springframework.web.bind.annotation.PathVariable; // NEW
-import org.springframework.web.bind.annotation.PostMapping; // NEW
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes; // NEW
-
-import java.security.Principal;
-import java.util.List;
-import com.e_health_care.web.patient.service.PatientAppointmentService;
-import com.e_health_care.web.patient.model.Appointment;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
-@Controller
-
-@RequestMapping("/admin")
+/**
+ * REST API Controller for Patient Management
+ * 
+ * Provides JSON API endpoints for CRUD operations on patients.
+ * This is a new API layer separate from the HTML view-based AdminDashboardController.
+ * 
+ * Base URL: /admin/api
+ * 
+ * Endpoints:
+ * - GET    /patients              - Get all patients
+ * - GET    /patients/{id}         - Get patient by ID
+ * - POST   /patients              - Create new patient
+ * - PUT    /patients/{id}         - Update patient info
+ * - PUT    /patients/{id}/password - Update patient password
+ * - DELETE /patients/{id}         - Delete patient
+ */
+@RestController
+@RequestMapping("/admin/api")
 public class AdminDashboardController {
-
-    @Autowired
-    private DoctorRepository doctorRepository;
 
     @Autowired
     private PatientRepository patientRepository;
 
     @Autowired
-    private AdminRepository adminRepository;
-    
-    // NEW SERVICE INJECTION
+    private AdminManagementService adminManagementService;
+
     @Autowired
-    private AdminManagementService adminManagementService; 
+    private PasswordEncoder passwordEncoder;
 
-    private Admin getCurrentAdmin(Principal principal) {
-        if (principal == null) return null;
-        return adminRepository.findByEmail(principal.getName());
-    }
-
-    // Existing Dashboard Method
-    @GetMapping("/dashboard")
-    public String showDashboard(Model model, HttpServletRequest request, Principal principal) {
-        Admin admin = getCurrentAdmin(principal);
-        if (admin == null) return "redirect:admin/login";
-        List<Doctor> doctors = doctorRepository.findAll();
-        List<Patient> patients = patientRepository.findAll();
-        model.addAttribute("doctors", doctors);
-        model.addAttribute("patients", patients);
-        model.addAttribute("adminToken", request.getAttribute("adminToken"));
-        model.addAttribute("admin", admin);
-        return "admin/admin-dashboard";
-    }
-
-    // --- DOCTOR MANAGEMENT ENDPOINTS ---
-
-    // Delete Doctor
-    @PostMapping("/doctor/delete/{id}")
-    public String deleteDoctor(@PathVariable long id, RedirectAttributes redirectAttributes) {
+    /**
+     * GET /admin/api/patients
+     * 
+     * Retrieve all patients for dashboard display
+     * 
+     * @return ResponseEntity with status 200 and list of patients
+     */
+    @GetMapping("/patients")
+    public ResponseEntity<?> getAllPatients() {
         try {
-            adminManagementService.deleteDoctor(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Doctor with ID " + id + " deleted successfully.");
+            List<Patient> patients = patientRepository.findAll();
+            
+            // Use HashMap to safely handle potential null values
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Patients retrieved successfully");
+            response.put("data", patients);
+            
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting doctor with ID " + id + ".");
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "message", "Error retrieving patients: " + e.getMessage(),
+                "data", (Object) null
+            ));
         }
-        return "redirect:/admin/dashboard";
     }
 
-    // Show Doctor Edit Form
-    @GetMapping("/doctor/edit/{id}")
-    public String showEditDoctorForm(@PathVariable long id, Model model, RedirectAttributes redirectAttributes) {
-        return adminManagementService.getDoctorById(id).map(doctor -> {
-            model.addAttribute("doctor", doctor);
-            return "admin/edit-doctor";
-        }).orElseGet(() -> {
-            redirectAttributes.addFlashAttribute("errorMessage", "Doctor not found.");
-            return "redirect:/admin/dashboard";
-        });
-    }
-    
-    // Handle Doctor Info Update (Non-password fields)
-    @PostMapping("/doctor/update/info")
-    public String updateDoctorInformation(@ModelAttribute Doctor doctor, RedirectAttributes redirectAttributes) {
+    /**
+     * GET /admin/api/patients/{id}
+     * 
+     * Retrieve a specific patient by ID
+     * 
+     * @param id Patient ID
+     * @return ResponseEntity with status 200 if found, 404 if not found
+     */
+    @GetMapping("/patients/{id}")
+    public ResponseEntity<?> getPatientById(@PathVariable long id) {
         try {
-            // Fetch existing doctor to preserve password and role
-            Doctor existingDoctor = adminManagementService.getDoctorById(doctor.getId()).orElse(null);
-            if (existingDoctor != null) {
-                doctor.setPassword(existingDoctor.getPassword());
-                doctor.setROLE(existingDoctor.getROLE());
-                adminManagementService.updateDoctorInformation(doctor);
-                redirectAttributes.addFlashAttribute("successMessage", "Doctor information updated successfully.");
+            var optionalPatient = adminManagementService.getPatientById(id);
+            
+            if (optionalPatient.isPresent()) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("message", "Patient retrieved successfully");
+                response.put("data", optionalPatient.get());
+                return ResponseEntity.ok(response);
             } else {
-                 redirectAttributes.addFlashAttribute("errorMessage", "Doctor not found.");
+                return ResponseEntity.status(404).body(Map.of(
+                    "success", false,
+                    "message", "Patient not found with ID: " + id,
+                    "data", (Object) null
+                ));
             }
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error updating doctor information.");
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "message", "Error retrieving patient: " + e.getMessage(),
+                "data", (Object) null
+            ));
         }
-        return "redirect:/admin/dashboard";
     }
 
-    // Handle Doctor Password Update
-    @PostMapping("/doctor/update/password/{id}")
-    public String updateDoctorPassword(@PathVariable long id, @ModelAttribute("newPassword") String newPassword, RedirectAttributes redirectAttributes) {
-        if (adminManagementService.updateDoctorPassword(id, newPassword)) {
-            redirectAttributes.addFlashAttribute("successMessage", "Doctor password updated successfully.");
-        } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Doctor not found or error updating password.");
-        }
-        // Redirect back to the edit page to show status
-        return "redirect:/admin/doctor/edit/" + id;
-    }
-
-
-    // --- PATIENT MANAGEMENT ENDPOINTS ---
-
-    // Delete Patient
-    @PostMapping("/patient/delete/{id}")
-    public String deletePatient(@PathVariable long id, RedirectAttributes redirectAttributes) {
+    /**
+     * POST /admin/api/patients
+     * 
+     * Create a new patient
+     * 
+     * @param dto PatientCreateDTO containing patient data
+     * @return ResponseEntity with status 201 if created, 400 if validation fails
+     */
+    @PostMapping("/patients")
+    public ResponseEntity<?> createPatient(@RequestBody PatientCreateDTO dto) {
         try {
+            // Validate DTO not null
+            if (dto == null) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Request body cannot be empty",
+                    "data", (Object) null
+                ));
+            }
+
+            // Validation: Check required fields
+            if (dto.getEmail() == null || dto.getEmail().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Email is required",
+                    "data", (Object) null
+                ));
+            }
+
+            if (dto.getPassword() == null || dto.getPassword().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Password is required",
+                    "data", (Object) null
+                ));
+            }
+
+            // Check if email already exists
+            if (patientRepository.findByEmail(dto.getEmail()).isPresent()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Email already exists: " + dto.getEmail(),
+                    "data", (Object) null
+                ));
+            }
+
+            // Create new patient
+            Patient patient = new Patient();
+            patient.setEmail(dto.getEmail());
+            patient.setFirstName(dto.getFirstName() != null ? dto.getFirstName() : "");
+            patient.setLastName(dto.getLastName() != null ? dto.getLastName() : "");
+            patient.setAddress(dto.getAddress() != null ? dto.getAddress() : "");
+            patient.setPhone(dto.getPhone() != null ? dto.getPhone() : "");
+            patient.setDateOfBirth(dto.getDateOfBirth());
+            patient.setMedicalHistory(dto.getMedicalHistory() != null ? dto.getMedicalHistory() : "");
+            patient.setAvatar(dto.getAvatar() != null ? dto.getAvatar() : "");
+            patient.setPassword(passwordEncoder.encode(dto.getPassword()));
+
+            Patient savedPatient = patientRepository.save(patient);
+
+            // Use HashMap to safely handle potential null values
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Patient created successfully");
+            response.put("data", savedPatient);
+
+            return ResponseEntity.status(201).body(response);
+        } catch (NullPointerException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "Invalid request format: " + e.getMessage(),
+                "data", (Object) null
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "message", "Error creating patient: " + e.getMessage(),
+                "data", (Object) null
+            ));
+        }
+    }
+
+    /**
+     * PUT /admin/api/patients/{id}
+     * 
+     * Update patient information (excluding password)
+     * 
+     * @param id Patient ID
+     * @param dto PatientUpdateDTO containing updated data
+     * @return ResponseEntity with status 200 if updated, 404 if not found
+     */
+    @PutMapping("/patients/{id}")
+    public ResponseEntity<?> updatePatient(
+            @PathVariable long id,
+            @RequestBody PatientUpdateDTO dto) {
+        try {
+            // Validate DTO not null
+            if (dto == null) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Request body cannot be empty",
+                    "data", (Object) null
+                ));
+            }
+
+            var optionalPatient = adminManagementService.getPatientById(id);
+            if (optionalPatient.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of(
+                    "success", false,
+                    "message", "Patient not found with ID: " + id,
+                    "data", (Object) null
+                ));
+            }
+
+            Patient patient = optionalPatient.get();
+            
+            // Update fields
+            if (dto.getEmail() != null && !dto.getEmail().trim().isEmpty()) {
+                // Check if email is already used by another patient
+                var existingEmail = patientRepository.findByEmail(dto.getEmail());
+                if (existingEmail.isPresent() && existingEmail.get().getId() != id) {
+                    return ResponseEntity.badRequest().body(Map.of(
+                        "success", false,
+                        "message", "Email already used by another patient: " + dto.getEmail(),
+                        "data", (Object) null
+                    ));
+                }
+                patient.setEmail(dto.getEmail());
+            }
+            if (dto.getFirstName() != null) patient.setFirstName(dto.getFirstName());
+            if (dto.getLastName() != null) patient.setLastName(dto.getLastName());
+            if (dto.getAddress() != null) patient.setAddress(dto.getAddress());
+            if (dto.getPhone() != null) patient.setPhone(dto.getPhone());
+            if (dto.getDateOfBirth() != null) patient.setDateOfBirth(dto.getDateOfBirth());
+            if (dto.getMedicalHistory() != null) patient.setMedicalHistory(dto.getMedicalHistory());
+            if (dto.getAvatar() != null) patient.setAvatar(dto.getAvatar());
+
+            Patient updatedPatient = adminManagementService.updatePatientInformation(patient);
+
+            // Use HashMap to safely handle potential null values
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "Patient updated successfully");
+            response.put("data", updatedPatient);
+
+            return ResponseEntity.ok(response);
+        } catch (NullPointerException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "Invalid request format: " + e.getMessage(),
+                "data", (Object) null
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "message", "Error updating patient: " + e.getMessage(),
+                "data", (Object) null
+            ));
+        }
+    }
+
+    /**
+     * PUT /admin/api/patients/{id}/password
+     * 
+     * Update patient password
+     * 
+     * @param id Patient ID
+     * @param dto PasswordUpdateDTO containing new password
+     * @return ResponseEntity with status 200 if updated, 404 if not found
+     */
+    @PutMapping("/patients/{id}/password")
+    public ResponseEntity<?> updatePatientPassword(
+            @PathVariable long id,
+            @RequestBody PasswordUpdateDTO dto) {
+        try {
+            if (dto.getNewPassword() == null || dto.getNewPassword().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "New password is required",
+                    "data", (Object) null
+                ));
+            }
+
+            boolean updated = adminManagementService.updatePatientPassword(id, dto.getNewPassword());
+            if (!updated) {
+                return ResponseEntity.status(404).body(Map.of(
+                    "success", false,
+                    "message", "Patient not found with ID: " + id,
+                    "data", (Object) null
+                ));
+            }
+
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Patient password updated successfully",
+                "data", (Object) null
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "message", "Error updating password: " + e.getMessage(),
+                "data", (Object) null
+            ));
+        }
+    }
+
+    /**
+     * DELETE /admin/api/patients/{id}
+     * 
+     * Delete a patient
+     * 
+     * @param id Patient ID
+     * @return ResponseEntity with status 200 if deleted, 404 if not found
+     */
+    @DeleteMapping("/patients/{id}")
+    public ResponseEntity<?> deletePatient(@PathVariable long id) {
+        try {
+            var patient = adminManagementService.getPatientById(id);
+            if (patient.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of(
+                    "success", false,
+                    "message", "Patient not found with ID: " + id,
+                    "data", (Object) null
+                ));
+            }
+
             adminManagementService.deletePatient(id);
-            redirectAttributes.addFlashAttribute("successMessage", "Patient with ID " + id + " deleted successfully.");
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Patient deleted successfully",
+                "data", (Object) null
+            ));
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error deleting patient with ID " + id + ".");
+            return ResponseEntity.status(500).body(Map.of(
+                "success", false,
+                "message", "Error deleting patient: " + e.getMessage(),
+                "data", (Object) null
+            ));
         }
-        return "redirect:/admin/dashboard";
-    }
-
-    // Show Patient Edit Form
-    @GetMapping("/patient/edit/{id}")
-    public String showEditPatientForm(@PathVariable long id, Model model, RedirectAttributes redirectAttributes) {
-        return adminManagementService.getPatientById(id).map(patient -> {
-            model.addAttribute("patient", patient);
-            return "admin/edit-patient";
-        }).orElseGet(() -> {
-            redirectAttributes.addFlashAttribute("errorMessage", "Patient not found.");
-            return "redirect:/admin/dashboard";
-        });
-    }
-
-    // Handle Patient Info Update (Non-password fields)
-    @PostMapping("/patient/update/info")
-    public String updatePatientInformation(@ModelAttribute Patient patient, RedirectAttributes redirectAttributes) {
-        try {
-            // Fetch existing patient to preserve password
-            Patient existingPatient = adminManagementService.getPatientById(patient.getId()).orElse(null);
-            if (existingPatient != null) {
-                patient.setPassword(existingPatient.getPassword());
-                adminManagementService.updatePatientInformation(patient);
-                redirectAttributes.addFlashAttribute("successMessage", "Patient information updated successfully.");
-            } else {
-                redirectAttributes.addFlashAttribute("errorMessage", "Patient not found.");
-            }
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Error updating patient information.");
-        }
-        return "redirect:/admin/dashboard";
-    }
-
-    // Handle Patient Password Update
-    @PostMapping("/patient/update/password/{id}")
-    public String updatePatientPassword(@PathVariable long id, @ModelAttribute("newPassword") String newPassword, RedirectAttributes redirectAttributes) {
-        if (adminManagementService.updatePatientPassword(id, newPassword)) {
-            redirectAttributes.addFlashAttribute("successMessage", "Patient password updated successfully.");
-        } else {
-            redirectAttributes.addFlashAttribute("errorMessage", "Patient not found or error updating password.");
-        }
-        // Redirect back to the edit page to show status
-        return "redirect:/admin/patient/edit/" + id;
-    }
-    @Autowired
-    private PatientAppointmentService appointmentService;
-
-    @GetMapping("/statistics")
-    public ResponseEntity<?> getStatistics() {
-        long totalDoctors = doctorRepository.count();
-        long totalPatients = patientRepository.count();
-
-        List<Appointment> allAppointments = appointmentService.getAllAppointments();
-        long pending = allAppointments.stream()
-                .filter(a -> "PENDING".equals(a.getStatus())).count();
-        long confirmed = allAppointments.stream()
-                .filter(a -> "CONFIRMED".equals(a.getStatus())).count();
-        long cancelled = allAppointments.stream()
-                .filter(a -> "CANCELLED".equals(a.getStatus())).count();
-
-        return ResponseEntity.ok(Map.of(
-                "totalDoctors", totalDoctors,
-                "totalPatients", totalPatients,
-                "totalAppointments", allAppointments.size(),
-                "pending", pending,
-                "confirmed", confirmed,
-                "cancelled", cancelled
-        ));
     }
 }
