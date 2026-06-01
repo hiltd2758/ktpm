@@ -1,4 +1,4 @@
-```sql
+
 -- MySQL dump 10.13  Distrib 8.0.42, for Win64 (x86_64)
 --
 -- Host: localhost    Database: e_health_care
@@ -96,4 +96,3 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2025-11-25 22:08:20
-```
