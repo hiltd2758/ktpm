@@ -102,7 +102,7 @@ jobs:
       # ── 6. Run Newman ────────────────────────────────────────────────────
       - name: Run Newman
         run: |
-          newman run postman/EHealthCare_Complete.postman_collection.json \
+          newman run postman/E-Health Care API.postman_collection.json \
             --environment /tmp/ehc-env.json \
             --reporters cli,htmlextra \
             --reporter-htmlextra-export reports/newman-report.html \
