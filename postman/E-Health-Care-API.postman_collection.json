@@ -1,8 +1,8 @@
-{
+﻿{
   "info": {
     "_postman_id": "4c8ddf4f-0ad3-4518-8dfe-6b7da581f69d",
     "name": "E-Health Care API",
-    "description": "E-Health Care — Complete Postman Collection v2.1\n\nGenerated from Spring Boot source code analysis.\n\nArchitecture:\n- Backend: Spring Boot on port 8080\n- Authentication: JWT Bearer Token (3 separate tokens per role)\n- Tokens: sent via Authorization: Bearer <token> header\n- Cookies: also set by server (jwt-admin-token, jwt-doctor-token, jwt-patient-token)\n\nSetup:\n1. Import EHC_Environment.json into Postman Environments\n2. Set base_url = http://localhost:8080\n3. Run Login requests — tokens are auto-saved via test scripts\n4. All protected requests reference {{admin_token}}, {{doctor_token}}, {{patient_token}}\n\nFolders:\n- Admin Auth        : /admin/api/auth\n- Admin Management  : /api/admin\n- Admin Patient CRUD: /admin/api/patients\n- Doctor            : /api/doctor\n- Patient           : /api/patient\n- Patient Appointment: /api/patient/appointment\n- Public            : /api",
+    "description": "E-Health Care â€” Complete Postman Collection v2.1\n\nGenerated from Spring Boot source code analysis.\n\nArchitecture:\n- Backend: Spring Boot on port 8080\n- Authentication: JWT Bearer Token (3 separate tokens per role)\n- Tokens: sent via Authorization: Bearer <token> header\n- Cookies: also set by server (jwt-admin-token, jwt-doctor-token, jwt-patient-token)\n\nSetup:\n1. Import EHC_Environment.json into Postman Environments\n2. Set base_url = http://localhost:8080\n3. Run Login requests â€” tokens are auto-saved via test scripts\n4. All protected requests reference {{admin_token}}, {{doctor_token}}, {{patient_token}}\n\nFolders:\n- Admin Auth        : /admin/api/auth\n- Admin Management  : /api/admin\n- Admin Patient CRUD: /admin/api/patients\n- Doctor            : /api/doctor\n- Patient           : /api/patient\n- Patient Appointment: /api/patient/appointment\n- Public            : /api",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "52299616",
     "_collection_link": "https://go.postman.co/collection/52299616-4c8ddf4f-0ad3-4518-8dfe-6b7da581f69d?source=collection_link"
@@ -51,7 +51,7 @@
                   "_postman_previewlanguage": "Text",
                   "header": [],
                   "cookie": [],
-                  "body": "{\n  \"message\": \"Xóa doctor thành công\"\n}"
+                  "body": "{\n  \"message\": \"XÃ³a doctor thÃ nh cÃ´ng\"\n}"
                 },
                 {
                   "name": "400 Bad Request",
@@ -134,7 +134,7 @@
                   "_postman_previewlanguage": "Text",
                   "header": [],
                   "cookie": [],
-                  "body": "{\n  \"message\": \"Cập nhật doctor thành công\"\n}"
+                  "body": "{\n  \"message\": \"Cáº­p nháº­t doctor thÃ nh cÃ´ng\"\n}"
                 },
                 {
                   "name": "404 Not Found",
@@ -228,7 +228,7 @@
                   "_postman_previewlanguage": "Text",
                   "header": [],
                   "cookie": [],
-                  "body": "{\n  \"message\": \"Đổi mật khẩu doctor thành công\"\n}"
+                  "body": "{\n  \"message\": \"Äá»•i máº­t kháº©u doctor thÃ nh cÃ´ng\"\n}"
                 }
               ]
             }
@@ -281,7 +281,7 @@
                   "_postman_previewlanguage": "Text",
                   "header": [],
                   "cookie": [],
-                  "body": "{\n  \"message\": \"Xóa patient thành công\"\n}"
+                  "body": "{\n  \"message\": \"XÃ³a patient thÃ nh cÃ´ng\"\n}"
                 }
               ]
             },
@@ -301,7 +301,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"id\": 1,\n  \"email\": \"newpatient@example.com\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\",\n  \"phone\": \"0912345678\",\n  \"address\": \"Ha Noi\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"medicalHistory\": \"No significant history\"\n}",
+                  "raw": "{\n  \"id\": 1,\n  \"email\": \"{{patient_email}}\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\",\n  \"phone\": \"0912345678\",\n  \"address\": \"Ha Noi\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"medicalHistory\": \"No significant history\"\n}",
                   "options": {
                     "raw": {
                       "language": "json"
@@ -332,7 +332,7 @@
                     ],
                     "body": {
                       "mode": "raw",
-                      "raw": "{\n  \"id\": 1,\n  \"email\": \"newpatient@example.com\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\"\n}"
+                      "raw": "{\n  \"id\": 1,\n  \"email\": \"{{patient_email}}\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\"\n}"
                     },
                     "url": {
                       "raw": ""
@@ -343,7 +343,7 @@
                   "_postman_previewlanguage": "Text",
                   "header": [],
                   "cookie": [],
-                  "body": "{\n  \"message\": \"Cập nhật patient thành công\"\n}"
+                  "body": "{\n  \"message\": \"Cáº­p nháº­t patient thÃ nh cÃ´ng\"\n}"
                 }
               ]
             },
@@ -412,7 +412,7 @@
                   "_postman_previewlanguage": "Text",
                   "header": [],
                   "cookie": [],
-                  "body": "{\n  \"message\": \"Đổi mật khẩu patient thành công\"\n}"
+                  "body": "{\n  \"message\": \"Äá»•i máº­t kháº©u patient thÃ nh cÃ´ng\"\n}"
                 }
               ]
             }
@@ -448,7 +448,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@ehealth.com\",\n  \"password\": \"password123\"\n}",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -475,7 +475,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"admin@ehealth.com\",\n  \"password\": \"password123\"\n}"
+                  "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}"
                 },
                 "url": {
                   "raw": ""
@@ -568,7 +568,7 @@
               "_postman_previewlanguage": "Text",
               "header": [],
               "cookie": [],
-              "body": "{\n  \"doctors\": [\n    {\n      \"id\": 1,\n      \"email\": \"doctor01@example.com\",\n      \"firstName\": \"Nguyen\",\n      \"lastName\": \"Van A\",\n      \"field\": \"Cardiology\",\n      \"phone\": \"0901234567\",\n      \"address\": \"Ho Chi Minh City\"\n    }\n  ],\n  \"patients\": [\n    {\n      \"id\": 1,\n      \"email\": \"newpatient@example.com\",\n      \"firstName\": \"Tran\",\n      \"lastName\": \"Thi B\",\n      \"phone\": \"0912345678\"\n    }\n  ]\n}"
+              "body": "{\n  \"doctors\": [\n    {\n      \"id\": 1,\n      \"email\": \"doctor01@example.com\",\n      \"firstName\": \"Nguyen\",\n      \"lastName\": \"Van A\",\n      \"field\": \"Cardiology\",\n      \"phone\": \"0901234567\",\n      \"address\": \"Ho Chi Minh City\"\n    }\n  ],\n  \"patients\": [\n    {\n      \"id\": 1,\n      \"email\": \"{{patient_email}}\",\n      \"firstName\": \"Tran\",\n      \"lastName\": \"Thi B\",\n      \"phone\": \"0912345678\"\n    }\n  ]\n}"
             }
           ]
         },
@@ -686,7 +686,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"doctor01@ehealth.com\",\n  \"password\": \"password123\"\n}",
+              "raw": "{\n  \"email\": \"{{doctor_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -713,7 +713,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"doctor01@ehealth.com\",\n  \"password\": \"password123\"\n}"
+                  "raw": "{\n  \"email\": \"{{doctor_email}}\",\n  \"password\": \"{{admin_password}}\"\n}"
                 },
                 "url": {
                   "raw": ""
@@ -831,7 +831,7 @@
               "_postman_previewlanguage": "Text",
               "header": [],
               "cookie": [],
-              "body": "{\n  \"id\": 1,\n  \"email\": \"doctor01@ehealth.com\",\n  \"firstName\": \"Dai\",\n  \"lastName\": \"Phi\",\n  \"field\": \"Cardiology\",\n  \"phone\": \"0909123456\",\n  \"address\": \"Ho Chi Minh City\",\n  \"avatar\": \"default-avatar.png\",\n  \"role\": \"doctor\"\n}"
+              "body": "{\n  \"id\": 1,\n  \"email\": \"{{doctor_email}}\",\n  \"firstName\": \"Dai\",\n  \"lastName\": \"Phi\",\n  \"field\": \"Cardiology\",\n  \"phone\": \"0909123456\",\n  \"address\": \"Ho Chi Minh City\",\n  \"avatar\": \"default-avatar.png\",\n  \"role\": \"doctor\"\n}"
             },
             {
               "name": "401 Unauthorized",
@@ -867,7 +867,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"nguyenledaiphi0252005@gmail.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"Dai\",\n  \"lastName\": \"Phi\",\n  \"phone\": \"0909123456\",\n  \"address\": \"Ho Chi Minh City\",\n  \"field\": \"Cardiology\",\n  \"avatar\": \"default-avatar.png\"\n}",
+              "raw": "{\n  \"email\": \"nguyenledaiphi0252005@gmail.com\",\n  \"password\": \"{{admin_password}}\",\n  \"firstName\": \"Dai\",\n  \"lastName\": \"Phi\",\n  \"phone\": \"0909123456\",\n  \"address\": \"Ho Chi Minh City\",\n  \"field\": \"Cardiology\",\n  \"avatar\": \"default-avatar.png\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -909,7 +909,7 @@
               "_postman_previewlanguage": "Text",
               "header": [],
               "cookie": [],
-              "body": "{\n  \"message\": \"Cập nhật hồ sơ thành công\"\n}"
+              "body": "{\n  \"message\": \"Cáº­p nháº­t há»“ sÆ¡ thÃ nh cÃ´ng\"\n}"
             }
           ]
         },
@@ -998,7 +998,7 @@
               "_postman_previewlanguage": "Text",
               "header": [],
               "cookie": [],
-              "body": "{\n  \"message\": \"Cập nhật thành công\"\n}"
+              "body": "{\n  \"message\": \"Cáº­p nháº­t thÃ nh cÃ´ng\"\n}"
             },
             {
               "name": "400 Bad Request",
@@ -1060,7 +1060,7 @@
               "_postman_previewlanguage": "Text",
               "header": [],
               "cookie": [],
-              "body": "[\n  {\n    \"id\": 1,\n    \"email\": \"newpatient@example.com\",\n    \"fullName\": \"Tran Thi B\",\n    \"firstName\": \"Tran\",\n    \"lastName\": \"Thi B\",\n    \"phone\": \"0912345678\",\n    \"address\": \"Ha Noi\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"avatar\": \"default-avatar.png\"\n  }\n]"
+              "body": "[\n  {\n    \"id\": 1,\n    \"email\": \"{{patient_email}}\",\n    \"fullName\": \"Tran Thi B\",\n    \"firstName\": \"Tran\",\n    \"lastName\": \"Thi B\",\n    \"phone\": \"0912345678\",\n    \"address\": \"Ha Noi\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"avatar\": \"default-avatar.png\"\n  }\n]"
             },
             {
               "name": "401 Unauthorized",
@@ -1117,7 +1117,7 @@
               "_postman_previewlanguage": "Text",
               "header": [],
               "cookie": [],
-              "body": "{\n  \"patient\": {\n    \"id\": 1,\n    \"email\": \"newpatient@example.com\",\n    \"firstName\": \"Tran\",\n    \"lastName\": \"Thi B\",\n    \"phone\": \"0912345678\",\n    \"address\": \"Ha Noi\",\n    \"dateOfBirth\": \"1990-05-15\"\n  },\n  \"clinicalInfo\": {\n    \"id\": 1,\n    \"patientId\": 1,\n    \"bloodType\": \"A+\",\n    \"allergies\": \"Penicillin\",\n    \"chronicDiseases\": \"Hypertension\",\n    \"familyMedicalHistory\": \"Diabetes (father)\",\n    \"lastUpdatedById\": 1,\n    \"lastUpDatedTime\": \"2026-05-01T10:00:00\"\n  }\n}"
+              "body": "{\n  \"patient\": {\n    \"id\": 1,\n    \"email\": \"{{patient_email}}\",\n    \"firstName\": \"Tran\",\n    \"lastName\": \"Thi B\",\n    \"phone\": \"0912345678\",\n    \"address\": \"Ha Noi\",\n    \"dateOfBirth\": \"1990-05-15\"\n  },\n  \"clinicalInfo\": {\n    \"id\": 1,\n    \"patientId\": 1,\n    \"bloodType\": \"A+\",\n    \"allergies\": \"Penicillin\",\n    \"chronicDiseases\": \"Hypertension\",\n    \"familyMedicalHistory\": \"Diabetes (father)\",\n    \"lastUpdatedById\": 1,\n    \"lastUpDatedTime\": \"2026-05-01T10:00:00\"\n  }\n}"
             }
           ]
         },
@@ -1179,7 +1179,7 @@
               "_postman_previewlanguage": "Text",
               "header": [],
               "cookie": [],
-              "body": "{\n  \"message\": \"Cập nhật bệnh án thành công\"\n}"
+              "body": "{\n  \"message\": \"Cáº­p nháº­t bá»‡nh Ã¡n thÃ nh cÃ´ng\"\n}"
             },
             {
               "name": "404 Not Found",
@@ -1226,7 +1226,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"newpatient@example.com\",\n  \"password\": \"securePass123\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\",\n  \"phone\": \"0912345678\",\n  \"address\": \"Ha Noi\",\n  \"dateOfBirth\": \"1995-08-20\"\n}",
+              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{patient_password}}\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\",\n  \"phone\": \"0912345678\",\n  \"address\": \"Ha Noi\",\n  \"dateOfBirth\": \"1995-08-20\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1253,7 +1253,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"newpatient@example.com\",\n  \"password\": \"securePass123\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\"\n}"
+                  "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{patient_password}}\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\"\n}"
                 },
                 "url": {
                   "raw": ""
@@ -1297,7 +1297,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"newpatient@example.com\",\n  \"password\": \"securePass123\"\n}",
+              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{patient_password}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1324,7 +1324,7 @@
                 ],
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"email\": \"newpatient@example.com\",\n  \"password\": \"securePass123\"\n}"
+                  "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{patient_password}}\"\n}"
                 },
                 "url": {
                   "raw": ""
@@ -1442,7 +1442,7 @@
               "_postman_previewlanguage": "Text",
               "header": [],
               "cookie": [],
-              "body": "{\n  \"id\": 1,\n  \"email\": \"newpatient@example.com\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\",\n  \"phone\": \"0912345678\",\n  \"address\": \"Ha Noi\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"medicalHistory\": \"None\",\n  \"avatar\": \"default-avatar.png\"\n}"
+              "body": "{\n  \"id\": 1,\n  \"email\": \"{{patient_email}}\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\",\n  \"phone\": \"0912345678\",\n  \"address\": \"Ha Noi\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"medicalHistory\": \"None\",\n  \"avatar\": \"default-avatar.png\"\n}"
             },
             {
               "name": "401 Unauthorized",
@@ -1478,7 +1478,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"newpatient@example.com\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B Updated\",\n  \"phone\": \"0912999888\",\n  \"address\": \"Ho Chi Minh City\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"medicalHistory\": \"Updated history\",\n  \"avatar\": \"default-avatar.png\"\n}",
+              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B Updated\",\n  \"phone\": \"0912999888\",\n  \"address\": \"Ho Chi Minh City\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"medicalHistory\": \"Updated history\",\n  \"avatar\": \"default-avatar.png\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1520,7 +1520,7 @@
               "_postman_previewlanguage": "Text",
               "header": [],
               "cookie": [],
-              "body": "{\n  \"message\": \"Cập nhật thành công\"\n}"
+              "body": "{\n  \"message\": \"Cáº­p nháº­t thÃ nh cÃ´ng\"\n}"
             }
           ]
         },
@@ -1608,7 +1608,7 @@
               "_postman_previewlanguage": "Text",
               "header": [],
               "cookie": [],
-              "body": "[\n  {\n    \"id\": 1,\n    \"email\": \"doctor01@ehealth.com\",\n    \"firstName\": \"Dai\",\n    \"lastName\": \"Phi\",\n    \"field\": \"Cardiology\",\n    \"phone\": \"0909123456\",\n    \"address\": \"Ho Chi Minh City\"\n  },\n  {\n    \"id\": 2,\n    \"email\": \"doctor02@example.com\",\n    \"firstName\": \"Le\",\n    \"lastName\": \"Van C\",\n    \"field\": \"Neurology\",\n    \"phone\": \"0901111222\",\n    \"address\": \"Da Nang\"\n  }\n]"
+              "body": "[\n  {\n    \"id\": 1,\n    \"email\": \"{{doctor_email}}\",\n    \"firstName\": \"Dai\",\n    \"lastName\": \"Phi\",\n    \"field\": \"Cardiology\",\n    \"phone\": \"0909123456\",\n    \"address\": \"Ho Chi Minh City\"\n  },\n  {\n    \"id\": 2,\n    \"email\": \"doctor02@example.com\",\n    \"firstName\": \"Le\",\n    \"lastName\": \"Van C\",\n    \"field\": \"Neurology\",\n    \"phone\": \"0901111222\",\n    \"address\": \"Da Nang\"\n  }\n]"
             }
           ]
         },
@@ -1670,7 +1670,7 @@
               "_postman_previewlanguage": "Text",
               "header": [],
               "cookie": [],
-              "body": "{\n  \"message\": \"Đặt lịch thành công\"\n}"
+              "body": "{\n  \"message\": \"Äáº·t lá»‹ch thÃ nh cÃ´ng\"\n}"
             },
             {
               "name": "400 Bad Request - Duplicate/Conflict",
@@ -1699,7 +1699,7 @@
               "_postman_previewlanguage": "Text",
               "header": [],
               "cookie": [],
-              "body": "{\n  \"error\": \"Lịch hẹn bị trùng. Vui lòng chọn thời gian khác.\"\n}"
+              "body": "{\n  \"error\": \"Lá»‹ch háº¹n bá»‹ trÃ¹ng. Vui lÃ²ng chá»n thá»i gian khÃ¡c.\"\n}"
             },
             {
               "name": "401 Unauthorized",
@@ -1813,7 +1813,7 @@
               "_postman_previewlanguage": "Text",
               "header": [],
               "cookie": [],
-              "body": "[\n  {\n    \"id\": 1,\n    \"email\": \"newpatient@example.com\",\n    \"fullName\": \"Tran Thi B\",\n    \"firstName\": \"Tran\",\n    \"lastName\": \"Thi B\",\n    \"phone\": \"0912345678\",\n    \"address\": \"Ha Noi\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"avatar\": \"default-avatar.png\"\n  }\n]"
+              "body": "[\n  {\n    \"id\": 1,\n    \"email\": \"{{patient_email}}\",\n    \"fullName\": \"Tran Thi B\",\n    \"firstName\": \"Tran\",\n    \"lastName\": \"Thi B\",\n    \"phone\": \"0912345678\",\n    \"address\": \"Ha Noi\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"avatar\": \"default-avatar.png\"\n  }\n]"
             }
           ]
         },
@@ -1844,7 +1844,7 @@
               "_postman_previewlanguage": "Text",
               "header": [],
               "cookie": [],
-              "body": "[\n  {\n    \"id\": 1,\n    \"email\": \"doctor01@ehealth.com\",\n    \"fullName\": \"Dai Phi\"\n  },\n  {\n    \"id\": 2,\n    \"email\": \"doctor02@example.com\",\n    \"fullName\": \"Le Van C\"\n  }\n]"
+              "body": "[\n  {\n    \"id\": 1,\n    \"email\": \"{{doctor_email}}\",\n    \"fullName\": \"Dai Phi\"\n  },\n  {\n    \"id\": 2,\n    \"email\": \"doctor02@example.com\",\n    \"fullName\": \"Le Van C\"\n  }\n]"
             }
           ]
         }
@@ -1890,3 +1890,4 @@
     }
   ]
 }
+
