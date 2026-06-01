@@ -57,7 +57,8 @@ public class ApiSecurityConfiguration {
                                 "/api/patient/register",
                                 "/api/doctor/login",
                                 "/api/admin/login",
-                                "/api/admin/generate-hash"
+                                "/api/admin/generate-hash","/api/patients",   // thêm
+                                "/api/doctors"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
