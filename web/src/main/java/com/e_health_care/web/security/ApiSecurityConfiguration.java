@@ -62,7 +62,7 @@ public class ApiSecurityConfiguration {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(doctorJwtFilter, UsernamePasswordAuthenticationFilter.class)
-                //.addFilterBefore(adminJwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(adminJwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(patientJwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
