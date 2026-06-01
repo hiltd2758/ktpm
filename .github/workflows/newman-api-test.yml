@@ -34,7 +34,7 @@ jobs:
             echo "Attempt $i/40..."
             sleep 3
             if [ $i -eq 40 ]; then
-              echo "MySQL failed to start in time"
+              echo "MySQL failed to start"
               docker compose logs mysql-local
               exit 1
             fi
@@ -68,24 +68,39 @@ jobs:
             > /tmp/springboot.log 2>&1 &
           echo "Waiting for Spring Boot to start..."
           for i in $(seq 1 60); do
-            if curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/doctors | grep -qE "^(200|401|403)"; then
-              echo "App is ready after $i attempts"
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/doctors)
+            if echo "$STATUS" | grep -qE "^(200|401|403)"; then
+              echo "App is ready after $i attempts (HTTP $STATUS)"
               break
             fi
-            echo "Attempt $i/60..."
+            echo "Attempt $i/60 (HTTP $STATUS)..."
             sleep 5
             if [ $i -eq 60 ]; then
-              echo "Spring Boot failed to start in time. Last logs:"
+              echo "Spring Boot failed to start. Logs:"
               tail -50 /tmp/springboot.log
               exit 1
             fi
           done
 
-      # ── 4. Install Newman ────────────────────────────────────────────────
+      # ── 4. Seed database (after Hibernate creates tables) ───────────────
+      - name: Seed database
+        run: |
+          docker exec mysql-local mysql -uroot -proot e_health -e "
+          INSERT IGNORE INTO admin (email, password, ROLE) VALUES
+          ('${{ secrets.ADMIN_EMAIL }}', '\$2a\$10\$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ROLE_ADMIN');
+
+          INSERT IGNORE INTO Doctor (email, password, first_name, last_name, field, phone, address, ROLE, avatar) VALUES
+          ('${{ secrets.DOCTOR_EMAIL }}', '\$2a\$10\$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Nguyen', 'Van A', 'Cardiology', '0901234567', 'Ho Chi Minh City', 'ROLE_DOCTOR', 'default-avatar.png');
+
+          INSERT IGNORE INTO Patient (email, password, first_name, last_name, phone, address, date_of_birth, medical_history, avatar) VALUES
+          ('${{ secrets.PATIENT_EMAIL }}', '\$2a\$10\$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Tran', 'Thi B', '0912345678', 'Ha Noi', '1995-08-20', 'None', 'default-avatar.png');
+          "
+
+      # ── 5. Install Newman ────────────────────────────────────────────────
       - name: Install Newman
         run: npm install -g newman newman-reporter-htmlextra
 
-      # ── 5. Prepare environment file with real credentials ────────────────
+      # ── 6. Prepare environment file ──────────────────────────────────────
       - name: Prepare environment file
         run: |
           cat > /tmp/ehc-env.json << EOF
@@ -109,7 +124,7 @@ jobs:
           }
           EOF
 
-      # ── 6. Run Newman ────────────────────────────────────────────────────
+      # ── 7. Run Newman ────────────────────────────────────────────────────
       - name: Run Newman
         run: |
           newman run postman/E-Health-Care-API.postman_collection.json \
@@ -122,7 +137,7 @@ jobs:
             --color on \
             --bail
 
-      # ── 7. Upload HTML report as artifact ───────────────────────────────
+      # ── 8. Upload HTML report as artifact ───────────────────────────────
       - name: Upload test report
         if: always()
         uses: actions/upload-artifact@v4
