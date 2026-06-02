@@ -187,17 +187,7 @@ jobs:
           SQL
           echo "✅ Database seeded successfully"
       - name: Debug - Verify seed data
-        run: |
-          docker exec mysql-local mysql -uroot -proot e_health \
-            -e "SELECT email, LEFT(password,30) FROM admin;"
-          # ── 9. Install Newman + reporters ─────────────────────
-          - name: Install Newman and reporters
-            run: |
-              npm install -g \
-                newman@6 \
-                newman-reporter-htmlextra \
-                newman-reporter-junitfull
-              echo "✅ Newman $(newman --version) installed"
+        run: docker exec mysql-local mysql -uroot -proot e_health -e "SELECT email, LEFT(password,30) FROM admin;"
 
       # ── 10. Create reports directory ───────────────────────
       - name: Prepare reports directory
