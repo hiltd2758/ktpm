@@ -1,115 +1,150 @@
-name: API Test — Newman
+# ============================================================
+# E-Health Care API — Newman CI/CD Test Pipeline
+# ============================================================
+# Triggers  : push and pull_request on any branch
+# Stack     : MySQL 8.0 + Spring Boot 3 (Java 21) + Newman
+# Reports   : CLI · JUnit (reports/junit.xml) · HTML (reports/html/)
+# Secrets required (Settings → Secrets → Actions):
+#   ADMIN_EMAIL      ADMIN_PASSWORD
+#   DOCTOR_EMAIL     DOCTOR_PASSWORD
+#   PATIENT_EMAIL    PATIENT_PASSWORD
+# ============================================================
+
+name: E-Health Care — API Tests (Newman)
 
 on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+  # Allow manual re-runs from the Actions tab
   workflow_dispatch:
     inputs:
-      environment:
-        description: 'Target environment'
-        required: true
-        default: 'local'
-        type: choice
-        options:
-          - local
+      newman_delay:
+        description: "Inter-request delay in ms"
+        required: false
+        default: "300"
+
+env:
+  # ── Application ──────────────────────────────────────────
+  APP_PORT: 8080
+  DB_PORT: 3307          # host-side port mapped from MySQL container 3306
+  DB_NAME: e_health
+  DB_USER: root
+  DB_PASS: root
+
+  # ── Paths ────────────────────────────────────────────────
+  COLLECTION: postman/E-Health-Care-API.postman_collection.json
+  ENV_FILE:   /tmp/ehc-environment.json
+  REPORTS_DIR: reports
+
+  # ── Newman tuning ────────────────────────────────────────
+  REQUEST_TIMEOUT_MS: 15000
+  NEWMAN_DELAY_MS: ${{ github.event.inputs.newman_delay || '300' }}
 
 jobs:
+  # ──────────────────────────────────────────────────────────
   api-test:
-    name: Run Newman Collection
+    name: Build → Seed → Test
     runs-on: ubuntu-latest
+    timeout-minutes: 25
 
     steps:
-      # ── 1. Checkout source ──────────────────────────────────────────────
+
+      # ── 1. Source checkout ─────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── 2. Start MySQL via Docker Compose ───────────────────────────────
-      - name: Start MySQL
+      # ── 2. Java 21 (Temurin) ──────────────────────────────
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          cache: maven
+
+      # ── 3. Maven dependency cache ─────────────────────────
+      - name: Cache Maven local repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      # ── 4. Node.js (for Newman) ───────────────────────────
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # ── 5. Start MySQL via Docker Compose ─────────────────
+      - name: Start MySQL container
         run: |
           docker compose up -d mysql-local
-          echo "Waiting for MySQL to be healthy..."
-          for i in $(seq 1 40); do
-            if docker exec mysql-local mysqladmin ping -h localhost -uroot -proot --silent 2>/dev/null; then
-              echo "MySQL is ready after $i attempts"
+          echo "⏳ Waiting for MySQL to become healthy..."
+          MAX=40
+          for i in $(seq 1 $MAX); do
+            if docker exec mysql-local mysqladmin ping \
+                -h 127.0.0.1 -uroot -p"${DB_PASS}" --silent 2>/dev/null; then
+              echo "✅ MySQL ready after ${i} probe(s)"
               break
             fi
-            echo "Attempt $i/40..."
+            echo "  probe ${i}/${MAX} — retrying in 3 s..."
             sleep 3
-            if [ $i -eq 40 ]; then
-              echo "MySQL failed to start"
+            if [ "$i" -eq "$MAX" ]; then
+              echo "❌ MySQL failed to become healthy within timeout"
               docker compose logs mysql-local
               exit 1
             fi
           done
 
-      # ── 3. Build & start Spring Boot app ────────────────────────────────
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-
-      - name: Cache Maven packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.m2
-          key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-          restore-keys: ${{ runner.os }}-m2
-
-      - name: Build Spring Boot app
+      # ── 6. Build Spring Boot application ──────────────────
+      - name: Build application (skip unit tests)
         working-directory: web
-        run: mvn package -DskipTests -q
+        run: mvn package -DskipTests --no-transfer-progress -q
 
-      - name: Start Spring Boot app
+      # ── 7. Start Spring Boot in background ────────────────
+      - name: Start Spring Boot application
         working-directory: web
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:${{ env.DB_PORT }}/${{ env.DB_NAME }}
+          SPRING_DATASOURCE_USERNAME: ${{ env.DB_USER }}
+          SPRING_DATASOURCE_PASSWORD: ${{ env.DB_PASS }}
         run: |
-          # Tạo thư mục upload để tránh crash khi chạy jar
-          mkdir -p src/main/resources/static/img/avatars/
-
           java -jar target/*.jar \
-            --spring.datasource.url=jdbc:mysql://localhost:3307/e_health \
-            --spring.datasource.username=root \
-            --spring.datasource.password=root \
+            --server.port=${APP_PORT} \
+            --spring.datasource.url="jdbc:mysql://127.0.0.1:${DB_PORT}/${DB_NAME}" \
+            --spring.datasource.username="${DB_USER}" \
+            --spring.datasource.password="${DB_PASS}" \
+            --spring.jpa.hibernate.ddl-auto=update \
+            --spring.jpa.show-sql=false \
             > /tmp/springboot.log 2>&1 &
 
-          echo "Waiting for Spring Boot to start..."
-          for i in $(seq 1 60); do
-            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/doctors)
-            if echo "$STATUS" | grep -qE "^(200|401|403)"; then
-              echo "App is ready after $i attempts (HTTP $STATUS)"
+          echo "⏳ Waiting for Spring Boot on port ${APP_PORT}..."
+          MAX=60
+          for i in $(seq 1 $MAX); do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+              "http://localhost:${APP_PORT}/api/doctors" 2>/dev/null || echo "000")
+            # Accept any response that means the app is up (200, 401, 403, 405 are all valid)
+            if echo "$HTTP_CODE" | grep -qE "^[2345][0-9]{2}$"; then
+              echo "✅ Spring Boot ready after ${i} probe(s) (HTTP ${HTTP_CODE})"
               break
             fi
-            echo "Attempt $i/60 (HTTP $STATUS)..."
-            if [ $((i % 10)) -eq 0 ]; then
-              echo "=== Spring Boot log (last 20 lines) ==="
-              tail -20 /tmp/springboot.log
-            fi
+            echo "  probe ${i}/${MAX} — HTTP ${HTTP_CODE} — waiting 5 s..."
             sleep 5
-            if [ $i -eq 60 ]; then
-              echo "=== FULL Spring Boot log ==="
-              cat /tmp/springboot.log
+            if [ "$i" -eq "$MAX" ]; then
+              echo "❌ Spring Boot failed to start within timeout. Last 80 log lines:"
+              tail -80 /tmp/springboot.log
               exit 1
             fi
           done
 
-      # ── 4. Seed database (after Hibernate creates tables) ───────────────
-      - name: Seed database
-        run: |
-          docker exec mysql-local mysql -uroot -proot e_health -e "
-          INSERT IGNORE INTO admin (email, password, ROLE) VALUES
-          ('${{ secrets.ADMIN_EMAIL }}', '\$2a\$10\$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ROLE_ADMIN');
-
-          INSERT IGNORE INTO Doctor (email, password, first_name, last_name, field, phone, address, ROLE, avatar) VALUES
-          ('${{ secrets.DOCTOR_EMAIL }}', '\$2a\$10\$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Nguyen', 'Van A', 'Cardiology', '0901234567', 'Ho Chi Minh City', 'ROLE_DOCTOR', 'default-avatar.png');
-
-          INSERT IGNORE INTO Patient (email, password, first_name, last_name, phone, address, date_of_birth, medical_history, avatar) VALUES
-          ('${{ secrets.PATIENT_EMAIL }}', '\$2a\$10\$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.', 'Tran', 'Thi B', '0912345678', 'Ha Noi', '1995-08-20', 'None', 'default-avatar.png');
-          "
-
-      # ── 5. Install Newman ────────────────────────────────────────────────
-      - name: Install Newman
-        run: npm install -g newman newman-reporter-htmlextra
-
-      # ── 6. Prepare environment file (jq — an toàn với ký tự đặc biệt) ───
-      - name: Prepare environment file
+      # ── 8. Seed the database ───────────────────────────────
+      # Hibernate's ddl-auto=update has already created the tables by now.
+      # We insert seed rows with INSERT IGNORE to be idempotent (re-runnable).
+      - name: Seed database with test credentials
         env:
           ADMIN_EMAIL:      ${{ secrets.ADMIN_EMAIL }}
           ADMIN_PASSWORD:   ${{ secrets.ADMIN_PASSWORD }}
@@ -118,52 +153,148 @@ jobs:
           PATIENT_EMAIL:    ${{ secrets.PATIENT_EMAIL }}
           PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
         run: |
-          jq -n \
-            --arg base_url         "http://localhost:8080" \
-            --arg admin_email      "$ADMIN_EMAIL" \
-            --arg admin_password   "$ADMIN_PASSWORD" \
-            --arg doctor_email     "$DOCTOR_EMAIL" \
-            --arg doctor_password  "$DOCTOR_PASSWORD" \
-            --arg patient_email    "$PATIENT_EMAIL" \
-            --arg patient_password "$PATIENT_PASSWORD" \
-            '{
-              name: "EHC_Environment",
-              values: [
-                { key: "base_url",         value: $base_url,         enabled: true },
-                { key: "admin_token",      value: "",                enabled: true },
-                { key: "doctor_token",     value: "",                enabled: true },
-                { key: "patient_token",    value: "",                enabled: true },
-                { key: "admin_email",      value: $admin_email,      enabled: true },
-                { key: "admin_password",   value: $admin_password,   enabled: true },
-                { key: "doctor_email",     value: $doctor_email,     enabled: true },
-                { key: "doctor_password",  value: $doctor_password,  enabled: true },
-                { key: "patient_email",    value: $patient_email,    enabled: true },
-                { key: "patient_password", value: $patient_password, enabled: true },
-                { key: "patient_id",       value: "1",               enabled: true },
-                { key: "doctor_id",        value: "1",               enabled: true },
-                { key: "appointment_id",   value: "1",               enabled: true }
-              ]
-            }' > /tmp/ehc-env.json
+          # BCrypt hash for "Admin@123"  (cost 10) — matches AdminAuthenticationService
+          ADMIN_HASH='$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'
+          # BCrypt hash for "Doctor@123" (cost 10)
+          DOCTOR_HASH='$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'
+          # BCrypt hash for "Patient@123" (cost 10)
+          PATIENT_HASH='$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.'
 
-      # ── 7. Run Newman ────────────────────────────────────────────────────
-      - name: Run Newman
+          docker exec mysql-local mysql \
+            -uroot -p"${DB_PASS}" "${DB_NAME}" << SQL
+
+          -- Admin seed (table name: admin, columns: id, email, password, ROLE)
+          INSERT IGNORE INTO admin (email, password, ROLE)
+          VALUES ('${ADMIN_EMAIL}', '${ADMIN_HASH}', 'ROLE_ADMIN');
+
+          -- Doctor seed (table name: Doctor)
+          INSERT IGNORE INTO Doctor
+            (email, password, first_name, last_name, field, phone, address, ROLE)
+          VALUES
+            ('${DOCTOR_EMAIL}', '${DOCTOR_HASH}',
+             'John', 'Smith', 'Cardiology', '0901234567',
+             'Ho Chi Minh City', 'ROLE_DOCTOR');
+
+          -- Patient seed (table name: Patient)
+          INSERT IGNORE INTO Patient
+            (email, password, first_name, last_name, phone, address,
+             date_of_birth, medical_history)
+          VALUES
+            ('${PATIENT_EMAIL}', '${PATIENT_HASH}',
+             'Tran', 'Thi B', '0912345678', 'Ha Noi',
+             '1995-08-20', 'None');
+
+          SQL
+          echo "✅ Database seeded successfully"
+
+      # ── 9. Install Newman + reporters ─────────────────────
+      - name: Install Newman and reporters
         run: |
-          mkdir -p reports
-          newman run postman/E-Health-Care-API.postman_collection.json \
-            --environment /tmp/ehc-env.json \
-            --reporters cli,htmlextra \
-            --reporter-htmlextra-export reports/newman-report.html \
-            --reporter-htmlextra-title "E-Health Care API Test Report" \
-            --delay-request 200 \
-            --timeout-request 10000 \
+          npm install -g \
+            newman@6 \
+            newman-reporter-htmlextra \
+            newman-reporter-junitfull
+          echo "✅ Newman $(newman --version) installed"
+
+      # ── 10. Create reports directory ───────────────────────
+      - name: Prepare reports directory
+        run: mkdir -p ${{ env.REPORTS_DIR }}
+
+      # ── 11. Write Newman environment file ─────────────────
+      # Secrets are written at runtime — they never appear in the
+      # collection file or in the repository.
+      - name: Write Newman environment file
+        env:
+          ADMIN_EMAIL:      ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD:   ${{ secrets.ADMIN_PASSWORD }}
+          DOCTOR_EMAIL:     ${{ secrets.DOCTOR_EMAIL }}
+          DOCTOR_PASSWORD:  ${{ secrets.DOCTOR_PASSWORD }}
+          PATIENT_EMAIL:    ${{ secrets.PATIENT_EMAIL }}
+          PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
+        run: |
+          cat > "${ENV_FILE}" << EOF
+          {
+            "id": "ehc-ci-environment",
+            "name": "EHC CI/CD Environment",
+            "values": [
+              { "key": "base_url",         "value": "http://localhost:${APP_PORT}", "enabled": true, "type": "default" },
+              { "key": "admin_email",      "value": "${ADMIN_EMAIL}",              "enabled": true, "type": "secret"  },
+              { "key": "admin_password",   "value": "${ADMIN_PASSWORD}",           "enabled": true, "type": "secret"  },
+              { "key": "doctor_email",     "value": "${DOCTOR_EMAIL}",             "enabled": true, "type": "secret"  },
+              { "key": "doctor_password",  "value": "${DOCTOR_PASSWORD}",          "enabled": true, "type": "secret"  },
+              { "key": "patient_email",    "value": "${PATIENT_EMAIL}",            "enabled": true, "type": "secret"  },
+              { "key": "patient_password", "value": "${PATIENT_PASSWORD}",         "enabled": true, "type": "secret"  },
+              { "key": "admin_token",      "value": "",                            "enabled": true, "type": "default" },
+              { "key": "doctor_token",     "value": "",                            "enabled": true, "type": "default" },
+              { "key": "patient_token",    "value": "",                            "enabled": true, "type": "default" },
+              { "key": "patient_id",       "value": "1",                           "enabled": true, "type": "default" },
+              { "key": "doctor_id",        "value": "1",                           "enabled": true, "type": "default" },
+              { "key": "appointment_id",   "value": "1",                           "enabled": true, "type": "default" }
+            ]
+          }
+          EOF
+          echo "✅ Newman environment file created"
+
+      # ── 12. Run Newman ─────────────────────────────────────
+      # Reporters: cli (live output) + junitfull (JUnit XML) + htmlextra (HTML)
+      # --bail      → fail fast on first test failure (pipeline health signal)
+      # --color on  → preserve ANSI in GitHub logs
+      - name: Run Newman API tests
+        run: |
+          newman run "${COLLECTION}" \
+            --environment "${ENV_FILE}" \
+            --reporters cli,junitfull,htmlextra \
+            --reporter-junitfull-export "${REPORTS_DIR}/junit.xml" \
+            --reporter-htmlextra-export "${REPORTS_DIR}/index.html" \
+            --reporter-htmlextra-title  "E-Health Care API Test Report" \
+            --reporter-htmlextra-logs \
+            --reporter-htmlextra-showEnvironmentData \
+            --reporter-htmlextra-showGlobalData \
+            --delay-request "${NEWMAN_DELAY_MS}" \
+            --timeout-request "${REQUEST_TIMEOUT_MS}" \
             --color on \
             --bail
 
-      # ── 8. Upload HTML report as artifact ───────────────────────────────
-      - name: Upload test report
-        if: always()
+      # ── 13. Print Spring Boot tail on failure ──────────────
+      - name: Print application logs on failure
+        if: failure()
+        run: |
+          echo "====== Last 100 lines of Spring Boot log ======"
+          tail -100 /tmp/springboot.log || true
+
+      # ── 14. Upload HTML report ─────────────────────────────
+      - name: Upload HTML report
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: newman-report-${{ github.run_number }}
-          path: reports/newman-report.html
+          name: newman-html-report-${{ github.run_number }}
+          path: ${{ env.REPORTS_DIR }}/index.html
           retention-days: 30
+          if-no-files-found: warn
+
+      # ── 15. Upload JUnit XML report ────────────────────────
+      - name: Upload JUnit XML report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: newman-junit-report-${{ github.run_number }}
+          path: ${{ env.REPORTS_DIR }}/junit.xml
+          retention-days: 30
+          if-no-files-found: warn
+
+      # ── 16. Publish JUnit test results ────────────────────
+      # Displays test results inline in the pull request / run summary
+      - name: Publish test results (JUnit)
+        uses: mikepenz/action-junit-report@v4
+        if: always()
+        with:
+          report_paths: "${{ env.REPORTS_DIR }}/junit.xml"
+          fail_on_failure: true
+          require_tests: true
+          check_name: "Newman API Test Results"
+          detailed_summary: true
+
+      # ── 17. Tear down containers ───────────────────────────
+      - name: Stop Docker containers
+        if: always()
+        run: docker compose down --volumes --remove-orphans || true

@@ -1,1824 +1,36 @@
 ﻿{
   "info": {
-    "_postman_id": "4c8ddf4f-0ad3-4518-8dfe-6b7da581f69d",
+    "_postman_id": "ehc-api-collection-v2-1-0",
     "name": "E-Health Care API",
-    "description": "E-Health Care â€” Complete Postman Collection v2.1\n\nGenerated from Spring Boot source code analysis.\n\nArchitecture:\n- Backend: Spring Boot on port 8080\n- Authentication: JWT Bearer Token (3 separate tokens per role)\n- Tokens: sent via Authorization: Bearer <token> header\n- Cookies: also set by server (jwt-admin-token, jwt-doctor-token, jwt-patient-token)\n\nSetup:\n1. Import EHC_Environment.json into Postman Environments\n2. Set base_url = http://localhost:8080\n3. Run Login requests â€” tokens are auto-saved via test scripts\n4. All protected requests reference {{admin_token}}, {{doctor_token}}, {{patient_token}}\n\nFolders:\n- Admin Auth        : /admin/api/auth\n- Admin Management  : /api/admin\n- Admin Patient CRUD: /admin/api/patients\n- Doctor            : /api/doctor\n- Patient           : /api/patient\n- Patient Appointment: /api/patient/appointment\n- Public            : /api",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "52299616",
-    "_collection_link": "https://go.postman.co/collection/52299616-4c8ddf4f-0ad3-4518-8dfe-6b7da581f69d?source=collection_link"
+    "description": "Complete API test suite for the E-Health Care system.\n\n**Roles & Authentication:**\n- Admin  → `POST /api/admin/login`  → stores `{{admin_token}}`\n- Doctor → `POST /api/doctor/login` → stores `{{doctor_token}}`\n- Patient → `POST /api/patient/login` → stores `{{patient_token}}`\n\nAll protected endpoints use `Authorization: Bearer {{<role>_token}}`.\n\n**Variables required (environment or collection):**\n- `base_url`        – e.g. `http://localhost:8080`\n- `admin_email`, `admin_password`\n- `doctor_email`, `doctor_password`\n- `patient_email`, `patient_password`\n- `admin_token`, `doctor_token`, `patient_token` (auto-populated by login scripts)\n- `patient_id`, `doctor_id`, `appointment_id` (seeded / captured during run)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",         "value": "http://localhost:8080", "type": "string" },
+    { "key": "admin_email",      "value": "admin@ehealthcare.com", "type": "string" },
+    { "key": "admin_password",   "value": "Admin@123",             "type": "string" },
+    { "key": "doctor_email",     "value": "doctor@ehealthcare.com","type": "string" },
+    { "key": "doctor_password",  "value": "Doctor@123",            "type": "string" },
+    { "key": "patient_email",    "value": "patient@ehealthcare.com","type": "string" },
+    { "key": "patient_password", "value": "Patient@123",           "type": "string" },
+    { "key": "admin_token",      "value": "",                      "type": "string" },
+    { "key": "doctor_token",     "value": "",                      "type": "string" },
+    { "key": "patient_token",    "value": "",                      "type": "string" },
+    { "key": "patient_id",       "value": "1",                     "type": "string" },
+    { "key": "doctor_id",        "value": "1",                     "type": "string" },
+    { "key": "appointment_id",   "value": "1",                     "type": "string" }
+  ],
+  "auth": {
+    "type": "noauth"
   },
   "item": [
+
     {
-      "name": "Admin Management",
+      "name": "00 — Public Endpoints",
+      "description": "Endpoints accessible without authentication (permitAll in ApiSecurityConfiguration).",
       "item": [
         {
-          "name": "Doctor Management",
-          "item": [
-            {
-              "name": "Delete Doctor",
-              "request": {
-                "method": "DELETE",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{admin_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/api/admin/doctor/delete/{{doctor_id}}",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "doctor", "delete", "{{doctor_id}}"]
-                },
-                "description": "DELETE /api/admin/doctor/delete/{id}  [PROTECTED]\n\nDeletes a doctor by ID. Cannot be undone."
-              },
-              "response": [
-                {
-                  "name": "200 OK",
-                  "originalRequest": {
-                    "method": "DELETE",
-                    "header": [
-                      {
-                        "key": "Authorization",
-                        "value": "Bearer {{admin_token}}"
-                      }
-                    ],
-                    "url": {
-                      "raw": ""
-                    }
-                  },
-                  "status": "OK",
-                  "code": 200,
-                  "_postman_previewlanguage": "Text",
-                  "header": [],
-                  "cookie": [],
-                  "body": "{\n  \"message\": \"XÃ³a doctor thÃ nh cÃ´ng\"\n}"
-                },
-                {
-                  "name": "400 Bad Request",
-                  "originalRequest": {
-                    "method": "DELETE",
-                    "header": [
-                      {
-                        "key": "Authorization",
-                        "value": "Bearer {{admin_token}}"
-                      }
-                    ],
-                    "url": {
-                      "raw": ""
-                    }
-                  },
-                  "status": "Bad Request",
-                  "code": 400,
-                  "_postman_previewlanguage": "Text",
-                  "header": [],
-                  "cookie": [],
-                  "body": "{\n  \"error\": \"Doctor not found\"\n}"
-                }
-              ]
-            },
-            {
-              "name": "Update Doctor Info",
-              "request": {
-                "method": "PUT",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{admin_token}}"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"id\": 1,\n  \"email\": \"doctor01@example.com\",\n  \"firstName\": \"Nguyen\",\n  \"lastName\": \"Van A\",\n  \"field\": \"Cardiology\",\n  \"phone\": \"0901234567\",\n  \"address\": \"Ho Chi Minh City\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{base_url}}/api/admin/doctor/update/info",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "doctor", "update", "info"]
-                },
-                "description": "PUT /api/admin/doctor/update/info  [PROTECTED]\n\nUpdate doctor information. The `id` field in request body identifies the target doctor. Password and role are preserved from existing record (cannot be changed via this endpoint).\n\n**Fields (Doctor model):**\n- id (required): Doctor ID\n- email, firstName, lastName, field (specialization), phone, address"
-              },
-              "response": [
-                {
-                  "name": "200 OK",
-                  "originalRequest": {
-                    "method": "PUT",
-                    "header": [
-                      {
-                        "key": "Authorization",
-                        "value": "Bearer {{admin_token}}"
-                      },
-                      {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                      }
-                    ],
-                    "body": {
-                      "mode": "raw",
-                      "raw": "{\n  \"id\": 1,\n  \"email\": \"doctor01@example.com\",\n  \"firstName\": \"Nguyen\",\n  \"lastName\": \"Van A\",\n  \"field\": \"Cardiology\",\n  \"phone\": \"0901234567\",\n  \"address\": \"Ho Chi Minh City\"\n}"
-                    },
-                    "url": {
-                      "raw": ""
-                    }
-                  },
-                  "status": "OK",
-                  "code": 200,
-                  "_postman_previewlanguage": "Text",
-                  "header": [],
-                  "cookie": [],
-                  "body": "{\n  \"message\": \"Cáº­p nháº­t doctor thÃ nh cÃ´ng\"\n}"
-                },
-                {
-                  "name": "404 Not Found",
-                  "originalRequest": {
-                    "method": "PUT",
-                    "header": [
-                      {
-                        "key": "Authorization",
-                        "value": "Bearer {{admin_token}}"
-                      }
-                    ],
-                    "body": {
-                      "mode": "raw",
-                      "raw": "{\n  \"id\": 9999\n}"
-                    },
-                    "url": {
-                      "raw": ""
-                    }
-                  },
-                  "status": "Not Found",
-                  "code": 404,
-                  "_postman_previewlanguage": "Text",
-                  "header": [],
-                  "cookie": [],
-                  "body": ""
-                }
-              ]
-            },
-            {
-              "name": "Update Doctor Password",
-              "request": {
-                "method": "PUT",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{admin_token}}"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"newPassword\": \"newSecurePassword123\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{base_url}}/api/admin/doctor/update/password/{{doctor_id}}",
-                  "host": ["{{base_url}}"],
-                  "path": [
-                    "api",
-                    "admin",
-                    "doctor",
-                    "update",
-                    "password",
-                    "{{doctor_id}}"
-                  ]
-                },
-                "description": "PUT /api/admin/doctor/update/password/{id}  [PROTECTED]\n\nChange a doctor's password. Password will be hashed with BCrypt before saving."
-              },
-              "response": [
-                {
-                  "name": "200 OK",
-                  "originalRequest": {
-                    "method": "PUT",
-                    "header": [
-                      {
-                        "key": "Authorization",
-                        "value": "Bearer {{admin_token}}"
-                      },
-                      {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                      }
-                    ],
-                    "body": {
-                      "mode": "raw",
-                      "raw": "{\n  \"newPassword\": \"newSecurePassword123\"\n}"
-                    },
-                    "url": {
-                      "raw": ""
-                    }
-                  },
-                  "status": "OK",
-                  "code": 200,
-                  "_postman_previewlanguage": "Text",
-                  "header": [],
-                  "cookie": [],
-                  "body": "{\n  \"message\": \"Äá»•i máº­t kháº©u doctor thÃ nh cÃ´ng\"\n}"
-                }
-              ]
-            }
-          ],
-          "description": "Admin endpoints to manage doctors."
-        },
-        {
-          "name": "Patient Management",
-          "item": [
-            {
-              "name": "Delete Patient",
-              "request": {
-                "method": "DELETE",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{admin_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": "{{base_url}}/api/admin/patient/delete/{{patient_id}}",
-                  "host": ["{{base_url}}"],
-                  "path": [
-                    "api",
-                    "admin",
-                    "patient",
-                    "delete",
-                    "{{patient_id}}"
-                  ]
-                },
-                "description": "DELETE /api/admin/patient/delete/{id}  [PROTECTED]\n\nDeletes a patient by ID."
-              },
-              "response": [
-                {
-                  "name": "200 OK",
-                  "originalRequest": {
-                    "method": "DELETE",
-                    "header": [
-                      {
-                        "key": "Authorization",
-                        "value": "Bearer {{admin_token}}"
-                      }
-                    ],
-                    "url": {
-                      "raw": ""
-                    }
-                  },
-                  "status": "OK",
-                  "code": 200,
-                  "_postman_previewlanguage": "Text",
-                  "header": [],
-                  "cookie": [],
-                  "body": "{\n  \"message\": \"XÃ³a patient thÃ nh cÃ´ng\"\n}"
-                }
-              ]
-            },
-            {
-              "name": "Update Patient Info",
-              "request": {
-                "method": "PUT",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{admin_token}}"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"id\": 1,\n  \"email\": \"{{patient_email}}\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\",\n  \"phone\": \"0912345678\",\n  \"address\": \"Ha Noi\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"medicalHistory\": \"No significant history\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{base_url}}/api/admin/patient/update/info",
-                  "host": ["{{base_url}}"],
-                  "path": ["api", "admin", "patient", "update", "info"]
-                },
-                "description": "PUT /api/admin/patient/update/info  [PROTECTED]\n\nUpdate patient information. The `id` field in request body identifies the target patient. Password is preserved."
-              },
-              "response": [
-                {
-                  "name": "200 OK",
-                  "originalRequest": {
-                    "method": "PUT",
-                    "header": [
-                      {
-                        "key": "Authorization",
-                        "value": "Bearer {{admin_token}}"
-                      },
-                      {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                      }
-                    ],
-                    "body": {
-                      "mode": "raw",
-                      "raw": "{\n  \"id\": 1,\n  \"email\": \"{{patient_email}}\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\"\n}"
-                    },
-                    "url": {
-                      "raw": ""
-                    }
-                  },
-                  "status": "OK",
-                  "code": 200,
-                  "_postman_previewlanguage": "Text",
-                  "header": [],
-                  "cookie": [],
-                  "body": "{\n  \"message\": \"Cáº­p nháº­t patient thÃ nh cÃ´ng\"\n}"
-                }
-              ]
-            },
-            {
-              "name": "Update Patient Password",
-              "request": {
-                "method": "PUT",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{admin_token}}"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"newPassword\": \"newSecurePassword123\"\n}",
-                  "options": {
-                    "raw": {
-                      "language": "json"
-                    }
-                  }
-                },
-                "url": {
-                  "raw": "{{base_url}}/api/admin/patient/update/password/{{patient_id}}",
-                  "host": ["{{base_url}}"],
-                  "path": [
-                    "api",
-                    "admin",
-                    "patient",
-                    "update",
-                    "password",
-                    "{{patient_id}}"
-                  ]
-                },
-                "description": "PUT /api/admin/patient/update/password/{id}  [PROTECTED]\n\nChange a patient's password. Will be BCrypt-hashed before saving."
-              },
-              "response": [
-                {
-                  "name": "200 OK",
-                  "originalRequest": {
-                    "method": "PUT",
-                    "header": [
-                      {
-                        "key": "Authorization",
-                        "value": "Bearer {{admin_token}}"
-                      },
-                      {
-                        "key": "Content-Type",
-                        "value": "application/json"
-                      }
-                    ],
-                    "body": {
-                      "mode": "raw",
-                      "raw": "{\n  \"newPassword\": \"newSecurePassword123\"\n}"
-                    },
-                    "url": {
-                      "raw": ""
-                    }
-                  },
-                  "status": "OK",
-                  "code": 200,
-                  "_postman_previewlanguage": "Text",
-                  "header": [],
-                  "cookie": [],
-                  "body": "{\n  \"message\": \"Äá»•i máº­t kháº©u patient thÃ nh cÃ´ng\"\n}"
-                }
-              ]
-            }
-          ],
-          "description": "Admin endpoints to manage patients via /api/admin."
-        },
-        {
-          "name": "Admin Login (API)",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
-                  "var json = pm.response.json();",
-                  "if (json.token) {",
-                  "pm.environment.set(\"admin_token\", json.token);",
-                  "pm.collectionVariables.set(\"admin_token\", json.token);",
-                  "console.log(\"admin_token saved:\", json.token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/admin/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "login"]
-            },
-            "description": "POST /api/admin/login  [PUBLIC  no auth required]\n\nSimpler admin login endpoint (AdminApiController). Returns token directly.\n\n**Response 200:**\n```json\n{ \"token\": \"<jwt>\" }\n```\n**Response 401:**\n```json\n{ \"error\": \"Invalid credentials\" }\n```"
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}"
-                },
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"token\": \"eyJhbGciOiJIUzI1NiJ9...\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Admin Logout (API)",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/admin/logout",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "logout"]
-            },
-            "description": "POST /api/admin/logout  [PROTECTED]\n\nClears SecurityContext server-side."
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{admin_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"message\": \"Logged out successfully\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Admin Dashboard",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/admin/dashboard",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "dashboard"]
-            },
-            "description": "GET /api/admin/dashboard  [PROTECTED]\n\nReturns all doctors and patients as lists."
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{admin_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"doctors\": [\n    {\n      \"id\": 1,\n      \"email\": \"doctor01@example.com\",\n      \"firstName\": \"Nguyen\",\n      \"lastName\": \"Van A\",\n      \"field\": \"Cardiology\",\n      \"phone\": \"0901234567\",\n      \"address\": \"Ho Chi Minh City\"\n    }\n  ],\n  \"patients\": [\n    {\n      \"id\": 1,\n      \"email\": \"{{patient_email}}\",\n      \"firstName\": \"Tran\",\n      \"lastName\": \"Thi B\",\n      \"phone\": \"0912345678\"\n    }\n  ]\n}"
-            }
-          ]
-        },
-        {
-          "name": "Admin Statistics",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{admin_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/admin/statistics",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "statistics"]
-            },
-            "description": "GET /api/admin/statistics  [PROTECTED]\n\nReturns counts of doctors, patients, and appointments broken down by status (PENDING, CONFIRMED, CANCELLED)."
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{admin_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"totalDoctors\": 5,\n  \"totalPatients\": 20,\n  \"totalAppointments\": 35,\n  \"pending\": 10,\n  \"confirmed\": 18,\n  \"cancelled\": 7\n}"
-            }
-          ]
-        },
-        {
-          "name": "Generate Password Hash",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/admin/generate-hash?password=myPassword123",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "generate-hash"],
-              "query": [
-                {
-                  "key": "password",
-                  "value": "myPassword123",
-                  "description": "Plain text password to hash"
-                }
-              ]
-            },
-            "description": "GET /api/admin/generate-hash  [PUBLIC  no auth required]\n\nUtility endpoint to generate BCrypt password hash. Useful for seeding database."
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"hash\": \"$2a$10$...\"\n}"
-            }
-          ]
-        }
-      ],
-      "description": "Admin management APIs for Doctors and Patients.\nBase path: /api/admin\nAuth: Bearer {{admin_token}} in Authorization header (ROLE_ADMIN JWT required)\n\nPublic (no auth): POST /api/admin/login, GET /api/admin/generate-hash"
-    },
-    {
-      "name": "Doctor",
-      "item": [
-        {
-          "name": "Doctor Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
-                  "var json = pm.response.json();",
-                  "if (json.token) {",
-                  "pm.environment.set(\"doctor_token\", json.token);",
-                  "pm.collectionVariables.set(\"doctor_token\", json.token);",
-                  "console.log(\"doctor_token saved:\", json.token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{doctor_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/doctor/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "doctor", "login"]
-            },
-            "description": "POST /api/doctor/login  [PUBLIC]\n\nAuthenticate doctor with email & password.\n\nServer also sets HttpOnly cookie `jwt-doctor-token` automatically.\n\n**Response 200:**\n```json\n{\n  \"message\": \"Login successful\",\n  \"token\": \"<jwt>\"\n}\n```\n**Response 401:**\n```json\n{ \"error\": \"Invalid credentials\" }\n```"
-          },
-          "response": [
-            {
-              "name": "200 OK - Login Successful",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"{{doctor_email}}\",\n  \"password\": \"{{admin_password}}\"\n}"
-                },
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"message\": \"Login successful\",\n  \"token\": \"eyJhbGciOiJIUzI1NiJ9...\"\n}"
-            },
-            {
-              "name": "401 Unauthorized",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"wrong@gmail.com\",\n  \"password\": \"wrongpassword\"\n}"
-                },
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "Unauthorized",
-              "code": 401,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"error\": \"Invalid credentials\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Doctor Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{doctor_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/doctor/logout",
-              "host": ["{{base_url}}"],
-              "path": ["api", "doctor", "logout"]
-            },
-            "description": "POST /api/doctor/logout  [PROTECTED]\n\nClears security context and expires the `jwt-doctor-token` cookie."
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{doctor_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"message\": \"Logged out successfully\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get Doctor Profile",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{doctor_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/doctor/profile",
-              "host": ["{{base_url}}"],
-              "path": ["api", "doctor", "profile"]
-            },
-            "description": "GET /api/doctor/profile  [PROTECTED]\n\nReturns profile of the currently authenticated doctor (identified from JWT token).\n\n**Response 200:** DoctorDTO\n- id, email, firstName, lastName, field (specialization), phone, address, avatar"
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{doctor_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"id\": 1,\n  \"email\": \"{{doctor_email}}\",\n  \"firstName\": \"Dai\",\n  \"lastName\": \"Phi\",\n  \"field\": \"Cardiology\",\n  \"phone\": \"0909123456\",\n  \"address\": \"Ho Chi Minh City\",\n  \"avatar\": \"default-avatar.png\",\n  \"role\": \"doctor\"\n}"
-            },
-            {
-              "name": "401 Unauthorized",
-              "originalRequest": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "Unauthorized",
-              "code": 401,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"error\": \"Unauthorized\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Update Doctor Profile",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{doctor_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"nguyenledaiphi0252005@gmail.com\",\n  \"password\": \"{{admin_password}}\",\n  \"firstName\": \"Dai\",\n  \"lastName\": \"Phi\",\n  \"phone\": \"0909123456\",\n  \"address\": \"Ho Chi Minh City\",\n  \"field\": \"Cardiology\",\n  \"avatar\": \"default-avatar.png\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/doctor/profile/update",
-              "host": ["{{base_url}}"],
-              "path": ["api", "doctor", "profile", "update"]
-            },
-            "description": "PUT /api/doctor/profile/update  [PROTECTED]\n\nUpdate authenticated doctor's profile. The doctor's ID is inferred from the JWT token (cannot be spoofed).\n\n**Request body:** DoctorDTO fields\n- email, firstName, lastName, field, phone, address, avatar\n- password (optional, included in DTO)"
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "PUT",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{doctor_token}}"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"firstName\": \"Dai\",\n  \"lastName\": \"Phi\",\n  \"phone\": \"0909123456\",\n  \"field\": \"Cardiology\"\n}"
-                },
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"message\": \"Cáº­p nháº­t há»“ sÆ¡ thÃ nh cÃ´ng\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get Doctor Appointment List",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{doctor_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/doctor/appointment/list",
-              "host": ["{{base_url}}"],
-              "path": ["api", "doctor", "appointment", "list"]
-            },
-            "description": "GET /api/doctor/appointment/list  [PROTECTED]\n\nReturns all appointments assigned to the authenticated doctor.\n\n**Response:** List of Appointment objects\n- id, patientId, doctorId, scheduleTime, status (PENDING | CONFIRMED | CANCELLED)"
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{doctor_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "[\n  {\n    \"id\": 1,\n    \"patientId\": 3,\n    \"doctorId\": 1,\n    \"scheduleTime\": \"2026-06-10T09:00:00\",\n    \"status\": \"PENDING\"\n  },\n  {\n    \"id\": 2,\n    \"patientId\": 5,\n    \"doctorId\": 1,\n    \"scheduleTime\": \"2026-06-11T14:30:00\",\n    \"status\": \"CONFIRMED\"\n  }\n]"
-            }
-          ]
-        },
-        {
-          "name": "Update Appointment Status",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{doctor_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/doctor/appointment/update/{{appointment_id}}/CONFIRMED",
-              "host": ["{{base_url}}"],
-              "path": [
-                "api",
-                "doctor",
-                "appointment",
-                "update",
-                "{{appointment_id}}",
-                "CONFIRMED"
-              ]
-            },
-            "description": "POST /api/doctor/appointment/update/{id}/{status}  [PROTECTED]\n\nUpdate the status of a specific appointment.\n\n**Path variables:**\n- `id`: Appointment ID\n- `status`: One of `PENDING`, `CONFIRMED`, `CANCELLED`\n\n**Note:** No request body needed."
-          },
-          "response": [
-            {
-              "name": "200 OK  Status Updated",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{doctor_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"message\": \"Cáº­p nháº­t thÃ nh cÃ´ng\"\n}"
-            },
-            {
-              "name": "400 Bad Request",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{doctor_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"error\": \"Appointment not found\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get Doctor Dashboard (Patient List)",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{doctor_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/doctor/dashboard",
-              "host": ["{{base_url}}"],
-              "path": ["api", "doctor", "dashboard"]
-            },
-            "description": "GET /api/doctor/dashboard  [PROTECTED]\n\nReturns list of all patients (summary) for doctor's dashboard view.\n\n**Response:** List of PatientSummaryDTO\n- id, email, fullName, phone, address, dateOfBirth, firstName, lastName, avatar"
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{doctor_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "[\n  {\n    \"id\": 1,\n    \"email\": \"{{patient_email}}\",\n    \"fullName\": \"Tran Thi B\",\n    \"firstName\": \"Tran\",\n    \"lastName\": \"Thi B\",\n    \"phone\": \"0912345678\",\n    \"address\": \"Ha Noi\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"avatar\": \"default-avatar.png\"\n  }\n]"
-            },
-            {
-              "name": "401 Unauthorized",
-              "originalRequest": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "Unauthorized",
-              "code": 401,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"error\": \"Unauthorized\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get Patient Medical Record",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{doctor_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/doctor/patient/{{patient_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "doctor", "patient", "{{patient_id}}"]
-            },
-            "description": "GET /api/doctor/patient/{id}  [PROTECTED]\n\nRetrieve full medical record of a specific patient (profile + clinical info).\n\n**Response 200:**\n```json\n{\n  \"patient\": { PatientDTO },\n  \"clinicalInfo\": { PatientClinicalInforDTO }\n}\n```\nIf no clinical info exists, an empty DTO with `patientId` is returned."
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{doctor_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"patient\": {\n    \"id\": 1,\n    \"email\": \"{{patient_email}}\",\n    \"firstName\": \"Tran\",\n    \"lastName\": \"Thi B\",\n    \"phone\": \"0912345678\",\n    \"address\": \"Ha Noi\",\n    \"dateOfBirth\": \"1990-05-15\"\n  },\n  \"clinicalInfo\": {\n    \"id\": 1,\n    \"patientId\": 1,\n    \"bloodType\": \"A+\",\n    \"allergies\": \"Penicillin\",\n    \"chronicDiseases\": \"Hypertension\",\n    \"familyMedicalHistory\": \"Diabetes (father)\",\n    \"lastUpdatedById\": 1,\n    \"lastUpDatedTime\": \"2026-05-01T10:00:00\"\n  }\n}"
-            }
-          ]
-        },
-        {
-          "name": "Update Patient Medical Record",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{doctor_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"bloodType\": \"A+\",\n  \"allergies\": \"Penicillin, Aspirin\",\n  \"chronicDiseases\": \"Hypertension, Type 2 Diabetes\",\n  \"familyMedicalHistory\": \"Diabetes (father), Heart disease (mother)\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/doctor/patient/{{patient_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "doctor", "patient", "{{patient_id}}"]
-            },
-            "description": "POST /api/doctor/patient/{id}  [PROTECTED]\n\nUpdate clinical information (medical record) for a patient.\n\n**Request body:** PatientClinicalInforDTO\n- bloodType: e.g. \"A+\", \"O-\"\n- allergies: comma-separated string\n- chronicDiseases: comma-separated string\n- familyMedicalHistory: free text\n\n`patientId` and `lastUpdatedById` are set automatically from path var and JWT token."
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{doctor_token}}"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"bloodType\": \"A+\",\n  \"allergies\": \"Penicillin\",\n  \"chronicDiseases\": \"Hypertension\",\n  \"familyMedicalHistory\": \"Diabetes (father)\"\n}"
-                },
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"message\": \"Cáº­p nháº­t bá»‡nh Ã¡n thÃ nh cÃ´ng\"\n}"
-            },
-            {
-              "name": "404 Not Found",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{doctor_token}}"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"bloodType\": \"B+\"\n}"
-                },
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "Not Found",
-              "code": 404,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"error\": \"Patient not found\"\n}"
-            }
-          ]
-        }
-      ],
-      "description": "Doctor authentication, profile, appointments, and patient record management.\nBase path: /api/doctor\nAuth: Bearer {{doctor_token}} in Authorization header (ROLE_DOCTOR JWT required)\n\nPublic: POST /api/doctor/login"
-    },
-    {
-      "name": "Patient",
-      "item": [
-        {
-          "name": "Patient Register",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{patient_password}}\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\",\n  \"phone\": \"0912345678\",\n  \"address\": \"Ha Noi\",\n  \"dateOfBirth\": \"1995-08-20\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/patient/register",
-              "host": ["{{base_url}}"],
-              "path": ["api", "patient", "register"]
-            },
-            "description": "POST /api/patient/register  [PUBLIC]\n\nRegister a new patient account.\n\n**Request body:** PatientDTO\n- email (required), password (required)\n- firstName, lastName, phone, address, dateOfBirth (optional)"
-          },
-          "response": [
-            {
-              "name": "200 OK - Registered",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{patient_password}}\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\"\n}"
-                },
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"message\": \"Registered successfully\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Patient Login",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
-                  "var json = pm.response.json();",
-                  "if (json.token) {",
-                  "pm.environment.set(\"patient_token\", json.token);",
-                  "pm.collectionVariables.set(\"patient_token\", json.token);",
-                  "console.log(\"patient_token saved:\", json.token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{patient_password}}\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/patient/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "patient", "login"]
-            },
-            "description": "POST /api/patient/login  [PUBLIC]\n\nAuthenticate patient with email & password.\n\nServer also sets HttpOnly cookie `jwt-patient-token` automatically.\n\n**Response 200:**\n```json\n{\n  \"message\": \"Login successful\",\n  \"token\": \"<jwt>\"\n}\n```"
-          },
-          "response": [
-            {
-              "name": "200 OK - Login Successful",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{patient_password}}\"\n}"
-                },
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"message\": \"Login successful\",\n  \"token\": \"eyJhbGciOiJIUzI1NiJ9...\"\n}"
-            },
-            {
-              "name": "401 Unauthorized",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"email\": \"wrong@example.com\",\n  \"password\": \"wrong\"\n}"
-                },
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "Unauthorized",
-              "code": 401,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"error\": \"Invalid credentials\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Patient Logout",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{patient_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/patient/logout",
-              "host": ["{{base_url}}"],
-              "path": ["api", "patient", "logout"]
-            },
-            "description": "POST /api/patient/logout  [PROTECTED]\n\nClears security context and expires the `jwt-patient-token` cookie."
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{patient_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"message\": \"Logged out successfully\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get Patient Profile",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{patient_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/patient/profile",
-              "host": ["{{base_url}}"],
-              "path": ["api", "patient", "profile"]
-            },
-            "description": "GET /api/patient/profile  [PROTECTED]\n\nReturns the full Patient entity for the currently authenticated patient (identified via JWT email)."
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{patient_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"id\": 1,\n  \"email\": \"{{patient_email}}\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\",\n  \"phone\": \"0912345678\",\n  \"address\": \"Ha Noi\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"medicalHistory\": \"None\",\n  \"avatar\": \"default-avatar.png\"\n}"
-            },
-            {
-              "name": "401 Unauthorized",
-              "originalRequest": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "Unauthorized",
-              "code": 401,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"error\": \"Unauthorized\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Update Patient Profile",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{patient_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B Updated\",\n  \"phone\": \"0912999888\",\n  \"address\": \"Ho Chi Minh City\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"medicalHistory\": \"Updated history\",\n  \"avatar\": \"default-avatar.png\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/patient/update/{{patient_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "patient", "update", "{{patient_id}}"]
-            },
-            "description": "PUT /api/patient/update/{id}  [PROTECTED]\n\nUpdate patient profile information by ID.\n\n**Request body:** PatientDTO fields\n- email, firstName, lastName, phone, address, dateOfBirth, medicalHistory, avatar"
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "PUT",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{patient_token}}"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B Updated\",\n  \"phone\": \"0912999888\"\n}"
-                },
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"message\": \"Cáº­p nháº­t thÃ nh cÃ´ng\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get Patient Clinical Info",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{patient_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/patient/clinical-info/{{patient_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "patient", "clinical-info", "{{patient_id}}"]
-            },
-            "description": "GET /api/patient/clinical-info/{id}  [PROTECTED]\n\nRetrieve clinical (medical) information for a specific patient.\n\n**Response:** PatientClinicalInforDTO\n- id, patientId, bloodType, allergies, chronicDiseases, familyMedicalHistory, lastUpdatedById, lastUpDatedTime"
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{patient_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"id\": 1,\n  \"patientId\": 1,\n  \"bloodType\": \"A+\",\n  \"allergies\": \"Penicillin\",\n  \"chronicDiseases\": \"Hypertension\",\n  \"familyMedicalHistory\": \"Diabetes (father)\",\n  \"lastUpdatedById\": 1,\n  \"lastUpDatedTime\": \"2026-05-01T10:00:00\"\n}"
-            }
-          ]
-        }
-      ],
-      "description": "Patient authentication, profile management, and clinical info viewing.\nBase path: /api/patient\nAuth: Bearer {{patient_token}} in Authorization header (ROLE_PATIENT JWT required)\n\nPublic: POST /api/patient/login, POST /api/patient/register"
-    },
-    {
-      "name": "Patient Appointment",
-      "item": [
-        {
-          "name": "Get Available Doctors",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{patient_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/patient/appointment/doctors",
-              "host": ["{{base_url}}"],
-              "path": ["api", "patient", "appointment", "doctors"]
-            },
-            "description": "GET /api/patient/appointment/doctors  [PROTECTED]\n\nReturns all doctors available for booking. Patient uses this to select a doctor when creating an appointment."
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{patient_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "[\n  {\n    \"id\": 1,\n    \"email\": \"{{doctor_email}}\",\n    \"firstName\": \"Dai\",\n    \"lastName\": \"Phi\",\n    \"field\": \"Cardiology\",\n    \"phone\": \"0909123456\",\n    \"address\": \"Ho Chi Minh City\"\n  },\n  {\n    \"id\": 2,\n    \"email\": \"doctor02@example.com\",\n    \"firstName\": \"Le\",\n    \"lastName\": \"Van C\",\n    \"field\": \"Neurology\",\n    \"phone\": \"0901111222\",\n    \"address\": \"Da Nang\"\n  }\n]"
-            }
-          ]
-        },
-        {
-          "name": "Book Appointment",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{patient_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"doctorId\": 1,\n  \"scheduleTime\": \"2026-06-15T10:00:00\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/api/patient/appointment/book",
-              "host": ["{{base_url}}"],
-              "path": ["api", "patient", "appointment", "book"]
-            },
-            "description": "POST /api/patient/appointment/book  [PROTECTED]\n\nBook a new appointment with a doctor.\n\n**Request body:** AppointmentRequestDTO\n- doctorId (required): ID of the doctor to book\n- scheduleTime (required): ISO 8601 datetime, e.g. `\"2026-06-15T10:00:00\"`\n\n**Note:** `patientId` is automatically set from the JWT token  do NOT send it in the body.\n\n**Error cases:**\n- Duplicate booking at same time slot  400"
-          },
-          "response": [
-            {
-              "name": "200 OK - Booked",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{patient_token}}"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"doctorId\": 1,\n  \"scheduleTime\": \"2026-06-15T10:00:00\"\n}"
-                },
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"message\": \"Äáº·t lá»‹ch thÃ nh cÃ´ng\"\n}"
-            },
-            {
-              "name": "400 Bad Request - Duplicate/Conflict",
-              "originalRequest": {
-                "method": "POST",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{patient_token}}"
-                  },
-                  {
-                    "key": "Content-Type",
-                    "value": "application/json"
-                  }
-                ],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"doctorId\": 1,\n  \"scheduleTime\": \"2026-06-15T10:00:00\"\n}"
-                },
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "Bad Request",
-              "code": 400,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"error\": \"Lá»‹ch háº¹n bá»‹ trÃ¹ng. Vui lÃ²ng chá»n thá»i gian khÃ¡c.\"\n}"
-            },
-            {
-              "name": "401 Unauthorized",
-              "originalRequest": {
-                "method": "POST",
-                "header": [],
-                "body": {
-                  "mode": "raw",
-                  "raw": "{\n  \"doctorId\": 1,\n  \"scheduleTime\": \"2026-06-15T10:00:00\"\n}"
-                },
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "Unauthorized",
-              "code": 401,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"error\": \"Unauthorized\"\n}"
-            }
-          ]
-        },
-        {
-          "name": "Get My Appointments",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{patient_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/patient/appointment/list",
-              "host": ["{{base_url}}"],
-              "path": ["api", "patient", "appointment", "list"]
-            },
-            "description": "GET /api/patient/appointment/list  [PROTECTED]\n\nReturns all appointments for the authenticated patient. Patient ID is inferred from JWT.\n\n**Response:** List of Appointment objects\n- id, patientId, doctorId, scheduleTime, status"
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "GET",
-                "header": [
-                  {
-                    "key": "Authorization",
-                    "value": "Bearer {{patient_token}}"
-                  }
-                ],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "[\n  {\n    \"id\": 1,\n    \"patientId\": 1,\n    \"doctorId\": 1,\n    \"scheduleTime\": \"2026-06-15T10:00:00\",\n    \"status\": \"PENDING\"\n  },\n  {\n    \"id\": 3,\n    \"patientId\": 1,\n    \"doctorId\": 2,\n    \"scheduleTime\": \"2026-06-20T14:00:00\",\n    \"status\": \"CONFIRMED\"\n  }\n]"
-            },
-            {
-              "name": "401 Unauthorized",
-              "originalRequest": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "Unauthorized",
-              "code": 401,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "{\n  \"error\": \"Unauthorized\"\n}"
-            }
-          ]
-        }
-      ],
-      "description": "Patient-facing appointment booking and management.\nBase path: /api/patient/appointment\nAuth: Bearer {{patient_token}} in Authorization header\n\nAll endpoints require patient authentication. PatientId is automatically extracted from JWT (PatientPrinciple)."
-    },
-    {
-      "name": "Public",
-      "item": [
-        {
-          "name": "Get All Patients (Summary)",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/patients",
-              "host": ["{{base_url}}"],
-              "path": ["api", "patients"]
-            },
-            "description": "GET /api/patients  [PUBLIC]\n\nReturns a summary list of all patients.\n\n**Response:** List of PatientSummaryDTO\n- id, email, fullName, phone, address, dateOfBirth, firstName, lastName, avatar"
-          },
-          "response": [
-            {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "[\n  {\n    \"id\": 1,\n    \"email\": \"{{patient_email}}\",\n    \"fullName\": \"Tran Thi B\",\n    \"firstName\": \"Tran\",\n    \"lastName\": \"Thi B\",\n    \"phone\": \"0912345678\",\n    \"address\": \"Ha Noi\",\n    \"dateOfBirth\": \"1990-05-15\",\n    \"avatar\": \"default-avatar.png\"\n  }\n]"
-            }
-          ]
-        },
-        {
-          "name": "Get All Doctors (Summary)",
+          "name": "Get All Doctors (Public)",
           "request": {
             "method": "GET",
             "header": [],
@@ -1827,67 +39,1942 @@
               "host": ["{{base_url}}"],
               "path": ["api", "doctors"]
             },
-            "description": "GET /api/doctors  [PUBLIC]\n\nReturns a summary list of all doctors.\n\n**Response:** List of DoctorSummaryDTO\n- id, email, fullName (firstName + lastName)"
+            "description": "GET /api/doctors — Returns a summary list of all doctors. Public endpoint, no token required.\n\nSource: UserAPIController → DoctorSummaryDTO { id, email, fullName, phone, address }"
           },
-          "response": [
+          "event": [
             {
-              "name": "200 OK",
-              "originalRequest": {
-                "method": "GET",
-                "header": [],
-                "url": {
-                  "raw": ""
-                }
-              },
-              "status": "OK",
-              "code": 200,
-              "_postman_previewlanguage": "Text",
-              "header": [],
-              "cookie": [],
-              "body": "[\n  {\n    \"id\": 1,\n    \"email\": \"{{doctor_email}}\",\n    \"fullName\": \"Dai Phi\"\n  },\n  {\n    \"id\": 2,\n    \"email\": \"doctor02@example.com\",\n    \"fullName\": \"Le Van C\"\n  }\n]"
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Each doctor has id and email', function () {",
+                  "    var body = pm.response.json();",
+                  "    if (body.length > 0) {",
+                  "        pm.expect(body[0]).to.have.property('id');",
+                  "        pm.expect(body[0]).to.have.property('email');",
+                  "        // Capture first doctor id for downstream tests",
+                  "        pm.collectionVariables.set('doctor_id', String(body[0].id));",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get All Patients (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/patients",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patients"]
+            },
+            "description": "GET /api/patients — Returns a summary list of all patients. Public endpoint, no token required.\n\nSource: UserAPIController → PatientSummaryDTO { id, email, fullName, phone, address, dateOfBirth, firstName, lastName, avatar }"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Capture first patient_id if available', function () {",
+                  "    var body = pm.response.json();",
+                  "    if (body.length > 0) {",
+                  "        pm.collectionVariables.set('patient_id', String(body[0].id));",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Generate Password Hash (Public)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/generate-hash?password=Admin@123",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "generate-hash"],
+              "query": [
+                { "key": "password", "value": "Admin@123", "description": "Plain-text password to hash with BCrypt" }
+              ]
+            },
+            "description": "GET /api/admin/generate-hash?password=<plain> — BCrypt hashes a password. Useful for seeding the database with correct password hashes.\n\nSource: AdminApiController → @RequestParam String password\nSecurity: permitAll (explicitly whitelisted in ApiSecurityConfiguration)"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains hash field', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('hash');",
+                  "    pm.expect(body.hash).to.be.a('string').and.to.match(/^\\$2a\\$/);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
             }
           ]
         }
-      ],
-      "description": "Public endpoints with no authentication required.\nBase path: /api\n\nThese endpoints return general summary data accessible without a JWT token."
+      ]
+    },
+
+    {
+      "name": "01 — Admin Auth",
+      "description": "Authentication for the Admin role.\n\nBase: /api/admin  |  JWT role claim: ROLE_ADMIN\nToken stored in: {{admin_token}}\nFilter: AdminJwtFilter reads Authorization: Bearer header",
+      "item": [
+        {
+          "name": "Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{admin_email}}\",\n  \"password\": \"{{admin_password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "login"]
+            },
+            "description": "POST /api/admin/login — Authenticates with AdminDTO { email, password }.\n\nOn success returns { \"token\": \"<jwt>\" }.\nThe test script extracts and stores the token in {{admin_token}}.\n\nJWT claims: { sub: email, role: \"ROLE_ADMIN\", iat, exp (24h) }\nSecret: jwt.admin.secret from application.properties"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains token', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('token');",
+                  "    pm.expect(body.token).to.be.a('string').and.to.have.length.above(20);",
+                  "});",
+                  "",
+                  "pm.test('Store admin_token', function () {",
+                  "    var body = pm.response.json();",
+                  "    if (body.token) {",
+                  "        pm.collectionVariables.set('admin_token', body.token);",
+                  "        pm.collectionVariables.set('token', body.token);",
+                  "        console.log('admin_token stored:', body.token.substring(0, 30) + '...');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Login — Invalid Credentials",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"wrong@example.com\",\n  \"password\": \"wrongpassword\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "login"]
+            },
+            "description": "Negative test — verifies that invalid credentials return HTTP 401 with an error payload."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Response contains error field', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "logout"]
+            },
+            "description": "POST /api/admin/logout — Clears the server-side SecurityContext.\n\nRequires: Authorization: Bearer {{admin_token}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains message', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "02 — Admin Dashboard & Statistics",
+      "description": "Admin-only dashboard, statistics and data views.\n\nBase: /api/admin  |  Requires: {{admin_token}}",
+      "item": [
+        {
+          "name": "Admin Dashboard (Doctors + Patients)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "dashboard"]
+            },
+            "description": "GET /api/admin/dashboard — Returns full Doctor[] and Patient[] lists.\n\nSource: AdminApiController.dashboard()\nResponse shape: { doctors: [...], patients: [...] }"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has doctors and patients arrays', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('doctors');",
+                  "    pm.expect(body).to.have.property('patients');",
+                  "    pm.expect(body.doctors).to.be.an('array');",
+                  "    pm.expect(body.patients).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Capture IDs for downstream tests', function () {",
+                  "    var body = pm.response.json();",
+                  "    if (body.doctors && body.doctors.length > 0) {",
+                  "        pm.collectionVariables.set('doctor_id', String(body.doctors[0].id));",
+                  "    }",
+                  "    if (body.patients && body.patients.length > 0) {",
+                  "        pm.collectionVariables.set('patient_id', String(body.patients[0].id));",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Statistics",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/statistics",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "statistics"]
+            },
+            "description": "GET /api/admin/statistics — Returns aggregate counts and appointment breakdowns.\n\nSource: AdminApiController.getStatistics()\nResponse: { totalDoctors, totalPatients, totalAppointments, pending, confirmed, cancelled }"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has all statistics fields', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('totalDoctors');",
+                  "    pm.expect(body).to.have.property('totalPatients');",
+                  "    pm.expect(body).to.have.property('totalAppointments');",
+                  "    pm.expect(body).to.have.property('pending');",
+                  "    pm.expect(body).to.have.property('confirmed');",
+                  "    pm.expect(body).to.have.property('cancelled');",
+                  "});",
+                  "",
+                  "pm.test('All counts are numbers', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.totalDoctors).to.be.a('number');",
+                  "    pm.expect(body.totalPatients).to.be.a('number');",
+                  "    pm.expect(body.totalAppointments).to.be.a('number');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "03 — Admin Doctor Management",
+      "description": "Admin CRUD operations on Doctor records.\n\nBase: /api/admin/doctor  |  Requires: {{admin_token}}\nNote: Admin can update doctor info and password, and delete doctors.",
+      "item": [
+        {
+          "name": "Update Doctor Info",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{doctor_id}},\n  \"email\": \"doctor@ehealthcare.com\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"field\": \"Cardiology\",\n  \"phone\": \"0901234567\",\n  \"address\": \"123 Medical Avenue, Ho Chi Minh City\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/doctor/update/info",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "doctor", "update", "info"]
+            },
+            "description": "PUT /api/admin/doctor/update/info — Updates doctor metadata (id, email, firstName, lastName, field, phone, address).\n\nSource: AdminApiController.updateDoctorInfo(@RequestBody Doctor)\nNote: Password and ROLE are preserved from the existing record — they cannot be changed via this endpoint."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 404 if no doctors seeded', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Response has success message', function () {",
+                  "        var body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('message');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Doctor Password",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"Doctor@123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/doctor/update/password/{{doctor_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "doctor", "update", "password", "{{doctor_id}}"]
+            },
+            "description": "PUT /api/admin/doctor/update/password/{id} — Changes a doctor's password (BCrypt-encoded).\n\nPath variable: id (doctor ID)\nBody: { newPassword: string }\nSource: AdminApiController.updateDoctorPassword()"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 400 if doctor not found', function () {",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Success message present', function () {",
+                  "        var body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('message');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Doctor",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/doctor/delete/{{doctor_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "doctor", "delete", "{{doctor_id}}"]
+            },
+            "description": "DELETE /api/admin/doctor/delete/{id} — Hard-deletes a doctor record.\n\nPath variable: id (doctor ID)\nSource: AdminApiController.deleteDoctor()\n⚠️ This test is placed LAST in the Doctor Management group so other doctor-dependent tests can run first."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 400 if doctor not found', function () {",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "04 — Admin Patient Management (via /api/admin)",
+      "description": "Admin CRUD operations on Patient records through the AdminApiController.\n\nBase: /api/admin/patient  |  Requires: {{admin_token}}",
+      "item": [
+        {
+          "name": "Update Patient Info",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": {{patient_id}},\n  \"email\": \"patient@ehealthcare.com\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\",\n  \"phone\": \"0912345678\",\n  \"address\": \"456 Health Street, Ha Noi\",\n  \"dateOfBirth\": \"1995-08-20\",\n  \"medicalHistory\": \"No known allergies\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/patient/update/info",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "patient", "update", "info"]
+            },
+            "description": "PUT /api/admin/patient/update/info — Updates patient record. Password is preserved from the existing record.\n\nSource: AdminApiController.updatePatientInfo(@RequestBody Patient)\nBody maps to Patient entity: id, email, firstName, lastName, phone, address, dateOfBirth, medicalHistory"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 404 if no patients seeded', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Success message present', function () {",
+                  "        var body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('message');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Patient Password",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"Patient@123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/admin/patient/update/password/{{patient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "patient", "update", "password", "{{patient_id}}"]
+            },
+            "description": "PUT /api/admin/patient/update/password/{id} — Updates a patient's password (BCrypt-encoded).\n\nPath variable: id (patient ID)\nBody: { newPassword: string }\nSource: AdminApiController.updatePatientPassword()"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 400 if patient not found', function () {",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Success message present', function () {",
+                  "        var body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('message');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Patient",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/patient/delete/{{patient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "patient", "delete", "{{patient_id}}"]
+            },
+            "description": "DELETE /api/admin/patient/delete/{id} — Hard-deletes a patient record.\n\nPath variable: id (patient ID)\nSource: AdminApiController.deletePatient()\n⚠️ Placed last in the group to avoid breaking other patient-dependent tests."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 400 if patient not found', function () {",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "05 — Admin Patient CRUD Dashboard (via /admin/api)",
+      "description": "Enhanced patient CRUD through AdminDashboardController at /admin/api.\nThis is a separate, more RESTful layer with richer error responses.\n\nBase: /admin/api  |  Auth: AdminJwtFilter (same admin token)\nRequires: {{admin_token}}",
+      "item": [
+        {
+          "name": "Get All Patients (Dashboard)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/api/patients",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "api", "patients"]
+            },
+            "description": "GET /admin/api/patients — Returns wrapped response { success, message, data: Patient[] }.\n\nSource: AdminDashboardController.getAllPatients()"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has success wrapper', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('success');",
+                  "    pm.expect(body.success).to.be.true;",
+                  "    pm.expect(body).to.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test('Data is array', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body.data).to.be.an('array');",
+                  "    if (body.data.length > 0) {",
+                  "        pm.collectionVariables.set('patient_id', String(body.data[0].id));",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Patient By ID (Dashboard)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/api/patients/{{patient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "api", "patients", "{{patient_id}}"]
+            },
+            "description": "GET /admin/api/patients/{id} — Retrieves a single patient by ID.\n\nSource: AdminDashboardController.getPatientById(@PathVariable long id)\nResponse: { success, message, data: Patient }"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 404 not found', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Patient data returned', function () {",
+                  "        var body = pm.response.json();",
+                  "        pm.expect(body.success).to.be.true;",
+                  "        pm.expect(body.data).to.have.property('id');",
+                  "        pm.expect(body.data).to.have.property('email');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create Patient (Dashboard)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newpatient_{{$timestamp}}@ehealthcare.com\",\n  \"firstName\": \"New\",\n  \"lastName\": \"Patient\",\n  \"password\": \"Patient@123\",\n  \"phone\": \"0987654321\",\n  \"address\": \"789 Test Avenue, Da Nang\",\n  \"dateOfBirth\": \"1990-01-15\",\n  \"medicalHistory\": \"None\",\n  \"avatar\": \"\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/api/patients",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "api", "patients"]
+            },
+            "description": "POST /admin/api/patients — Creates a new patient. Password is BCrypt-encoded server-side.\n\nSource: AdminDashboardController.createPatient(@RequestBody PatientCreateDTO)\nDTO fields: email*, firstName, lastName, address, password*, phone, dateOfBirth, medicalHistory, avatar\nValidation: email and password are required; email must be unique."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201 Created or 400 email conflict', function () {",
+                  "    pm.expect([201, 400]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.test('Created patient has id', function () {",
+                  "        var body = pm.response.json();",
+                  "        pm.expect(body.success).to.be.true;",
+                  "        pm.expect(body.data).to.have.property('id');",
+                  "        // Store for subsequent tests",
+                  "        pm.collectionVariables.set('created_patient_id', String(body.data.id));",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Patient Info (Dashboard)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Patient\",\n  \"phone\": \"0911111111\",\n  \"address\": \"Updated Address, Ho Chi Minh City\",\n  \"dateOfBirth\": \"1990-05-20\",\n  \"medicalHistory\": \"Hypertension\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/api/patients/{{patient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "api", "patients", "{{patient_id}}"]
+            },
+            "description": "PUT /admin/api/patients/{id} — Updates patient info (excluding password).\n\nSource: AdminDashboardController.updatePatient(@PathVariable, @RequestBody PatientUpdateDTO)\nDTO fields: email, firstName, lastName, address, phone, dateOfBirth, medicalHistory, avatar"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 404 not found', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Updated patient returned', function () {",
+                  "        var body = pm.response.json();",
+                  "        pm.expect(body.success).to.be.true;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Patient Password (Dashboard)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newPassword\": \"NewPatient@456\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/api/patients/{{patient_id}}/password",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "api", "patients", "{{patient_id}}", "password"]
+            },
+            "description": "PUT /admin/api/patients/{id}/password — Updates patient password (BCrypt-encoded).\n\nSource: AdminDashboardController.updatePatientPassword(@PathVariable, @RequestBody PasswordUpdateDTO)\nDTO: { newPassword: string }"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 404 not found', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Password update confirmed', function () {",
+                  "        var body = pm.response.json();",
+                  "        pm.expect(body.success).to.be.true;",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete Patient (Dashboard)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{admin_token}}", "type": "string" }]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/admin/api/patients/{{patient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "api", "patients", "{{patient_id}}"]
+            },
+            "description": "DELETE /admin/api/patients/{id} — Hard-deletes a patient.\n\nSource: AdminDashboardController.deletePatient(@PathVariable long id)\n⚠️ Placed last in this group."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 404 not found', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "06 — Doctor Auth",
+      "description": "Authentication for the Doctor role.\n\nBase: /api/doctor  |  JWT role claim: ROLE_DOCTOR\nToken stored in: {{doctor_token}}\nFilter: DoctorJwtFilter — reads Authorization: Bearer header first, then jwt-doctor-token cookie",
+      "item": [
+        {
+          "name": "Doctor Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{doctor_email}}\",\n  \"password\": \"{{doctor_password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/doctor/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctor", "login"]
+            },
+            "description": "POST /api/doctor/login — Authenticates with DoctorDTO { email, password }.\n\nOn success returns { message: 'Login successful', token: '<jwt>' }.\nThe token is also set as the jwt-doctor-token cookie.\nJWT claims: { sub: email, role: 'ROLE_DOCTOR', iat, exp (24h) }\nSecret: jwt.doctor.secret from application.properties\n\nNote: DoctorDTO has @NotBlank on email and password."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains token', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('token');",
+                  "    pm.expect(body.token).to.be.a('string').and.to.have.length.above(20);",
+                  "});",
+                  "",
+                  "pm.test('Store doctor_token', function () {",
+                  "    var body = pm.response.json();",
+                  "    if (body.token) {",
+                  "        pm.collectionVariables.set('doctor_token', body.token);",
+                  "        console.log('doctor_token stored:', body.token.substring(0, 30) + '...');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Doctor Login — Invalid Credentials",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"fake.doctor@example.com\",\n  \"password\": \"wrongpassword\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/doctor/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctor", "login"]
+            },
+            "description": "Negative test — verifies that invalid credentials return HTTP 401."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Error message present', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Doctor Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{doctor_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctor/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctor", "logout"]
+            },
+            "description": "POST /api/doctor/logout — Clears SecurityContext and expires the jwt-doctor-token cookie.\n\nRequires: Authorization: Bearer {{doctor_token}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Logout message present', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "07 — Doctor Profile",
+      "description": "Doctor self-service profile endpoints.\n\nBase: /api/doctor  |  Requires: {{doctor_token}}",
+      "item": [
+        {
+          "name": "Doctor Login (re-auth for profile tests)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{doctor_email}}\",\n  \"password\": \"{{doctor_password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/doctor/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctor", "login"]
+            },
+            "description": "Re-authenticates the doctor so that the profile and appointment tests have a valid token, even if the previous logout test cleared it."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var body = pm.response.json();",
+                  "    if (body.token) {",
+                  "        pm.collectionVariables.set('doctor_token', body.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Doctor Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{doctor_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctor/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctor", "profile"]
+            },
+            "description": "GET /api/doctor/profile — Returns the authenticated doctor's profile from SecurityContext.\n\nSource: DoctorApiController.getProfile()\nResponse: DoctorDTO { id, email, firstName, lastName, field, phone, address, avatar }\nToken identity is used to look up the doctor — no ID path parameter needed."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Profile has expected fields', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('email');",
+                  "    pm.expect(body).to.have.property('firstName');",
+                  "    pm.expect(body).to.have.property('lastName');",
+                  "    pm.expect(body).to.have.property('field');",
+                  "    // Capture doctor_id from profile",
+                  "    pm.collectionVariables.set('doctor_id', String(body.id));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Doctor Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{doctor_token}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Smith\",\n  \"field\": \"Cardiology\",\n  \"phone\": \"0901234567\",\n  \"address\": \"123 Medical Avenue, Ho Chi Minh City\",\n  \"avatar\": \"\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/doctor/profile/update",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctor", "profile", "update"]
+            },
+            "description": "PUT /api/doctor/profile/update — Updates the authenticated doctor's own profile.\n\nSource: DoctorApiController.updateProfile(@RequestBody DoctorDTO)\nThe doctor ID is extracted from the JWT token — clients cannot set a different ID.\nUpdatable fields via DoctorDTO: firstName, lastName, field, phone, address, avatar"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Success message returned', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "08 — Doctor Appointments & Consultation",
+      "description": "Doctor-side appointment management and patient record access.\n\nBase: /api/doctor  |  Requires: {{doctor_token}}\nAppointment statuses: PENDING | CONFIRMED | CANCELLED | COMPLETED",
+      "item": [
+        {
+          "name": "Get Doctor Appointment List",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{doctor_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctor/appointment/list",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctor", "appointment", "list"]
+            },
+            "description": "GET /api/doctor/appointment/list — Returns all appointments where the authenticated doctor is assigned.\n\nSource: DoctorApiController.getAppointments()\nDoctor identity resolved from JWT via SecurityContextHolder.\nResponse: Appointment[] { id, patient, doctor, scheduleTime, status }"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Capture first appointment_id if available', function () {",
+                  "    var body = pm.response.json();",
+                  "    if (body.length > 0) {",
+                  "        pm.collectionVariables.set('appointment_id', String(body[0].id));",
+                  "        console.log('appointment_id set to:', body[0].id);",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Appointment Status — CONFIRMED",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{doctor_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctor/appointment/update/{{appointment_id}}/CONFIRMED",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctor", "appointment", "update", "{{appointment_id}}", "CONFIRMED"]
+            },
+            "description": "POST /api/doctor/appointment/update/{id}/{status} — Changes appointment status.\n\nPath variables: id (appointment ID), status (PENDING | CONFIRMED | CANCELLED | COMPLETED)\nSource: DoctorApiController.updateStatus(@PathVariable Long id, @PathVariable String status)\nNote: The entity table is named 'consultation' in the DB."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 400 not found', function () {",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Success message returned', function () {",
+                  "        var body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('message');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Appointment Status — CANCELLED",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{doctor_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctor/appointment/update/{{appointment_id}}/CANCELLED",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctor", "appointment", "update", "{{appointment_id}}", "CANCELLED"]
+            },
+            "description": "Same as above but sets status to CANCELLED."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 400', function () {",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Doctor Dashboard (Patient List for Doctor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{doctor_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctor/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctor", "dashboard"]
+            },
+            "description": "GET /api/doctor/dashboard — Returns all patients as PatientSummaryDTO[].\n\nSource: ConsultationApiController.getDashboard()\nResponse: PatientSummaryDTO[] { id, email, fullName, phone, address, dateOfBirth, firstName, lastName, avatar }"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array of patients', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Patient Medical Record (by Doctor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{doctor_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctor/patient/{{patient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctor", "patient", "{{patient_id}}"]
+            },
+            "description": "GET /api/doctor/patient/{id} — Returns the patient profile + clinical info for a specific patient.\n\nSource: ConsultationApiController.getPatientRecord(@PathVariable Long id)\nResponse: { patient: PatientDTO, clinicalInfo: PatientClinicalInforDTO }\nClinicalInforDTO fields: id, patientId, bloodType, allergies, chronicDiseases, familyMedicalHistory, lastUpdatedById, lastUpDatedTime"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 404', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Response has patient and clinicalInfo', function () {",
+                  "        var body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('patient');",
+                  "        pm.expect(body).to.have.property('clinicalInfo');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Patient Medical Record (by Doctor)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{doctor_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bloodType\": \"O+\",\n  \"allergies\": \"Penicillin\",\n  \"chronicDiseases\": \"Hypertension\",\n  \"familyMedicalHistory\": \"Diabetes in father\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/doctor/patient/{{patient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctor", "patient", "{{patient_id}}"]
+            },
+            "description": "POST /api/doctor/patient/{id} — Creates or updates the clinical record for a patient.\n\nSource: ConsultationApiController.updatePatientRecord(@PathVariable Long id, @RequestBody PatientClinicalInforDTO)\nDTO fields: bloodType, allergies, chronicDiseases, familyMedicalHistory\nThe lastUpdatedById is set server-side from the authenticated doctor's identity."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 404 patient not found', function () {",
+                  "    pm.expect([200, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Success message returned', function () {",
+                  "        var body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('message');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "09 — Patient Auth & Registration",
+      "description": "Authentication and registration for the Patient role.\n\nBase: /api/patient  |  JWT role claim: ROLE_PATIENT\nToken stored in: {{patient_token}}\nFilter: PatientJwtFilter — reads jwt-patient-token cookie first, then Authorization: Bearer header",
+      "item": [
+        {
+          "name": "Patient Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{patient_password}}\",\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\",\n  \"phone\": \"0912345678\",\n  \"address\": \"456 Health Street, Ha Noi\",\n  \"dateOfBirth\": \"1995-08-20\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/patient/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patient", "register"]
+            },
+            "description": "POST /api/patient/register — Registers a new patient account.\n\nSource: PatientAuthApiController.register(@RequestBody PatientDTO)\nPatientDTO fields: email, password, firstName, lastName, address, phone, dateOfBirth, medicalHistory\nSecurity: permitAll (no token required)\nNote: If the email already exists this will return an error — the CI pipeline pre-seeds unique credentials."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 4xx if email exists', function () {",
+                  "    pm.expect([200, 400, 409, 500]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Registration success message', function () {",
+                  "        var body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('message');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Patient Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{patient_password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/patient/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patient", "login"]
+            },
+            "description": "POST /api/patient/login — Authenticates with PatientDTO { email, password }.\n\nOn success returns { message: 'Login successful', token: '<jwt>' }.\nThe token is also set as the jwt-patient-token cookie.\nJWT claims: { sub: email, role: 'ROLE_PATIENT', iat, exp (24h) }\nSecret: jwt.patient.secret from application.properties"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response contains token', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('token');",
+                  "    pm.expect(body.token).to.be.a('string').and.to.have.length.above(20);",
+                  "});",
+                  "",
+                  "pm.test('Store patient_token', function () {",
+                  "    var body = pm.response.json();",
+                  "    if (body.token) {",
+                  "        pm.collectionVariables.set('patient_token', body.token);",
+                  "        console.log('patient_token stored:', body.token.substring(0, 30) + '...');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Patient Login — Invalid Credentials",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"nobody@example.com\",\n  \"password\": \"wrongpass\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/patient/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patient", "login"]
+            },
+            "description": "Negative test — verifies that invalid credentials return HTTP 401."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "",
+                  "pm.test('Error field present', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Patient Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{patient_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/patient/logout",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patient", "logout"]
+            },
+            "description": "POST /api/patient/logout — Clears SecurityContext and expires the jwt-patient-token cookie.\n\nRequires: Authorization: Bearer {{patient_token}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Logout message returned', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "10 — Patient Profile",
+      "description": "Patient self-service profile and clinical info endpoints.\n\nBase: /api/patient  |  Requires: {{patient_token}}",
+      "item": [
+        {
+          "name": "Patient Login (re-auth for profile tests)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{patient_email}}\",\n  \"password\": \"{{patient_password}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/patient/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patient", "login"]
+            },
+            "description": "Re-authenticates the patient for the profile section tests."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var body = pm.response.json();",
+                  "    if (body.token) {",
+                  "        pm.collectionVariables.set('patient_token', body.token);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Patient Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{patient_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/patient/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patient", "profile"]
+            },
+            "description": "GET /api/patient/profile — Returns the full Patient entity for the authenticated patient.\n\nSource: PatientAuthApiController.getProfile()\nPatient identity resolved from JWT via SecurityContextHolder.\nResponse: Patient { id, email, firstName, lastName, address, phone, dateOfBirth, medicalHistory, avatar }"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Profile has required fields', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('id');",
+                  "    pm.expect(body).to.have.property('email');",
+                  "    // Capture patient_id from profile response",
+                  "    pm.collectionVariables.set('patient_id', String(body.id));",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Patient Profile",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{patient_token}}", "type": "string" }]
+            },
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"Tran\",\n  \"lastName\": \"Thi B\",\n  \"phone\": \"0912345678\",\n  \"address\": \"456 Health Street, Ha Noi\",\n  \"dateOfBirth\": \"1995-08-20\",\n  \"medicalHistory\": \"Updated medical history\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/patient/update/{{patient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patient", "update", "{{patient_id}}"]
+            },
+            "description": "PUT /api/patient/update/{id} — Updates the patient's own profile information.\n\nSource: PatientAuthApiController.updateProfile(@PathVariable Long id, @RequestBody PatientDTO)\nPath variable: id (must match authenticated patient's ID)\nDTO fields: firstName, lastName, phone, address, dateOfBirth, medicalHistory, avatar"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Success message returned', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('message');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Patient Clinical Info",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{patient_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/patient/clinical-info/{{patient_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patient", "clinical-info", "{{patient_id}}"]
+            },
+            "description": "GET /api/patient/clinical-info/{id} — Retrieves the patient's clinical information record.\n\nSource: PatientAuthApiController.getClinicalInfo(@PathVariable Long id)\nResponse: PatientClinicalInforDTO { id, patientId, bloodType, allergies, chronicDiseases, familyMedicalHistory, lastUpdatedById, lastUpDatedTime }"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 400 if no clinical record yet', function () {",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Clinical info DTO fields present', function () {",
+                  "        var body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('patientId');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "11 — Patient Appointments",
+      "description": "Patient-side appointment booking and listing.\n\nBase: /api/patient/appointment  |  Requires: {{patient_token}}\nAppointment flow: Book → Doctor confirms/cancels",
+      "item": [
+        {
+          "name": "Get Available Doctors",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{patient_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/patient/appointment/doctors",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patient", "appointment", "doctors"]
+            },
+            "description": "GET /api/patient/appointment/doctors — Returns the full Doctor entity list for the booking UI.\n\nSource: PatientAppointmentApiController.getDoctors()\nResponse: Doctor[] { id, email, firstName, lastName, field, phone, address, ROLE, avatar }"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Capture doctor_id for booking test', function () {",
+                  "    var body = pm.response.json();",
+                  "    if (body.length > 0) {",
+                  "        pm.collectionVariables.set('doctor_id', String(body[0].id));",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Book Appointment",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{patient_token}}", "type": "string" }]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"doctorId\": {{doctor_id}},\n  \"scheduleTime\": \"2027-03-15T10:00:00\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/patient/appointment/book",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patient", "appointment", "book"]
+            },
+            "description": "POST /api/patient/appointment/book — Books a new appointment.\n\nSource: PatientAppointmentApiController.book(@RequestBody AppointmentRequestDTO)\nDTO fields: doctorId (Long), scheduleTime (LocalDateTime ISO-8601)\nNote: patientId is injected server-side from the JWT principal (PatientPrinciple) — clients cannot spoof it.\nInitial status: PENDING"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK or 400 if doctor not found', function () {",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    pm.test('Booking success message', function () {",
+                  "        var body = pm.response.json();",
+                  "        pm.expect(body).to.have.property('message');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Patient Appointment List",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{patient_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/patient/appointment/list",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patient", "appointment", "list"]
+            },
+            "description": "GET /api/patient/appointment/list — Returns all appointments for the authenticated patient.\n\nSource: PatientAppointmentApiController.list()\nPatient identity resolved from JWT principal (PatientPrinciple instance-of check).\nResponse: Appointment[] { id, patient, doctor, scheduleTime, status }"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 200 OK', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is an array', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('Capture appointment_id if any', function () {",
+                  "    var body = pm.response.json();",
+                  "    if (body.length > 0) {",
+                  "        pm.collectionVariables.set('appointment_id', String(body[0].id));",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+
+    {
+      "name": "12 — Security & Auth Edge Cases",
+      "description": "Cross-cutting security tests: missing tokens, wrong role tokens, and protected route access.",
+      "item": [
+        {
+          "name": "Access Protected Admin Route Without Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "dashboard"]
+            },
+            "description": "Negative test — attempts to access an admin-protected endpoint without any Authorization header.\nExpected: 401 or 403"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Access denied without token (401 or 403)', function () {",
+                  "    pm.expect([401, 403]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Access Protected Doctor Route Without Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctor/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctor", "profile"]
+            },
+            "description": "Negative test — attempts to access the doctor profile endpoint without any Authorization header."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Access denied without token (401 or 403)', function () {",
+                  "    pm.expect([401, 403]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Access Protected Patient Route Without Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/patient/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "patient", "profile"]
+            },
+            "description": "Negative test — attempts to access the patient profile endpoint without any Authorization header."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Access denied without token (401 or 403)', function () {",
+                  "    pm.expect([401, 403]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Access Admin Route With Patient Token (Wrong Role)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{patient_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "admin", "dashboard"]
+            },
+            "description": "Negative test — uses a valid ROLE_PATIENT token to attempt access to an ROLE_ADMIN endpoint.\nThe AdminJwtFilter checks the role claim and rejects non-ROLE_ADMIN tokens.\nExpected: 401 or 403"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Access denied with wrong role token (401 or 403)', function () {",
+                  "    pm.expect([401, 403]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Access Doctor Route With Patient Token (Wrong Role)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [{ "key": "token", "value": "{{patient_token}}", "type": "string" }]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/doctor/dashboard",
+              "host": ["{{base_url}}"],
+              "path": ["api", "doctor", "dashboard"]
+            },
+            "description": "Negative test — uses a ROLE_PATIENT token to access a ROLE_DOCTOR endpoint.\nExpected: 401 or 403"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Access denied with wrong role token (401 or 403)', function () {",
+                  "    pm.expect([401, 403]).to.include(pm.response.code);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
     }
-  ],
-  "variable": [
-    {
-      "key": "base_url",
-      "value": "http://localhost:8080",
-      "type": "string"
-    },
-    {
-      "key": "admin_token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "doctor_token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "patient_token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "patient_id",
-      "value": "1",
-      "type": "string"
-    },
-    {
-      "key": "doctor_id",
-      "value": "1",
-      "type": "string"
-    },
-    {
-      "key": "appointment_id",
-      "value": "1",
-      "type": "string"
-    }
+
   ]
 }
-
