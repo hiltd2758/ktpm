@@ -191,13 +191,13 @@ jobs:
             # Ghi SQL ra file trên host runner trước
             cat > /tmp/seed.sql << ENDSQL
             DELETE FROM admin   WHERE email = '${ADMIN_EMAIL}';
-            DELETE FROM Doctor  WHERE email = '${DOCTOR_EMAIL}';
-            DELETE FROM Patient WHERE email = '${PATIENT_EMAIL}';
-            INSERT INTO admin (email, password, ROLE)
+            DELETE FROM doctor  WHERE email = '${DOCTOR_EMAIL}';
+            DELETE FROM patient WHERE email = '${PATIENT_EMAIL}';
+            INSERT INTO admin (email, password, role)
             VALUES ('${ADMIN_EMAIL}', '${ADMIN_HASH}', 'ROLE_ADMIN');
-            INSERT INTO Doctor (email, password, first_name, last_name, field, phone, address, ROLE)
+            INSERT INTO doctor (email, password, first_name, last_name, field, phone, address, role)
             VALUES ('${DOCTOR_EMAIL}', '${DOCTOR_HASH}', 'John', 'Smith', 'Cardiology', '0901234567', 'Ho Chi Minh City', 'ROLE_DOCTOR');
-            INSERT INTO Patient (email, password, first_name, last_name, phone, address, date_of_birth, medical_history)
+            INSERT INTO patient (email, password, first_name, last_name, phone, address, date_of_birth, medical_history)
             VALUES ('${PATIENT_EMAIL}', '${PATIENT_HASH}', 'Tran', 'Thi B', '0912345678', 'Ha Noi', '1995-08-20', 'None');
             ENDSQL
             
