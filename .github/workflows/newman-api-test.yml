@@ -11,9 +11,12 @@
 #
 # FIXES APPLIED:
 #   [FIX-1] Thêm step cài Newman + reporters (junitfull, htmlextra)
-#   [FIX-2] BCrypt hash sinh động từ secret thay vì hardcode
+#   [FIX-2] BCrypt hash sinh động từ secret — đọc qua os.environ
+#           tránh shell masking khiến password thành chuỗi rỗng
 #   [FIX-3] Bỏ --bail → Newman chạy hết, reporters luôn ghi file
 #   [FIX-4] Newman step dùng continue-on-error + exit code thủ công
+#   [FIX-5] DELETE trước INSERT → tránh INSERT IGNORE bỏ qua hash mới
+#   [FIX-6] permissions: checks: write → mikepenz/action-junit-report
 # ============================================================
 
 name: E-Health Care — API Tests (Newman)
@@ -55,6 +58,11 @@ jobs:
     name: Build → Seed → Test
     runs-on: ubuntu-latest
     timeout-minutes: 25
+
+    # [FIX-6] Cấp quyền checks:write cho mikepenz/action-junit-report
+    permissions:
+      checks: write
+      contents: read
 
     steps:
 
@@ -157,9 +165,12 @@ jobs:
             fi
           done
 
-      # ── 9. [FIX-2] Seed database — BCrypt hash sinh động ──
-      # Không hardcode hash. Hash được sinh tại runtime từ secret thực tế
-      # → đảm bảo credentials trong DB luôn khớp với Newman environment.
+      # ── 9. [FIX-2 + FIX-5] Seed database ─────────────────
+      # FIX-2: Đọc password qua os.environ thay vì nhúng vào shell string
+      #        → tránh GitHub Actions mask secrets thành *** trước khi
+      #          shell expand → hash của empty string → login 401
+      # FIX-5: DELETE trước INSERT → tránh INSERT IGNORE bỏ qua
+      #        khi row đã tồn tại từ run trước với hash cũ
       - name: Seed database with test credentials
         env:
           ADMIN_EMAIL:      ${{ secrets.ADMIN_EMAIL }}
@@ -169,161 +180,171 @@ jobs:
           PATIENT_EMAIL:    ${{ secrets.PATIENT_EMAIL }}
           PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
         run: |
-          # Cài bcrypt để sinh hash động
           pip install bcrypt --quiet --break-system-packages
 
-          # Sinh BCrypt hash từ secret thực tế (cost=10, khớp Spring Security mặc định)
-          ADMIN_HASH=$(python3 -c \
-            "import bcrypt; print(bcrypt.hashpw('${ADMIN_PASSWORD}'.encode(), bcrypt.gensalt(rounds=10)).decode())")
-          DOCTOR_HASH=$(python3 -c \
-            "import bcrypt; print(bcrypt.hashpw('${DOCTOR_PASSWORD}'.encode(), bcrypt.gensalt(rounds=10)).decode())")
-          PATIENT_HASH=$(python3 -c \
-            "import bcrypt; print(bcrypt.hashpw('${PATIENT_PASSWORD}'.encode(), bcrypt.gensalt(rounds=10)).decode())")
+          # Đọc password từ os.environ — secrets được inject đúng vào
+          # process environment, không bị mask khi shell expand string
+          ADMIN_HASH=$(python3 -c "
+  import bcrypt, os
+  pw = os.environ['ADMIN_PASSWORD'].encode()
+  print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
+  ")
+          DOCTOR_HASH=$(python3 -c "
+  import bcrypt, os
+  pw = os.environ['DOCTOR_PASSWORD'].encode()
+  print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
+  ")
+          PATIENT_HASH=$(python3 -c "
+  import bcrypt, os
+  pw = os.environ['PATIENT_PASSWORD'].encode()
+  print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
+  ")
 
           echo "✅ BCrypt hashes generated"
+  
+  docker exec mysql-local mysql \
+  -uroot -p"${DB_PASS}" "${DB_NAME}" \
+  -e "
+  DELETE FROM admin   WHERE email = '${ADMIN_EMAIL}';
+  DELETE FROM Doctor  WHERE email = '${DOCTOR_EMAIL}';
+  DELETE FROM Patient WHERE email = '${PATIENT_EMAIL}';
+  
+  INSERT INTO admin (email, password, ROLE)
+  VALUES ('${ADMIN_EMAIL}', '${ADMIN_HASH}', 'ROLE_ADMIN');
+  
+  INSERT INTO Doctor
+  (email, password, first_name, last_name, field, phone, address, ROLE)
+  VALUES
+  ('${DOCTOR_EMAIL}', '${DOCTOR_HASH}',
+  'John', 'Smith', 'Cardiology', '0901234567',
+  'Ho Chi Minh City', 'ROLE_DOCTOR');
+  
+  INSERT INTO Patient
+  (email, password, first_name, last_name, phone, address,
+  date_of_birth, medical_history)
+  VALUES
+  ('${PATIENT_EMAIL}', '${PATIENT_HASH}',
+  'Tran', 'Thi B', '0912345678', 'Ha Noi',
+  '1995-08-20', 'None');
+  "
+  echo "✅ Database seeded successfully"
 
-          docker exec mysql-local mysql \
-            -uroot -p"${DB_PASS}" "${DB_NAME}" << SQL
+# ── 10. Debug — Verify seed data ──────────────────────
+- name: Debug — Verify seed data
+  run: |
+    docker exec mysql-local mysql -uroot -p"${DB_PASS}" "${DB_NAME}" \
+      -e "SELECT email, LEFT(password,30) AS hash_prefix, ROLE FROM admin;
+          SELECT email, LEFT(password,30) AS hash_prefix, ROLE FROM Doctor;
+          SELECT email, LEFT(password,30) AS hash_prefix FROM Patient;"
 
-          -- Admin seed (table: admin)
-          INSERT IGNORE INTO admin (email, password, ROLE)
-          VALUES ('${ADMIN_EMAIL}', '${ADMIN_HASH}', 'ROLE_ADMIN');
+# ── 11. Prepare reports directory ─────────────────────
+- name: Prepare reports directory
+  run: mkdir -p ${{ env.REPORTS_DIR }}
 
-          -- Doctor seed (table: Doctor)
-          INSERT IGNORE INTO Doctor
-            (email, password, first_name, last_name, field, phone, address, ROLE)
-          VALUES
-            ('${DOCTOR_EMAIL}', '${DOCTOR_HASH}',
-             'John', 'Smith', 'Cardiology', '0901234567',
-             'Ho Chi Minh City', 'ROLE_DOCTOR');
+# ── 12. Write Newman environment file ─────────────────
+- name: Write Newman environment file
+  env:
+    ADMIN_EMAIL:      ${{ secrets.ADMIN_EMAIL }}
+    ADMIN_PASSWORD:   ${{ secrets.ADMIN_PASSWORD }}
+    DOCTOR_EMAIL:     ${{ secrets.DOCTOR_EMAIL }}
+    DOCTOR_PASSWORD:  ${{ secrets.DOCTOR_PASSWORD }}
+    PATIENT_EMAIL:    ${{ secrets.PATIENT_EMAIL }}
+    PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
+  run: |
+    cat > "${ENV_FILE}" << EOF
+    {
+      "id": "ehc-ci-environment",
+      "name": "EHC CI/CD Environment",
+      "values": [
+        { "key": "base_url",         "value": "http://localhost:${APP_PORT}", "enabled": true, "type": "default" },
+        { "key": "admin_email",      "value": "${ADMIN_EMAIL}",              "enabled": true, "type": "secret"  },
+        { "key": "admin_password",   "value": "${ADMIN_PASSWORD}",           "enabled": true, "type": "secret"  },
+        { "key": "doctor_email",     "value": "${DOCTOR_EMAIL}",             "enabled": true, "type": "secret"  },
+        { "key": "doctor_password",  "value": "${DOCTOR_PASSWORD}",          "enabled": true, "type": "secret"  },
+        { "key": "patient_email",    "value": "${PATIENT_EMAIL}",            "enabled": true, "type": "secret"  },
+        { "key": "patient_password", "value": "${PATIENT_PASSWORD}",         "enabled": true, "type": "secret"  },
+        { "key": "admin_token",      "value": "",                            "enabled": true, "type": "default" },
+        { "key": "doctor_token",     "value": "",                            "enabled": true, "type": "default" },
+        { "key": "patient_token",    "value": "",                            "enabled": true, "type": "default" },
+        { "key": "patient_id",       "value": "1",                           "enabled": true, "type": "default" },
+        { "key": "doctor_id",        "value": "1",                           "enabled": true, "type": "default" },
+        { "key": "appointment_id",   "value": "1",                           "enabled": true, "type": "default" }
+      ]
+    }
+    EOF
+    echo "✅ Newman environment file created"
 
-          -- Patient seed (table: Patient)
-          INSERT IGNORE INTO Patient
-            (email, password, first_name, last_name, phone, address,
-             date_of_birth, medical_history)
-          VALUES
-            ('${PATIENT_EMAIL}', '${PATIENT_HASH}',
-             'Tran', 'Thi B', '0912345678', 'Ha Noi',
-             '1995-08-20', 'None');
+# ── 13. [FIX-3 + FIX-4] Run Newman API tests ──────────
+# - Bỏ --bail → Newman chạy hết toàn bộ collection
+#   → reporters luôn ghi junit.xml và index.html dù có test fail
+# - continue-on-error: true → pipeline không dừng ở đây
+# - Lưu exit code → fail pipeline SAU KHI đã upload reports
+- name: Run Newman API tests
+  id: newman
+  continue-on-error: true
+  run: |
+    newman run "${COLLECTION}" \
+      --environment "${ENV_FILE}" \
+      --reporters cli,junitfull,htmlextra \
+      --reporter-junitfull-export "${REPORTS_DIR}/junit.xml" \
+      --reporter-htmlextra-export "${REPORTS_DIR}/index.html" \
+      --reporter-htmlextra-title  "E-Health Care API Test Report" \
+      --reporter-htmlextra-logs \
+      --reporter-htmlextra-showEnvironmentData \
+      --reporter-htmlextra-showGlobalData \
+      --delay-request "${NEWMAN_DELAY_MS}" \
+      --timeout-request "${REQUEST_TIMEOUT_MS}" \
+      --color on
+    echo "newman_exit=$?" >> "$GITHUB_OUTPUT"
 
-          SQL
-          echo "✅ Database seeded successfully"
+# ── 14. Print Spring Boot tail on failure ──────────────
+- name: Print application logs on failure
+  if: failure() || steps.newman.outcome == 'failure'
+  run: |
+    echo "====== Last 100 lines of Spring Boot log ======"
+    tail -100 /tmp/springboot.log || true
 
-      # ── 10. Debug — Verify seed data ──────────────────────
-      - name: Debug — Verify seed data
-        run: |
-          docker exec mysql-local mysql -uroot -proot e_health \
-            -e "SELECT email, LEFT(password,30) AS hash_prefix FROM admin;"
+# ── 15. Upload HTML report ─────────────────────────────
+- name: Upload HTML report
+  uses: actions/upload-artifact@v4
+  if: always()
+  with:
+    name: newman-html-report-${{ github.run_number }}
+    path: ${{ env.REPORTS_DIR }}/index.html
+    retention-days: 30
+    if-no-files-found: warn
 
-      # ── 11. Prepare reports directory ─────────────────────
-      - name: Prepare reports directory
-        run: mkdir -p ${{ env.REPORTS_DIR }}
+# ── 16. Upload JUnit XML report ────────────────────────
+- name: Upload JUnit XML report
+  uses: actions/upload-artifact@v4
+  if: always()
+  with:
+    name: newman-junit-report-${{ github.run_number }}
+    path: ${{ env.REPORTS_DIR }}/junit.xml
+    retention-days: 30
+    if-no-files-found: warn
 
-      # ── 12. Write Newman environment file ─────────────────
-      - name: Write Newman environment file
-        env:
-          ADMIN_EMAIL:      ${{ secrets.ADMIN_EMAIL }}
-          ADMIN_PASSWORD:   ${{ secrets.ADMIN_PASSWORD }}
-          DOCTOR_EMAIL:     ${{ secrets.DOCTOR_EMAIL }}
-          DOCTOR_PASSWORD:  ${{ secrets.DOCTOR_PASSWORD }}
-          PATIENT_EMAIL:    ${{ secrets.PATIENT_EMAIL }}
-          PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
-        run: |
-          cat > "${ENV_FILE}" << EOF
-          {
-            "id": "ehc-ci-environment",
-            "name": "EHC CI/CD Environment",
-            "values": [
-              { "key": "base_url",         "value": "http://localhost:${APP_PORT}", "enabled": true, "type": "default" },
-              { "key": "admin_email",      "value": "${ADMIN_EMAIL}",              "enabled": true, "type": "secret"  },
-              { "key": "admin_password",   "value": "${ADMIN_PASSWORD}",           "enabled": true, "type": "secret"  },
-              { "key": "doctor_email",     "value": "${DOCTOR_EMAIL}",             "enabled": true, "type": "secret"  },
-              { "key": "doctor_password",  "value": "${DOCTOR_PASSWORD}",          "enabled": true, "type": "secret"  },
-              { "key": "patient_email",    "value": "${PATIENT_EMAIL}",            "enabled": true, "type": "secret"  },
-              { "key": "patient_password", "value": "${PATIENT_PASSWORD}",         "enabled": true, "type": "secret"  },
-              { "key": "admin_token",      "value": "",                            "enabled": true, "type": "default" },
-              { "key": "doctor_token",     "value": "",                            "enabled": true, "type": "default" },
-              { "key": "patient_token",    "value": "",                            "enabled": true, "type": "default" },
-              { "key": "patient_id",       "value": "1",                           "enabled": true, "type": "default" },
-              { "key": "doctor_id",        "value": "1",                           "enabled": true, "type": "default" },
-              { "key": "appointment_id",   "value": "1",                           "enabled": true, "type": "default" }
-            ]
-          }
-          EOF
-          echo "✅ Newman environment file created"
+# ── 17. [FIX-6] Publish JUnit test results ────────────
+- name: Publish test results (JUnit)
+  uses: mikepenz/action-junit-report@v4
+  if: always()
+  with:
+    report_paths: "${{ env.REPORTS_DIR }}/junit.xml"
+    fail_on_failure: true
+    require_tests: true
+    check_name: "Newman API Test Results"
+    detailed_summary: true
 
-      # ── 13. [FIX-3 + FIX-4] Run Newman API tests ──────────
-      # - Bỏ --bail → Newman chạy hết toàn bộ collection
-      #   → reporters luôn ghi junit.xml và index.html dù có test fail
-      # - continue-on-error: true → pipeline không dừng ở đây
-      # - Lưu exit code → fail pipeline SAU KHI đã upload reports
-      - name: Run Newman API tests
-        id: newman
-        continue-on-error: true
-        run: |
-          newman run "${COLLECTION}" \
-            --environment "${ENV_FILE}" \
-            --reporters cli,junitfull,htmlextra \
-            --reporter-junitfull-export "${REPORTS_DIR}/junit.xml" \
-            --reporter-htmlextra-export "${REPORTS_DIR}/index.html" \
-            --reporter-htmlextra-title  "E-Health Care API Test Report" \
-            --reporter-htmlextra-logs \
-            --reporter-htmlextra-showEnvironmentData \
-            --reporter-htmlextra-showGlobalData \
-            --delay-request "${NEWMAN_DELAY_MS}" \
-            --timeout-request "${REQUEST_TIMEOUT_MS}" \
-            --color on
-          # Ghi exit code để dùng ở step cuối
-          echo "newman_exit=$?" >> "$GITHUB_OUTPUT"
+# ── 18. Tear down containers ───────────────────────────
+- name: Stop Docker containers
+  if: always()
+  run: docker compose down --volumes --remove-orphans || true
 
-      # ── 14. Print Spring Boot tail on failure ──────────────
-      - name: Print application logs on failure
-        if: failure() || steps.newman.outcome == 'failure'
-        run: |
-          echo "====== Last 100 lines of Spring Boot log ======"
-          tail -100 /tmp/springboot.log || true
-
-      # ── 15. Upload HTML report ─────────────────────────────
-      - name: Upload HTML report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: newman-html-report-${{ github.run_number }}
-          path: ${{ env.REPORTS_DIR }}/index.html
-          retention-days: 30
-          if-no-files-found: warn
-
-      # ── 16. Upload JUnit XML report ────────────────────────
-      - name: Upload JUnit XML report
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: newman-junit-report-${{ github.run_number }}
-          path: ${{ env.REPORTS_DIR }}/junit.xml
-          retention-days: 30
-          if-no-files-found: warn
-
-      # ── 17. Publish JUnit test results ────────────────────
-      - name: Publish test results (JUnit)
-        uses: mikepenz/action-junit-report@v4
-        if: always()
-        with:
-          report_paths: "${{ env.REPORTS_DIR }}/junit.xml"
-          fail_on_failure: true
-          require_tests: true
-          check_name: "Newman API Test Results"
-          detailed_summary: true
-
-      # ── 18. Tear down containers ───────────────────────────
-      - name: Stop Docker containers
-        if: always()
-        run: docker compose down --volumes --remove-orphans || true
-
-      # ── 19. [FIX-4] Fail pipeline nếu Newman có lỗi ───────
-      # Đặt CUỐI CÙNG để đảm bảo reports và containers đã được
-      # xử lý trước khi pipeline báo fail.
-      - name: Fail pipeline if Newman tests failed
-        if: steps.newman.outputs.newman_exit != '0'
-        run: |
-          echo "❌ Newman exited with code ${{ steps.newman.outputs.newman_exit }}"
-          exit 1
+# ── 19. [FIX-4] Fail pipeline nếu Newman có lỗi ───────
+# Đặt CUỐI CÙNG để đảm bảo reports và containers đã được
+# xử lý trước khi pipeline báo fail.
+- name: Fail pipeline if Newman tests failed
+  if: steps.newman.outputs.newman_exit != '0'
+  run: |
+    echo "❌ Newman exited with code ${{ steps.newman.outputs.newman_exit }}"
+    exit 1
