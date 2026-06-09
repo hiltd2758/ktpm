@@ -1,20 +1,12 @@
-# ============================================================
-
-# E-Health Care API - Newman CI/CD Pipeline
-
-# ============================================================
-
 name: E-Health Care API Tests
 
 on:
   push:
     branches:
       - "**"
-
   pull_request:
     branches:
       - "**"
-
   workflow_dispatch:
     inputs:
       newman_delay:
@@ -22,237 +14,214 @@ on:
         required: false
         default: "300"
 
-# ============================================================
-
-# Global Environment Variables
-
-# ============================================================
-
 env:
-APP_PORT: 8080
-
-DB_PORT: 3307
-DB_NAME: e_health
-DB_USER: root
-DB_PASS: root
-
-COLLECTION: postman/E-Health-Care-API.postman_collection.json
-ENV_FILE: /tmp/ehc-environment.json
-
-REPORTS_DIR: reports
-
-REQUEST_TIMEOUT_MS: 15000
-NEWMAN_DELAY_MS: ${{ github.event.inputs.newman_delay || '300' }}
-
-# ============================================================
-
-# Job
-
-# ============================================================
+  APP_PORT: 8080
+  DB_PORT: 3307
+  DB_NAME: e_health
+  DB_USER: root
+  DB_PASS: root
+  COLLECTION: postman/E-Health-Care-API.postman_collection.json
+  ENV_FILE: /tmp/ehc-environment.json
+  REPORTS_DIR: reports
+  REQUEST_TIMEOUT_MS: 15000
+  NEWMAN_DELAY_MS: ${{ github.event.inputs.newman_delay || '300' }}
 
 jobs:
-api-test:
+  api-test:
+    name: Build → Seed → Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      checks: write
+      contents: read
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: e_health
+        ports:
+          - 3307:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
-name: Build → Seed → Test
-runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-timeout-minutes: 25
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+          cache: maven
 
-permissions:
-  checks: write
-  contents: read
+      - name: Cache Maven Repository
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
 
-steps:
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
 
-  # ------------------------------------------------------
-  # Checkout & Setup
-  # ------------------------------------------------------
+      - name: Install Newman + Reporters
+        run: |
+          npm install -g newman newman-reporter-junitfull newman-reporter-htmlextra
+          newman --version
 
-  - name: Checkout repository
-    uses: actions/checkout@v4
+      # Build & Run Application
+      - name: Build Spring Boot
+        working-directory: web
+        run: mvn package -DskipTests --no-transfer-progress -q
 
-  - name: Setup Java 21
-    uses: actions/setup-java@v4
-    with:
-      java-version: "21"
-      distribution: temurin
-      cache: maven
+      - name: Start Spring Boot
+        working-directory: web
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:${{ env.DB_PORT }}/${{ env.DB_NAME }}
+          SPRING_DATASOURCE_USERNAME: ${{ env.DB_USER }}
+          SPRING_DATASOURCE_PASSWORD: ${{ env.DB_PASS }}
+        run: |
+          nohup java -jar target/*.jar \
+            --server.port=${APP_PORT} \
+            --spring.jpa.hibernate.ddl-auto=update \
+            > /tmp/springboot.log 2>&1 &
+          echo "SPRING_PID=$!" >> $GITHUB_ENV
 
-  - name: Cache Maven Repository
-    uses: actions/cache@v4
-    with:
-      path: ~/.m2/repository
-      key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-      restore-keys: |
-        ${{ runner.os }}-maven-
+      - name: Wait for Application
+        run: |
+          for i in {1..30}; do
+            if curl -s http://localhost:${APP_PORT}/actuator/health > /dev/null || \
+               curl -s -o /dev/null -w "%{http_code}" http://localhost:${APP_PORT}/api/auth/login | grep -q "405\|200"; then
+              echo "✅ Application is ready!"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "❌ Application failed to start"
+          exit 1
 
-  - name: Setup Node.js 20
-    uses: actions/setup-node@v4
-    with:
-      node-version: "20"
+      # Database Seed
+      - name: Generate BCrypt Hashes & Seed Database
+        env:
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          DOCTOR_EMAIL: ${{ secrets.DOCTOR_EMAIL }}
+          DOCTOR_PASSWORD: ${{ secrets.DOCTOR_PASSWORD }}
+          PATIENT_EMAIL: ${{ secrets.PATIENT_EMAIL }}
+          PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
+        run: |
+          npm install -g bcrypt-cli
 
-  - name: Install Newman + Reporters
-    run: |
-      npm install -g \
-        newman \
-        newman-reporter-junitfull \
-        newman-reporter-htmlextra
+          ADMIN_HASH=$(bcrypt-cli hash "$ADMIN_PASSWORD")
+          DOCTOR_HASH=$(bcrypt-cli hash "$DOCTOR_PASSWORD")
+          PATIENT_HASH=$(bcrypt-cli hash "$PATIENT_PASSWORD")
 
-      newman --version
+          cat > /tmp/seed.sql << EOF
+          INSERT INTO users (email, password, role, full_name, enabled) 
+          VALUES 
+            ('$ADMIN_EMAIL', '$ADMIN_HASH', 'ADMIN', 'Admin User', true),
+            ('$DOCTOR_EMAIL', '$DOCTOR_HASH', 'DOCTOR', 'Doctor User', true),
+            ('$PATIENT_EMAIL', '$PATIENT_HASH', 'PATIENT', 'Patient User', true)
+          ON DUPLICATE KEY UPDATE password = VALUES(password);
+          EOF
 
-  # ------------------------------------------------------
-  # Infrastructure
-  # ------------------------------------------------------
+          mysql -h 127.0.0.1 -P ${{ env.DB_PORT }} -u root -proot e_health < /tmp/seed.sql
+          echo "✅ Database seeded successfully"
 
-  - name: Start MySQL
-    run: |
-      docker compose up -d mysql-local
-      # wait until healthy
+      - name: Verify Seed Data
+        run: mysql -h 127.0.0.1 -P ${{ env.DB_PORT }} -u root -proot e_health -e "SELECT email, role FROM users;"
 
-  # ------------------------------------------------------
-  # Build & Run Application
-  # ------------------------------------------------------
+      # Smoke Test
+      - name: Verify Login APIs
+        env:
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: |
+          echo "Testing Admin Login..."
+          curl -s -X POST http://localhost:${APP_PORT}/api/auth/login \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASSWORD\"}"
 
-  - name: Build Spring Boot
-    working-directory: web
-    run: mvn package -DskipTests --no-transfer-progress -q
+      # Newman Environment & Run
+      - name: Create Reports Directory
+        run: mkdir -p ${{ env.REPORTS_DIR }}
 
-  - name: Start Spring Boot
-    working-directory: web
-    env:
-      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:${{ env.DB_PORT }}/${{ env.DB_NAME }}
-      SPRING_DATASOURCE_USERNAME: ${{ env.DB_USER }}
-      SPRING_DATASOURCE_PASSWORD: ${{ env.DB_PASS }}
-    run: |
-      java -jar target/*.jar \
-        --server.port=${APP_PORT} \
-        --spring.jpa.hibernate.ddl-auto=update \
-        > /tmp/springboot.log 2>&1 &
+      - name: Generate Newman Environment
+        env:
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          DOCTOR_EMAIL: ${{ secrets.DOCTOR_EMAIL }}
+          DOCTOR_PASSWORD: ${{ secrets.DOCTOR_PASSWORD }}
+          PATIENT_EMAIL: ${{ secrets.PATIENT_EMAIL }}
+          PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
+        run: |
+          cat > "${ENV_FILE}" << EOF
+          {
+            "values": [
+              {"key": "baseUrl", "value": "http://localhost:${APP_PORT}"},
+              {"key": "adminEmail", "value": "${ADMIN_EMAIL}"},
+              {"key": "adminPassword", "value": "${ADMIN_PASSWORD}"},
+              {"key": "doctorEmail", "value": "${DOCTOR_EMAIL}"},
+              {"key": "doctorPassword", "value": "${DOCTOR_PASSWORD}"},
+              {"key": "patientEmail", "value": "${PATIENT_EMAIL}"},
+              {"key": "patientPassword", "value": "${PATIENT_PASSWORD}"}
+            ]
+          }
+          EOF
 
-  # ------------------------------------------------------
-  # Database Seed
-  # ------------------------------------------------------
+      - name: Run Newman Collection
+        id: newman
+        continue-on-error: true
+        run: |
+          newman run "${COLLECTION}" \
+            --environment "${ENV_FILE}" \
+            --reporters cli,junitfull,htmlextra \
+            --reporter-junitfull-export "${REPORTS_DIR}/junit.xml" \
+            --reporter-htmlextra-export "${REPORTS_DIR}/index.html" \
+            --delay-request "${NEWMAN_DELAY_MS}" \
+            --timeout-request "${REQUEST_TIMEOUT_MS}" \
+            --bail
 
-  - name: Generate BCrypt Hashes & Seed Database
-    env:
-      ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          echo "newman_exit=$?" >> "$GITHUB_OUTPUT"
 
-      DOCTOR_EMAIL: ${{ secrets.DOCTOR_EMAIL }}
-      DOCTOR_PASSWORD: ${{ secrets.DOCTOR_PASSWORD }}
+      - name: Print Spring Boot Logs (on failure)
+        if: failure() || steps.newman.outcome == 'failure'
+        run: tail -100 /tmp/springboot.log || true
 
-      PATIENT_EMAIL: ${{ secrets.PATIENT_EMAIL }}
-      PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
-    run: |
-      # generate hashes
-      # create seed.sql
-      # execute seed.sql
+      # Reports
+      - name: Upload HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-html-report-${{ github.run_number }}
+          path: reports/index.html
 
-  - name: Verify Seed Data
-    run: |
-      # mysql select statements
+      - name: Upload JUnit Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: newman-junit-report-${{ github.run_number }}
+          path: reports/junit.xml
 
-  # ------------------------------------------------------
-  # Smoke Test
-  # ------------------------------------------------------
+      - name: Publish JUnit Results
+        if: always()
+        uses: mikepenz/action-junit-report@v4
+        with:
+          report_paths: reports/junit.xml
+          fail_on_failure: true
+          require_tests: true
+          check_name: Newman API Test Results
 
-  - name: Verify Login APIs
-    env:
-      ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-
-      DOCTOR_EMAIL: ${{ secrets.DOCTOR_EMAIL }}
-      DOCTOR_PASSWORD: ${{ secrets.DOCTOR_PASSWORD }}
-    run: |
-      # curl admin login
-      # curl doctor login
-
-  # ------------------------------------------------------
-  # Newman Environment
-  # ------------------------------------------------------
-
-  - name: Create Reports Directory
-    run: mkdir -p ${{ env.REPORTS_DIR }}
-
-  - name: Generate Newman Environment
-    env:
-      ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-      ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-
-      DOCTOR_EMAIL: ${{ secrets.DOCTOR_EMAIL }}
-      DOCTOR_PASSWORD: ${{ secrets.DOCTOR_PASSWORD }}
-
-      PATIENT_EMAIL: ${{ secrets.PATIENT_EMAIL }}
-      PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
-    run: |
-      # create environment json
-
-  # ------------------------------------------------------
-  # Execute Newman
-  # ------------------------------------------------------
-
-  - name: Run Newman Collection
-    id: newman
-    continue-on-error: true
-    run: |
-      newman run "${COLLECTION}" \
-        --environment "${ENV_FILE}" \
-        --reporters cli,junitfull,htmlextra \
-        --reporter-junitfull-export "${REPORTS_DIR}/junit.xml" \
-        --reporter-htmlextra-export "${REPORTS_DIR}/index.html" \
-        --delay-request "${NEWMAN_DELAY_MS}" \
-        --timeout-request "${REQUEST_TIMEOUT_MS}"
-
-      echo "newman_exit=$?" >> "$GITHUB_OUTPUT"
-
-  # ------------------------------------------------------
-  # Diagnostics
-  # ------------------------------------------------------
-
-  - name: Print Spring Boot Logs
-    if: failure() || steps.newman.outcome == 'failure'
-    run: |
-      tail -100 /tmp/springboot.log || true
-
-  # ------------------------------------------------------
-  # Reports
-  # ------------------------------------------------------
-
-  - name: Upload HTML Report
-    if: always()
-    uses: actions/upload-artifact@v4
-    with:
-      name: newman-html-report-${{ github.run_number }}
-      path: reports/index.html
-
-  - name: Upload JUnit Report
-    if: always()
-    uses: actions/upload-artifact@v4
-    with:
-      name: newman-junit-report-${{ github.run_number }}
-      path: reports/junit.xml
-
-  - name: Publish JUnit Results
-    if: always()
-    uses: mikepenz/action-junit-report@v4
-    with:
-      report_paths: reports/junit.xml
-      fail_on_failure: true
-      require_tests: true
-      check_name: Newman API Test Results
-
-  # ------------------------------------------------------
-  # Cleanup
-  # ------------------------------------------------------
-
-  - name: Stop Containers
-    if: always()
-    run: |
-      docker compose down --volumes --remove-orphans || true
-
-  - name: Fail Workflow if Newman Failed
-    if: steps.newman.outputs.newman_exit != '0'
-    run: |
-      exit 1
-
+      # Cleanup
+      - name: Stop Spring Boot
+        if: always()
+        run: kill ${{ env.SPRING_PID }} 2>/dev/null || true
