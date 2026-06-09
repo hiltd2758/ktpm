@@ -1022,114 +1022,6 @@
               }
             }
           ]
-        },
-        {
-          "name": "Update Patient Password (Dashboard)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{admin_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"newPassword\": \"NewPatient@456\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
-            "url": {
-              "raw": "{{base_url}}/admin/api/patients/{{patient_id}}/password",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "api",
-                "patients",
-                "{{patient_id}}",
-                "password"
-              ]
-            },
-            "description": "PUT /admin/api/patients/{id}/password — Updates patient password (BCrypt-encoded).\n\nSource: AdminDashboardController.updatePatientPassword(@PathVariable, @RequestBody PasswordUpdateDTO)\nDTO: { newPassword: string }"
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200 OK or 404 not found', function () {",
-                  "    pm.expect([200, 404]).to.include(pm.response.code);",
-                  "});",
-                  "",
-                  "if (pm.response.code === 200) {",
-                  "    pm.test('Password update confirmed', function () {",
-                  "        var body = pm.response.json();",
-                  "        pm.expect(body.success).to.be.true;",
-                  "    });",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        },
-        {
-          "name": "Delete Patient (Dashboard)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{admin_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/admin/api/patients/{{patient_id}}",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "admin",
-                "api",
-                "patients",
-                "{{patient_id}}"
-              ]
-            },
-            "description": "DELETE /admin/api/patients/{id} — Hard-deletes a patient.\n\nSource: AdminDashboardController.deletePatient(@PathVariable long id)\n⚠️ Placed last in this group."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200 OK or 404 not found', function () {",
-                  "    pm.expect([200, 404]).to.include(pm.response.code);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
         }
       ]
     },
@@ -2100,7 +1992,7 @@
                   "    pm.expect(body).to.have.property('id');",
                   "    pm.expect(body).to.have.property('email');",
                   "    // Capture patient_id from profile response",
-                  "    pm.collectionVariables.set('patient_id', String(body.id));",
+                  "    pm.environment.set('patient_id', String(body.id));",
                   "});"
                 ],
                 "type": "text/javascript"
