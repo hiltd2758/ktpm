@@ -15,7 +15,7 @@ import java.time.LocalDate; // Example for date of birth
 public class Patient {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
     private String email;
     private String firstName;
     private String lastName;

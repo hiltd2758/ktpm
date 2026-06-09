@@ -48,16 +48,23 @@ public class PatientAuthApiController {
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
-
-        Patient patient = patientRepository.findByEmail(auth.getName())
-                .orElse(null);
+        if (auth == null || !auth.isAuthenticated()
+                || auth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+        }
+        Patient patient = patientRepository.findByEmail(auth.getName()).orElse(null);
         if (patient == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(patient);
     }
 
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updateProfile(@PathVariable Long id, @RequestBody PatientDTO patientDTO) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // Verify id thuộc về patient đang login
+        Patient current = patientRepository.findByEmail(auth.getName()).orElse(null);
+        if (current == null || !current.getId().equals(id)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Forbidden"));
+        }
         try {
             patientService.updatePatient(patientDTO, id);
             return ResponseEntity.ok(Map.of("message", "Cập nhật thành công"));

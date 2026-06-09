@@ -55,6 +55,9 @@ jobs:
     name: Build → Seed → Test
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    permissions:
+      checks: write
+      contents: read
 
     steps:
 
@@ -162,59 +165,59 @@ jobs:
       # → đảm bảo credentials trong DB luôn khớp với Newman environment.
       - name: Seed database with test credentials
         env:
-            ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-            ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-            DOCTOR_EMAIL: ${{ secrets.DOCTOR_EMAIL }}
-            DOCTOR_PASSWORD: ${{ secrets.DOCTOR_PASSWORD }}
-            PATIENT_EMAIL: ${{ secrets.PATIENT_EMAIL }}
-            PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          DOCTOR_EMAIL: ${{ secrets.DOCTOR_EMAIL }}
+          DOCTOR_PASSWORD: ${{ secrets.DOCTOR_PASSWORD }}
+          PATIENT_EMAIL: ${{ secrets.PATIENT_EMAIL }}
+          PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
         run: |
-            pip install bcrypt --quiet --break-system-packages
-            
-            ADMIN_HASH=$(python3 -c "
-            import bcrypt, os
-            pw = os.environ['ADMIN_PASSWORD'].encode()
-            print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
-            ")
-                      DOCTOR_HASH=$(python3 -c "
-            import bcrypt, os
-            pw = os.environ['DOCTOR_PASSWORD'].encode()
-            print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
-            ")
-                      PATIENT_HASH=$(python3 -c "
-            import bcrypt, os
-            pw = os.environ['PATIENT_PASSWORD'].encode()
-            print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
-            ")
-                      echo "✅ BCrypt hashes generated"
-            
-            # Ghi SQL ra file trên host runner trước
-            cat > /tmp/seed.sql << ENDSQL
-            DELETE FROM admin WHERE email = '${ADMIN_EMAIL}';
-            INSERT INTO admin (email, password, role)
-            VALUES ('${ADMIN_EMAIL}', '${ADMIN_HASH}', 'ROLE_ADMIN');
-            
-            INSERT INTO doctor (email, password, first_name, last_name, field, phone, address, role)
-            VALUES ('${DOCTOR_EMAIL}', '${DOCTOR_HASH}', 'John', 'Smith', 'Cardiology', '0901234567', 'Ho Chi Minh City', 'ROLE_DOCTOR')
-            ON DUPLICATE KEY UPDATE password = VALUES(password), role = VALUES(role);
-            
-            INSERT INTO patient (email, password, first_name, last_name, phone, address, date_of_birth, medical_history)
-            VALUES ('${PATIENT_EMAIL}', '${PATIENT_HASH}', 'Tran', 'Thi B', '0912345678', 'Ha Noi', '1995-08-20', 'None')
-            ON DUPLICATE KEY UPDATE password = VALUES(password);
-            ENDSQL
-            
-            # Verify file được tạo đúng (ẩn hash, chỉ show email)
-            echo "=== SQL preview (emails only) ==="
-            grep "INSERT INTO admin" /tmp/seed.sql
-            
-            # Copy file vào container rồi chạy
-            docker cp /tmp/seed.sql mysql-local:/tmp/seed.sql
-            docker exec mysql-local mysql \
-            -uroot -p"${DB_PASS}" "${DB_NAME}" \
-            -e "source /tmp/seed.sql"
-            echo "✅ Database seeded successfully"
+          pip install bcrypt --quiet --break-system-packages
+          
+          ADMIN_HASH=$(python3 -c "
+          import bcrypt, os
+          pw = os.environ['ADMIN_PASSWORD'].encode()
+          print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
+          ")
+                    DOCTOR_HASH=$(python3 -c "
+          import bcrypt, os
+          pw = os.environ['DOCTOR_PASSWORD'].encode()
+          print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
+          ")
+                    PATIENT_HASH=$(python3 -c "
+          import bcrypt, os
+          pw = os.environ['PATIENT_PASSWORD'].encode()
+          print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
+          ")
+                    echo "✅ BCrypt hashes generated"
+          
+          # Ghi SQL ra file trên host runner trước
+          cat > /tmp/seed.sql << ENDSQL
+          DELETE FROM admin WHERE email = '${ADMIN_EMAIL}';
+          INSERT INTO admin (email, password, role)
+          VALUES ('${ADMIN_EMAIL}', '${ADMIN_HASH}', 'ROLE_ADMIN');
+          
+          INSERT INTO doctor (email, password, first_name, last_name, field, phone, address, role)
+          VALUES ('${DOCTOR_EMAIL}', '${DOCTOR_HASH}', 'John', 'Smith', 'Cardiology', '0901234567', 'Ho Chi Minh City', 'ROLE_DOCTOR')
+          ON DUPLICATE KEY UPDATE password = VALUES(password), role = VALUES(role);
+          
+          INSERT INTO patient (email, password, first_name, last_name, phone, address, date_of_birth, medical_history)
+          VALUES ('${PATIENT_EMAIL}', '${PATIENT_HASH}', 'Tran', 'Thi B', '0912345678', 'Ha Noi', '1995-08-20', 'None')
+          ON DUPLICATE KEY UPDATE password = VALUES(password);
+          ENDSQL
 
-      # ── 10. Debug — Verify seed data ──────────────────────
+  # Verify file được tạo đúng (ẩn hash, chỉ show email)
+          echo "=== SQL preview (emails only) ==="
+          grep "INSERT INTO admin" /tmp/seed.sql
+          
+          # Copy file vào container rồi chạy
+          docker cp /tmp/seed.sql mysql-local:/tmp/seed.sql
+          docker exec mysql-local mysql \
+          -uroot -p"${DB_PASS}" "${DB_NAME}" \
+          -e "source /tmp/seed.sql"
+          echo "✅ Database seeded successfully"
+
+# ── 10. Debug — Verify seed data ──────────────────────
       - name: Debug — Verify seed data
         run: |
           docker exec mysql-local mysql -uroot -p"${DB_PASS}" "${DB_NAME}" \
@@ -223,21 +226,21 @@ jobs:
           SELECT 'patient' as tbl, email, LEFT(password,20) FROM patient;"
       - name: Debug — Test login endpoints
         env:
-            ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-            ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-            DOCTOR_EMAIL: ${{ secrets.DOCTOR_EMAIL }}
-            DOCTOR_PASSWORD: ${{ secrets.DOCTOR_PASSWORD }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          DOCTOR_EMAIL: ${{ secrets.DOCTOR_EMAIL }}
+          DOCTOR_PASSWORD: ${{ secrets.DOCTOR_PASSWORD }}
         run: |
-            echo "=== Test Admin Login ==="
-            curl -s -X POST http://localhost:${APP_PORT}/api/admin/login \
-              -H "Content-Type: application/json" \
-              -d "{\"email\":\"${ADMIN_EMAIL}\",\"password\":\"${ADMIN_PASSWORD}\"}" | head -c 200
-            
-            echo ""
-            echo "=== Test Doctor Login ==="
-            curl -s -X POST http://localhost:${APP_PORT}/api/doctor/login \
-              -H "Content-Type: application/json" \
-              -d "{\"email\":\"${DOCTOR_EMAIL}\",\"password\":\"${DOCTOR_PASSWORD}\"}" | head -c 200
+          echo "=== Test Admin Login ==="
+          curl -s -X POST http://localhost:${APP_PORT}/api/admin/login \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"${ADMIN_EMAIL}\",\"password\":\"${ADMIN_PASSWORD}\"}" | head -c 200
+          
+          echo ""
+          echo "=== Test Doctor Login ==="
+          curl -s -X POST http://localhost:${APP_PORT}/api/doctor/login \
+            -H "Content-Type: application/json" \
+            -d "{\"email\":\"${DOCTOR_EMAIL}\",\"password\":\"${DOCTOR_PASSWORD}\"}" | head -c 200
       # ── 11. Prepare reports directory ─────────────────────
       - name: Prepare reports directory
         run: mkdir -p ${{ env.REPORTS_DIR }}
