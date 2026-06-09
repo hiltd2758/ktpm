@@ -492,38 +492,38 @@
             }
           ]
         },
-        {
-          "name": "Delete Doctor",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                { "key": "token", "value": "{{admin_token}}", "type": "string" }
-              ]
-            },
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/admin/doctor/delete/{{doctor_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "doctor", "delete", "{{doctor_id}}"]
-            },
-            "description": "DELETE /api/admin/doctor/delete/{id} — Hard-deletes a doctor record.\n\nPath variable: id (doctor ID)\nSource: AdminApiController.deleteDoctor()\n⚠️ This test is placed LAST in the Doctor Management group so other doctor-dependent tests can run first."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200 OK or 400 if doctor not found', function () {",
-                  "    pm.expect([200, 400]).to.include(pm.response.code);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        }
+//        {
+//          "name": "Delete Doctor",
+//          "request": {
+//            "auth": {
+//              "type": "bearer",
+//              "bearer": [
+//                { "key": "token", "value": "{{admin_token}}", "type": "string" }
+//              ]
+//            },
+//            "method": "DELETE",
+//            "header": [],
+//            "url": {
+//              "raw": "{{base_url}}/api/admin/doctor/delete/{{doctor_id}}",
+//              "host": ["{{base_url}}"],
+//              "path": ["api", "admin", "doctor", "delete", "{{doctor_id}}"]
+//            },
+//            "description": "DELETE /api/admin/doctor/delete/{id} — Hard-deletes a doctor record.\n\nPath variable: id (doctor ID)\nSource: AdminApiController.deleteDoctor()\n⚠️ This test is placed LAST in the Doctor Management group so other doctor-dependent tests can run first."
+//          },
+//          "event": [
+//            {
+//              "listen": "test",
+//              "script": {
+//                "exec": [
+//                  "pm.test('Status 200 OK or 400 if doctor not found', function () {",
+//                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+//                  "});"
+//                ],
+//                "type": "text/javascript"
+//              }
+//            }
+//          ]
+//        }
       ]
     },
 
@@ -626,38 +626,38 @@
             }
           ]
         },
-        {
-          "name": "Delete Patient",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                { "key": "token", "value": "{{admin_token}}", "type": "string" }
-              ]
-            },
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/admin/patient/delete/{{patient_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["api", "admin", "patient", "delete", "{{patient_id}}"]
-            },
-            "description": "DELETE /api/admin/patient/delete/{id} — Hard-deletes a patient record.\n\nPath variable: id (patient ID)\nSource: AdminApiController.deletePatient()\n⚠️ Placed last in the group to avoid breaking other patient-dependent tests."
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 200 OK or 400 if patient not found', function () {",
-                  "    pm.expect([200, 400]).to.include(pm.response.code);",
-                  "});"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ]
-        }
+//        {
+//          "name": "Delete Patient",
+//          "request": {
+//            "auth": {
+//              "type": "bearer",
+//              "bearer": [
+//                { "key": "token", "value": "{{admin_token}}", "type": "string" }
+//              ]
+//            },
+//            "method": "DELETE",
+//            "header": [],
+//            "url": {
+//              "raw": "{{base_url}}/api/admin/patient/delete/{{patient_id}}",
+//              "host": ["{{base_url}}"],
+//              "path": ["api", "admin", "patient", "delete", "{{patient_id}}"]
+//            },
+//            "description": "DELETE /api/admin/patient/delete/{id} — Hard-deletes a patient record.\n\nPath variable: id (patient ID)\nSource: AdminApiController.deletePatient()\n⚠️ Placed last in the group to avoid breaking other patient-dependent tests."
+//          },
+//          "event": [
+//            {
+//              "listen": "test",
+//              "script": {
+//                "exec": [
+//                  "pm.test('Status 200 OK or 400 if patient not found', function () {",
+//                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+//                  "});"
+//                ],
+//                "type": "text/javascript"
+//              }
+//            }
+//          ]
+//        }
       ]
     },
 
