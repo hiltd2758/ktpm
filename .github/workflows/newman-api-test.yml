@@ -222,6 +222,13 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{\"email\":\"${DOCTOR_EMAIL}\",\"password\":\"${DOCTOR_PASSWORD}\"}" | head -c 200
 
+      - name: Debug — Test protected routes without token
+        run: |
+          echo "=== Doctor profile WITHOUT token ==="
+          curl -v http://localhost:${APP_PORT}/api/doctor/profile 2>&1 | grep -E "< HTTP|{.*}"
+          
+          echo "=== Patient profile WITHOUT token ==="
+          curl -v http://localhost:${APP_PORT}/api/patient/profile 2>&1 | grep -E "< HTTP|{.*}"
       - name: Prepare reports directory
         run: mkdir -p ${{ env.REPORTS_DIR }}
 
