@@ -120,14 +120,14 @@ jobs:
           SPRING_DATASOURCE_PASSWORD: ${{ env.DB_PASS }}
         run: |
           java -jar target/*.jar \
-          --server.port=${APP_PORT} \
-          --spring.datasource.url="jdbc:mysql://127.0.0.1:${DB_PORT}/${DB_NAME}" \
-          --spring.datasource.username="${DB_USER}" \
-          --spring.datasource.password="${DB_PASS}" \
-          --spring.jpa.hibernate.ddl-auto=update \
-          --spring.jpa.show-sql=false \
-          > /tmp/springboot.log 2>&1 &
-          
+            --server.port=${APP_PORT} \
+            --spring.datasource.url="jdbc:mysql://127.0.0.1:${DB_PORT}/${DB_NAME}" \
+            --spring.datasource.username="${DB_USER}" \
+            --spring.datasource.password="${DB_PASS}" \
+            --spring.jpa.hibernate.ddl-auto=update \
+            --spring.jpa.show-sql=false \
+            > /tmp/springboot.log 2>&1 &
+
           echo "⏳ Waiting for Spring Boot on port ${APP_PORT}..."
           MAX=60
           for i in $(seq 1 $MAX); do
@@ -148,55 +148,54 @@ jobs:
 
       - name: Seed database with test credentials
         env:
-            ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-            ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-            DOCTOR_EMAIL: ${{ secrets.DOCTOR_EMAIL }}
-            DOCTOR_PASSWORD: ${{ secrets.DOCTOR_PASSWORD }}
-            PATIENT_EMAIL: ${{ secrets.PATIENT_EMAIL }}
-            PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          DOCTOR_EMAIL: ${{ secrets.DOCTOR_EMAIL }}
+          DOCTOR_PASSWORD: ${{ secrets.DOCTOR_PASSWORD }}
+          PATIENT_EMAIL: ${{ secrets.PATIENT_EMAIL }}
+          PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
         run: |
           pip install bcrypt --quiet --break-system-packages
-          
-          python3 << 'PYEOF'
-        import bcrypt, os
-        def hash_pw(pw):
-          raw = bcrypt.hashpw(pw.encode(), bcrypt.gensalt(rounds=10)).decode()
-          return raw.replace("$2b$", "$2a$")
-        admin_hash   = hash_pw(os.environ['ADMIN_PASSWORD'])
-        doctor_hash  = hash_pw(os.environ['DOCTOR_PASSWORD'])
-        patient_hash = hash_pw(os.environ['PATIENT_PASSWORD'])
-        with open('/tmp/hashes.env', 'w') as f:
-          f.write(f"ADMIN_HASH={admin_hash}\n")
-          f.write(f"DOCTOR_HASH={doctor_hash}\n")
-          f.write(f"PATIENT_HASH={patient_hash}\n")
-        print("✅ BCrypt hashes generated ($2a$ prefix for Spring)")
-        PYEOF
-        
-        source /tmp/hashes.env
-        echo "ADMIN_HASH prefix: ${ADMIN_HASH:0:10}"
-            
-            cat > /tmp/seed.sql << ENDSQL
-            DELETE FROM admin WHERE email = '${ADMIN_EMAIL}';
-            INSERT INTO admin (email, password, role)
-            VALUES ('${ADMIN_EMAIL}', '${ADMIN_HASH}', 'ROLE_ADMIN');
-            
-            DELETE FROM doctor WHERE email = '${DOCTOR_EMAIL}';
-            INSERT INTO doctor (email, password, first_name, last_name, field, phone, address, role)
-            VALUES ('${DOCTOR_EMAIL}', '${DOCTOR_HASH}', 'John', 'Smith', 'Cardiology', '0901234567', 'Ho Chi Minh City', 'ROLE_DOCTOR');
-            
-            DELETE FROM patient WHERE email = '${PATIENT_EMAIL}';
-            INSERT INTO patient (email, password, first_name, last_name, phone, address, date_of_birth, medical_history)
-            VALUES ('${PATIENT_EMAIL}', '${PATIENT_HASH}', 'Tran', 'Thi B', '0912345678', 'Ha Noi', '1995-08-20', 'None');
-            ENDSQL
-            
-            echo "=== SQL preview (emails only) ==="
-            grep "INSERT INTO admin" /tmp/seed.sql
-            
-            docker cp /tmp/seed.sql mysql-local:/tmp/seed.sql
-            docker exec mysql-local mysql \
-              -uroot -p"${DB_PASS}" "${DB_NAME}" \
-              -e "source /tmp/seed.sql"
-            echo "✅ Database seeded successfully"
+
+          ADMIN_HASH=$(python3 -c "
+          import bcrypt, os
+          pw = os.environ['ADMIN_PASSWORD'].encode()
+          print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
+          ")
+          DOCTOR_HASH=$(python3 -c "
+          import bcrypt, os
+          pw = os.environ['DOCTOR_PASSWORD'].encode()
+          print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
+          ")
+          PATIENT_HASH=$(python3 -c "
+          import bcrypt, os
+          pw = os.environ['PATIENT_PASSWORD'].encode()
+          print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
+          ")
+          echo "✅ BCrypt hashes generated"
+
+          cat > /tmp/seed.sql << ENDSQL
+          DELETE FROM admin WHERE email = '${ADMIN_EMAIL}';
+          INSERT INTO admin (email, password, role)
+          VALUES ('${ADMIN_EMAIL}', '${ADMIN_HASH}', 'ROLE_ADMIN');
+
+          DELETE FROM doctor WHERE email = '${DOCTOR_EMAIL}';
+          INSERT INTO doctor (email, password, first_name, last_name, field, phone, address, role)
+          VALUES ('${DOCTOR_EMAIL}', '${DOCTOR_HASH}', 'John', 'Smith', 'Cardiology', '0901234567', 'Ho Chi Minh City', 'ROLE_DOCTOR');
+
+          DELETE FROM patient WHERE email = '${PATIENT_EMAIL}';
+          INSERT INTO patient (email, password, first_name, last_name, phone, address, date_of_birth, medical_history)
+          VALUES ('${PATIENT_EMAIL}', '${PATIENT_HASH}', 'Tran', 'Thi B', '0912345678', 'Ha Noi', '1995-08-20', 'None');
+          ENDSQL
+
+          echo "=== SQL preview (emails only) ==="
+          grep "INSERT INTO admin" /tmp/seed.sql
+
+          docker cp /tmp/seed.sql mysql-local:/tmp/seed.sql
+          docker exec mysql-local mysql \
+            -uroot -p"${DB_PASS}" "${DB_NAME}" \
+            -e "source /tmp/seed.sql"
+          echo "✅ Database seeded successfully"
 
       - name: Debug — Verify seed data
         run: |
@@ -222,13 +221,6 @@ jobs:
           curl -s -X POST http://localhost:${APP_PORT}/api/doctor/login \
             -H "Content-Type: application/json" \
             -d "{\"email\":\"${DOCTOR_EMAIL}\",\"password\":\"${DOCTOR_PASSWORD}\"}" | head -c 200
-      - name: Debug — Check secret length
-        env:
-          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-          DOCTOR_PASSWORD: ${{ secrets.DOCTOR_PASSWORD }}
-        run: |
-          echo "ADMIN_PASSWORD length: ${#ADMIN_PASSWORD}"
-          echo "DOCTOR_PASSWORD length: ${#DOCTOR_PASSWORD}"
 
       - name: Prepare reports directory
         run: mkdir -p ${{ env.REPORTS_DIR }}
