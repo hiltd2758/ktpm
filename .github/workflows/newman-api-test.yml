@@ -8,6 +8,12 @@
 #   ADMIN_EMAIL      ADMIN_PASSWORD
 #   DOCTOR_EMAIL     DOCTOR_PASSWORD
 #   PATIENT_EMAIL    PATIENT_PASSWORD
+#
+# FIXES APPLIED:
+#   [FIX-1] Thêm step cài Newman + reporters (junitfull, htmlextra)
+#   [FIX-2] BCrypt hash sinh động từ secret thay vì hardcode
+#   [FIX-3] Bỏ --bail → Newman chạy hết, reporters luôn ghi file
+#   [FIX-4] Newman step dùng continue-on-error + exit code thủ công
 # ============================================================
 
 name: E-Health Care — API Tests (Newman)
@@ -79,7 +85,17 @@ jobs:
         with:
           node-version: "20"
 
-      # ── 5. Start MySQL via Docker Compose ─────────────────
+      # ── 5. [FIX-1] Install Newman + third-party reporters ──
+      # junitfull và htmlextra KHÔNG đi kèm Newman mặc định.
+      # Phải cài trước khi chạy newman run.
+      - name: Install Newman and reporters
+        run: |
+          npm install -g newman \
+                         newman-reporter-junitfull \
+                         newman-reporter-htmlextra
+          echo "✅ Newman version: $(newman --version)"
+
+      # ── 6. Start MySQL via Docker Compose ─────────────────
       - name: Start MySQL container
         run: |
           docker compose up -d mysql-local
@@ -100,12 +116,12 @@ jobs:
             fi
           done
 
-      # ── 6. Build Spring Boot application ──────────────────
+      # ── 7. Build Spring Boot application ──────────────────
       - name: Build application (skip unit tests)
         working-directory: web
         run: mvn package -DskipTests --no-transfer-progress -q
 
-      # ── 7. Start Spring Boot in background ────────────────
+      # ── 8. Start Spring Boot in background ────────────────
       - name: Start Spring Boot application
         working-directory: web
         env:
@@ -141,9 +157,9 @@ jobs:
             fi
           done
 
-      # ── 8. Seed the database ───────────────────────────────
-      # Hibernate's ddl-auto=update has already created the tables by now.
-      # We insert seed rows with INSERT IGNORE to be idempotent (re-runnable).
+      # ── 9. [FIX-2] Seed database — BCrypt hash sinh động ──
+      # Không hardcode hash. Hash được sinh tại runtime từ secret thực tế
+      # → đảm bảo credentials trong DB luôn khớp với Newman environment.
       - name: Seed database with test credentials
         env:
           ADMIN_EMAIL:      ${{ secrets.ADMIN_EMAIL }}
@@ -153,21 +169,27 @@ jobs:
           PATIENT_EMAIL:    ${{ secrets.PATIENT_EMAIL }}
           PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
         run: |
-          # BCrypt hash for "Admin@123"  (cost 10) — matches AdminAuthenticationService
-          ADMIN_HASH='$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'
-          # BCrypt hash for "Doctor@123" (cost 10)
-          DOCTOR_HASH='$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'
-          # BCrypt hash for "Patient@123" (cost 10)
-          PATIENT_HASH='$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2uheWG/igi.'
+          # Cài bcrypt để sinh hash động
+          pip install bcrypt --quiet --break-system-packages
+
+          # Sinh BCrypt hash từ secret thực tế (cost=10, khớp Spring Security mặc định)
+          ADMIN_HASH=$(python3 -c \
+            "import bcrypt; print(bcrypt.hashpw('${ADMIN_PASSWORD}'.encode(), bcrypt.gensalt(rounds=10)).decode())")
+          DOCTOR_HASH=$(python3 -c \
+            "import bcrypt; print(bcrypt.hashpw('${DOCTOR_PASSWORD}'.encode(), bcrypt.gensalt(rounds=10)).decode())")
+          PATIENT_HASH=$(python3 -c \
+            "import bcrypt; print(bcrypt.hashpw('${PATIENT_PASSWORD}'.encode(), bcrypt.gensalt(rounds=10)).decode())")
+
+          echo "✅ BCrypt hashes generated"
 
           docker exec mysql-local mysql \
             -uroot -p"${DB_PASS}" "${DB_NAME}" << SQL
 
-          -- Admin seed (table name: admin, columns: id, email, password, ROLE)
+          -- Admin seed (table: admin)
           INSERT IGNORE INTO admin (email, password, ROLE)
           VALUES ('${ADMIN_EMAIL}', '${ADMIN_HASH}', 'ROLE_ADMIN');
 
-          -- Doctor seed (table name: Doctor)
+          -- Doctor seed (table: Doctor)
           INSERT IGNORE INTO Doctor
             (email, password, first_name, last_name, field, phone, address, ROLE)
           VALUES
@@ -175,7 +197,7 @@ jobs:
              'John', 'Smith', 'Cardiology', '0901234567',
              'Ho Chi Minh City', 'ROLE_DOCTOR');
 
-          -- Patient seed (table name: Patient)
+          -- Patient seed (table: Patient)
           INSERT IGNORE INTO Patient
             (email, password, first_name, last_name, phone, address,
              date_of_birth, medical_history)
@@ -186,16 +208,18 @@ jobs:
 
           SQL
           echo "✅ Database seeded successfully"
-      - name: Debug - Verify seed data
-        run: docker exec mysql-local mysql -uroot -proot e_health -e "SELECT email, LEFT(password,30) FROM admin;"
 
-      # ── 10. Create reports directory ───────────────────────
+      # ── 10. Debug — Verify seed data ──────────────────────
+      - name: Debug — Verify seed data
+        run: |
+          docker exec mysql-local mysql -uroot -proot e_health \
+            -e "SELECT email, LEFT(password,30) AS hash_prefix FROM admin;"
+
+      # ── 11. Prepare reports directory ─────────────────────
       - name: Prepare reports directory
         run: mkdir -p ${{ env.REPORTS_DIR }}
 
-      # ── 11. Write Newman environment file ─────────────────
-      # Secrets are written at runtime — they never appear in the
-      # collection file or in the repository.
+      # ── 12. Write Newman environment file ─────────────────
       - name: Write Newman environment file
         env:
           ADMIN_EMAIL:      ${{ secrets.ADMIN_EMAIL }}
@@ -228,11 +252,14 @@ jobs:
           EOF
           echo "✅ Newman environment file created"
 
-      # ── 12. Run Newman ─────────────────────────────────────
-      # Reporters: cli (live output) + junitfull (JUnit XML) + htmlextra (HTML)
-      # --bail      → fail fast on first test failure (pipeline health signal)
-      # --color on  → preserve ANSI in GitHub logs
+      # ── 13. [FIX-3 + FIX-4] Run Newman API tests ──────────
+      # - Bỏ --bail → Newman chạy hết toàn bộ collection
+      #   → reporters luôn ghi junit.xml và index.html dù có test fail
+      # - continue-on-error: true → pipeline không dừng ở đây
+      # - Lưu exit code → fail pipeline SAU KHI đã upload reports
       - name: Run Newman API tests
+        id: newman
+        continue-on-error: true
         run: |
           newman run "${COLLECTION}" \
             --environment "${ENV_FILE}" \
@@ -245,17 +272,18 @@ jobs:
             --reporter-htmlextra-showGlobalData \
             --delay-request "${NEWMAN_DELAY_MS}" \
             --timeout-request "${REQUEST_TIMEOUT_MS}" \
-            --color on \
-            --bail
+            --color on
+          # Ghi exit code để dùng ở step cuối
+          echo "newman_exit=$?" >> "$GITHUB_OUTPUT"
 
-      # ── 13. Print Spring Boot tail on failure ──────────────
+      # ── 14. Print Spring Boot tail on failure ──────────────
       - name: Print application logs on failure
-        if: failure()
+        if: failure() || steps.newman.outcome == 'failure'
         run: |
           echo "====== Last 100 lines of Spring Boot log ======"
           tail -100 /tmp/springboot.log || true
 
-      # ── 14. Upload HTML report ─────────────────────────────
+      # ── 15. Upload HTML report ─────────────────────────────
       - name: Upload HTML report
         uses: actions/upload-artifact@v4
         if: always()
@@ -265,7 +293,7 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
-      # ── 15. Upload JUnit XML report ────────────────────────
+      # ── 16. Upload JUnit XML report ────────────────────────
       - name: Upload JUnit XML report
         uses: actions/upload-artifact@v4
         if: always()
@@ -275,8 +303,7 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
 
-      # ── 16. Publish JUnit test results ────────────────────
-      # Displays test results inline in the pull request / run summary
+      # ── 17. Publish JUnit test results ────────────────────
       - name: Publish test results (JUnit)
         uses: mikepenz/action-junit-report@v4
         if: always()
@@ -287,7 +314,16 @@ jobs:
           check_name: "Newman API Test Results"
           detailed_summary: true
 
-      # ── 17. Tear down containers ───────────────────────────
+      # ── 18. Tear down containers ───────────────────────────
       - name: Stop Docker containers
         if: always()
         run: docker compose down --volumes --remove-orphans || true
+
+      # ── 19. [FIX-4] Fail pipeline nếu Newman có lỗi ───────
+      # Đặt CUỐI CÙNG để đảm bảo reports và containers đã được
+      # xử lý trước khi pipeline báo fail.
+      - name: Fail pipeline if Newman tests failed
+        if: steps.newman.outputs.newman_exit != '0'
+        run: |
+          echo "❌ Newman exited with code ${{ steps.newman.outputs.newman_exit }}"
+          exit 1
