@@ -155,24 +155,25 @@ jobs:
             PATIENT_EMAIL: ${{ secrets.PATIENT_EMAIL }}
             PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
         run: |
-            pip install bcrypt --quiet --break-system-packages
-            
-            python3 << 'PYEOF'
-            import bcrypt, os
-            def hash_pw(pw):
-                raw = bcrypt.hashpw(pw.encode(), bcrypt.gensalt(rounds=10)).decode()
-                return raw.replace("$2b$", "$2a$")
-            admin_hash   = hash_pw(os.environ['ADMIN_PASSWORD'])
-            doctor_hash  = hash_pw(os.environ['DOCTOR_PASSWORD'])
-            patient_hash = hash_pw(os.environ['PATIENT_PASSWORD'])
-            with open('/tmp/hashes.env', 'w') as f:
-                f.write(f"ADMIN_HASH={admin_hash}\n")
-                f.write(f"DOCTOR_HASH={doctor_hash}\n")
-                f.write(f"PATIENT_HASH={patient_hash}\n")
-            print("✅ BCrypt hashes generated ($2a$ prefix for Spring)")
-            PYEOF
-            
-            source /tmp/hashes.env
+          pip install bcrypt --quiet --break-system-packages
+          
+          python3 << 'PYEOF'
+        import bcrypt, os
+        def hash_pw(pw):
+          raw = bcrypt.hashpw(pw.encode(), bcrypt.gensalt(rounds=10)).decode()
+          return raw.replace("$2b$", "$2a$")
+        admin_hash   = hash_pw(os.environ['ADMIN_PASSWORD'])
+        doctor_hash  = hash_pw(os.environ['DOCTOR_PASSWORD'])
+        patient_hash = hash_pw(os.environ['PATIENT_PASSWORD'])
+        with open('/tmp/hashes.env', 'w') as f:
+          f.write(f"ADMIN_HASH={admin_hash}\n")
+          f.write(f"DOCTOR_HASH={doctor_hash}\n")
+          f.write(f"PATIENT_HASH={patient_hash}\n")
+        print("✅ BCrypt hashes generated ($2a$ prefix for Spring)")
+        PYEOF
+        
+        source /tmp/hashes.env
+        echo "ADMIN_HASH prefix: ${ADMIN_HASH:0:10}"
             
             cat > /tmp/seed.sql << ENDSQL
             DELETE FROM admin WHERE email = '${ADMIN_EMAIL}';
