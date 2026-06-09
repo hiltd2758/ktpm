@@ -7,18 +7,20 @@
 name: E-Health Care API Tests
 
 on:
-push:
-branches: ["**"]
+  push:
+    branches:
+      - "**"
 
-pull_request:
-branches: ["**"]
+  pull_request:
+    branches:
+      - "**"
 
-workflow_dispatch:
-inputs:
-newman_delay:
-description: "Inter-request delay (ms)"
-required: false
-default: "300"
+  workflow_dispatch:
+    inputs:
+      newman_delay:
+        description: "Inter-request delay (ms)"
+        required: false
+        default: "300"
 
 # ============================================================
 
