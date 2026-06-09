@@ -235,7 +235,7 @@ jobs:
           DOCTOR_PASSWORD:  ${{ secrets.DOCTOR_PASSWORD }}
           PATIENT_EMAIL:    ${{ secrets.PATIENT_EMAIL }}
           PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
-          run: |
+        run: |
             DOCTOR_ID=$(docker exec mysql-local mysql -uroot -p"${DB_PASS}" "${DB_NAME}" \
               -sNe "SELECT id FROM doctor WHERE email='${DOCTOR_EMAIL}' LIMIT 1;")
             PATIENT_ID=$(docker exec mysql-local mysql -uroot -p"${DB_PASS}" "${DB_NAME}" \
