@@ -51,7 +51,7 @@ NEWMAN_DELAY_MS: ${{ github.event.inputs.newman_delay || '300' }}
 jobs:
 api-test:
 
-  ```
+
 name: Build → Seed → Test
 runs-on: ubuntu-latest
 
