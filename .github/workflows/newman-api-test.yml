@@ -217,8 +217,10 @@ jobs:
       # ── 10. Debug — Verify seed data ──────────────────────
       - name: Debug — Verify seed data
         run: |
-          docker exec mysql-local mysql -uroot -proot e_health \
-            -e "SELECT email, LEFT(password,30) AS hash_prefix FROM admin;"
+          docker exec mysql-local mysql -uroot -p"${DB_PASS}" "${DB_NAME}" \
+          -e "SELECT 'admin' as tbl, email, LEFT(password,20) FROM admin;
+          SELECT 'doctor' as tbl, email, LEFT(password,20) FROM doctor;
+          SELECT 'patient' as tbl, email, LEFT(password,20) FROM patient;"
 
       # ── 11. Prepare reports directory ─────────────────────
       - name: Prepare reports directory
