@@ -154,39 +154,39 @@ jobs:
           pip install bcrypt --quiet --break-system-packages
 
           ADMIN_HASH=$(python3 -c "
-          import bcrypt, os
-          pw = os.environ['ADMIN_PASSWORD'].encode()
-          print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
-          ")
-                  DOCTOR_HASH=$(python3 -c "
-          import bcrypt, os
-          pw = os.environ['DOCTOR_PASSWORD'].encode()
-          print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
-          ")
-                  PATIENT_HASH=$(python3 -c "
-          import bcrypt, os
-          pw = os.environ['PATIENT_PASSWORD'].encode()
-          print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
-          ")
-                  echo "✅ BCrypt hashes generated"
-          
+import bcrypt, os
+pw = os.environ['ADMIN_PASSWORD'].encode()
+print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
+")
+          DOCTOR_HASH=$(python3 -c "
+import bcrypt, os
+pw = os.environ['DOCTOR_PASSWORD'].encode()
+print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
+")
+          PATIENT_HASH=$(python3 -c "
+import bcrypt, os
+pw = os.environ['PATIENT_PASSWORD'].encode()
+print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
+")
+          echo "✅ BCrypt hashes generated"
+
           cat > /tmp/seed.sql << ENDSQL
-          DELETE FROM admin WHERE email = '${ADMIN_EMAIL}';
-          INSERT INTO admin (email, password, role)
-          VALUES ('${ADMIN_EMAIL}', '${ADMIN_HASH}', 'ROLE_ADMIN');
-          
-          DELETE FROM doctor WHERE email = '${DOCTOR_EMAIL}';
-          INSERT INTO doctor (email, password, first_name, last_name, field, phone, address, role)
-          VALUES ('${DOCTOR_EMAIL}', '${DOCTOR_HASH}', 'John', 'Smith', 'Cardiology', '0901234567', 'Ho Chi Minh City', 'ROLE_DOCTOR');
-          
-          DELETE FROM patient WHERE email = '${PATIENT_EMAIL}';
-          INSERT INTO patient (email, password, first_name, last_name, phone, address, date_of_birth, medical_history)
-          VALUES ('${PATIENT_EMAIL}', '${PATIENT_HASH}', 'Tran', 'Thi B', '0912345678', 'Ha Noi', '1995-08-20', 'None');
-          ENDSQL
-          
+DELETE FROM admin WHERE email = '${ADMIN_EMAIL}';
+INSERT INTO admin (email, password, role)
+VALUES ('${ADMIN_EMAIL}', '${ADMIN_HASH}', 'ROLE_ADMIN');
+
+DELETE FROM doctor WHERE email = '${DOCTOR_EMAIL}';
+INSERT INTO doctor (email, password, first_name, last_name, field, phone, address, role)
+VALUES ('${DOCTOR_EMAIL}', '${DOCTOR_HASH}', 'John', 'Smith', 'Cardiology', '0901234567', 'Ho Chi Minh City', 'ROLE_DOCTOR');
+
+DELETE FROM patient WHERE email = '${PATIENT_EMAIL}';
+INSERT INTO patient (email, password, first_name, last_name, phone, address, date_of_birth, medical_history)
+VALUES ('${PATIENT_EMAIL}', '${PATIENT_HASH}', 'Tran', 'Thi B', '0912345678', 'Ha Noi', '1995-08-20', 'None');
+ENDSQL
+
           echo "=== SQL preview (emails only) ==="
           grep "INSERT INTO admin" /tmp/seed.sql
-          
+
           docker cp /tmp/seed.sql mysql-local:/tmp/seed.sql
           docker exec mysql-local mysql \
           -uroot -p"${DB_PASS}" "${DB_NAME}" \
@@ -211,7 +211,7 @@ jobs:
           curl -s -X POST http://localhost:${APP_PORT}/api/admin/login \
             -H "Content-Type: application/json" \
             -d "{\"email\":\"${ADMIN_EMAIL}\",\"password\":\"${ADMIN_PASSWORD}\"}" | head -c 200
-          
+
           echo ""
           echo "=== Test Doctor Login ==="
           curl -s -X POST http://localhost:${APP_PORT}/api/doctor/login \
@@ -235,29 +235,29 @@ jobs:
           PATIENT_ID=$(docker exec mysql-local mysql -uroot -p"${DB_PASS}" "${DB_NAME}" \
             -sNe "SELECT id FROM patient WHERE email='${PATIENT_EMAIL}' LIMIT 1;")
           echo "✅ doctor_id=${DOCTOR_ID}  patient_id=${PATIENT_ID}"
-          
+
           cat > "${ENV_FILE}" << EOF
-            {
-              "id": "ehc-ci-environment",
-              "name": "EHC CI/CD Environment",
-              "values": [
-                { "key": "base_url",         "value": "http://localhost:${APP_PORT}", "enabled": true, "type": "default" },
-                { "key": "admin_email",      "value": "${ADMIN_EMAIL}",              "enabled": true, "type": "secret"  },
-                { "key": "admin_password",   "value": "${ADMIN_PASSWORD}",           "enabled": true, "type": "secret"  },
-                { "key": "doctor_email",     "value": "${DOCTOR_EMAIL}",             "enabled": true, "type": "secret"  },
-                { "key": "doctor_password",  "value": "${DOCTOR_PASSWORD}",          "enabled": true, "type": "secret"  },
-                { "key": "patient_email",    "value": "${PATIENT_EMAIL}",            "enabled": true, "type": "secret"  },
-                { "key": "patient_password", "value": "${PATIENT_PASSWORD}",         "enabled": true, "type": "secret"  },
-                { "key": "admin_token",      "value": "",                            "enabled": true, "type": "default" },
-                { "key": "doctor_token",     "value": "",                            "enabled": true, "type": "default" },
-                { "key": "patient_token",    "value": "",                            "enabled": true, "type": "default" },
-                { "key": "patient_id",       "value": "${PATIENT_ID}",               "enabled": true, "type": "default" },
-                { "key": "doctor_id",        "value": "${DOCTOR_ID}",                "enabled": true, "type": "default" },
-                { "key": "appointment_id",   "value": "1",                           "enabled": true, "type": "default" }
-              ]
-            }
-            EOF
-            echo "✅ Newman environment file created"
+{
+  "id": "ehc-ci-environment",
+  "name": "EHC CI/CD Environment",
+  "values": [
+    { "key": "base_url",         "value": "http://localhost:${APP_PORT}", "enabled": true, "type": "default" },
+    { "key": "admin_email",      "value": "${ADMIN_EMAIL}",              "enabled": true, "type": "secret"  },
+    { "key": "admin_password",   "value": "${ADMIN_PASSWORD}",           "enabled": true, "type": "secret"  },
+    { "key": "doctor_email",     "value": "${DOCTOR_EMAIL}",             "enabled": true, "type": "secret"  },
+    { "key": "doctor_password",  "value": "${DOCTOR_PASSWORD}",          "enabled": true, "type": "secret"  },
+    { "key": "patient_email",    "value": "${PATIENT_EMAIL}",            "enabled": true, "type": "secret"  },
+    { "key": "patient_password", "value": "${PATIENT_PASSWORD}",         "enabled": true, "type": "secret"  },
+    { "key": "admin_token",      "value": "",                            "enabled": true, "type": "default" },
+    { "key": "doctor_token",     "value": "",                            "enabled": true, "type": "default" },
+    { "key": "patient_token",    "value": "",                            "enabled": true, "type": "default" },
+    { "key": "patient_id",       "value": "${PATIENT_ID}",               "enabled": true, "type": "default" },
+    { "key": "doctor_id",        "value": "${DOCTOR_ID}",                "enabled": true, "type": "default" },
+    { "key": "appointment_id",   "value": "1",                           "enabled": true, "type": "default" }
+  ]
+}
+EOF
+          echo "✅ Newman environment file created"
 
       - name: Run Newman API tests
         id: newman
