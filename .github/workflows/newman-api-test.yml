@@ -160,17 +160,17 @@ jobs:
           ADMIN_HASH=$(python3 -c "
           import bcrypt, os
           pw = os.environ['ADMIN_PASSWORD'].encode()
-          print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
+          print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode().replace("$2b$", "$2a$"))
           ")
           DOCTOR_HASH=$(python3 -c "
           import bcrypt, os
           pw = os.environ['DOCTOR_PASSWORD'].encode()
-          print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
+          print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode().replace("$2b$", "$2a$"))
           ")
           PATIENT_HASH=$(python3 -c "
           import bcrypt, os
           pw = os.environ['PATIENT_PASSWORD'].encode()
-          print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode())
+          print(bcrypt.hashpw(pw, bcrypt.gensalt(rounds=10)).decode().replace("$2b$", "$2a$"))
           ")
           echo "✅ BCrypt hashes generated"
 
