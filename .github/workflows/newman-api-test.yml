@@ -221,6 +221,13 @@ jobs:
           curl -s -X POST http://localhost:${APP_PORT}/api/doctor/login \
             -H "Content-Type: application/json" \
             -d "{\"email\":\"${DOCTOR_EMAIL}\",\"password\":\"${DOCTOR_PASSWORD}\"}" | head -c 200
+      - name: Debug — Check secret length
+        env:
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          DOCTOR_PASSWORD: ${{ secrets.DOCTOR_PASSWORD }}
+        run: |
+          echo "ADMIN_PASSWORD length: ${#ADMIN_PASSWORD}"
+          echo "DOCTOR_PASSWORD length: ${#DOCTOR_PASSWORD}"
 
       - name: Prepare reports directory
         run: mkdir -p ${{ env.REPORTS_DIR }}
