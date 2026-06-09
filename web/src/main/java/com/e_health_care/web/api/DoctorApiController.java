@@ -96,9 +96,7 @@ public class DoctorApiController {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             System.out.println("AUTH = " + authentication);
 
-            if (authentication == null
-                    || authentication instanceof AnonymousAuthenticationToken
-                    || !authentication.isAuthenticated()) {
+            if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
                 return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
             }
 
