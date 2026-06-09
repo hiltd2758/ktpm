@@ -272,30 +272,6 @@ jobs:
             echo "newman_exit=${NEWMAN_EXIT}" >> "$GITHUB_OUTPUT"
             echo "Newman exited with code: ${NEWMAN_EXIT}"
 
-      # [FIX-6] npx newman → dùng đúng binary local
-      # [FIX-7] set +e trước → lưu $? ngay sau newman, tránh bị ghi đè
-      - name: Run Newman API tests
-        id: newman
-        continue-on-error: true
-        run: |
-          mkdir -p "${REPORTS_DIR}"
-          set +e
-          npx newman run "${COLLECTION}" \
-            --environment "${ENV_FILE}" \
-            --reporters cli,junitfull,htmlextra \
-            --reporter-junitfull-export "${REPORTS_DIR}/junit.xml" \
-            --reporter-htmlextra-export "${REPORTS_DIR}/index.html" \
-            --reporter-htmlextra-title  "E-Health Care API Test Report" \
-            --reporter-htmlextra-logs \
-            --reporter-htmlextra-showEnvironmentData \
-            --reporter-htmlextra-showGlobalData \
-            --delay-request "${NEWMAN_DELAY_MS}" \
-            --timeout-request "${REQUEST_TIMEOUT_MS}" \
-            --color on
-          NEWMAN_EXIT=$?
-          set -e
-          echo "newman_exit=${NEWMAN_EXIT}" >> "$GITHUB_OUTPUT"
-          echo "Newman exited with code: ${NEWMAN_EXIT}"
 
       - name: Debug — Check report files
         if: always()
