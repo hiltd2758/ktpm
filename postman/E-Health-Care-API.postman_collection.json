@@ -270,8 +270,8 @@
                   "pm.test('Store admin_token', function () {",
                   "    var body = pm.response.json();",
                   "    if (body.token) {",
-                  "        pm.environment.set('admin_token', body.token);",
-                  "        pm.environment.set('token', body.token);",
+                  "        pm.collectionVariables.set('admin_token', body.token);",
+                  "        pm.collectionVariables.set('token', body.token);",
                   "        console.log('admin_token stored:', body.token.substring(0, 30) + '...');",
                   "    }",
                   "});"
@@ -1079,7 +1079,7 @@
                   "pm.test('Store doctor_token', function () {",
                   "    var body = pm.response.json();",
                   "    if (body.token) {",
-                  "        pm.environment.set('doctor_token', body.token);",
+                  "        pm.collectionVariables.set('doctor_token', body.token);",
                   "        console.log('doctor_token stored:', body.token.substring(0, 30) + '...');",
                   "    }",
                   "});"
@@ -1787,7 +1787,7 @@
                   "pm.test('Store patient_token', function () {",
                   "    var body = pm.response.json();",
                   "    if (body.token) {",
-                  "        pm.environment.set('patient_token', body.token);",
+                  "        pm.collectionVariables.set('patient_token', body.token);",
                   "        console.log('patient_token stored:', body.token.substring(0, 30) + '...');",
                   "    }",
                   "});"
@@ -1992,7 +1992,7 @@
                   "    pm.expect(body).to.have.property('id');",
                   "    pm.expect(body).to.have.property('email');",
                   "    // Capture patient_id from profile response",
-                  "    pm.environment.set('patient_id', String(body.id));",
+                  "    pm.collectionVariables.set('patient_id', String(body.id));",
                   "});"
                 ],
                 "type": "text/javascript"
