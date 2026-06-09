@@ -47,7 +47,7 @@ public class ApiSecurityConfiguration {
     @Bean
     public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/api/**")
+                .securityMatcher("/api/**", "/admin/api/**")
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -57,9 +57,11 @@ public class ApiSecurityConfiguration {
                                 "/api/patient/register",
                                 "/api/doctor/login",
                                 "/api/admin/login",
-                                "/api/admin/generate-hash","/api/patients",   // thêm
+                                "/api/admin/generate-hash",
+                                "/api/patients",
                                 "/api/doctors"
                         ).permitAll()
+                        .requestMatchers("/admin/api/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(doctorJwtFilter, UsernamePasswordAuthenticationFilter.class)

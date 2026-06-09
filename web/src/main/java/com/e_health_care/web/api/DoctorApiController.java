@@ -42,7 +42,7 @@ public class DoctorApiController {
         if (token != null) {
             response.setHeader("Set-Cookie",
                     "jwt-doctor-token=" + token +
-                            "; Pa   th=/; HttpOnly; Max-Age=86400; SameSite=Lax");
+                            "; Path=/; HttpOnly; Max-Age=86400; SameSite=Lax");
 //            return ResponseEntity.ok(Map.of("message", "Login successful"));
             return ResponseEntity.ok(Map.of("message", "Login successful", "token", token));
 

@@ -4,6 +4,7 @@ import com.e_health_care.web.patient.dto.PatientDTO;
 import com.e_health_care.web.patient.service.PatientAuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import com.e_health_care.web.patient.model.Patient;
 import com.e_health_care.web.patient.repository.PatientRepository;
@@ -48,8 +49,7 @@ public class PatientAuthApiController {
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()
-                || auth instanceof org.springframework.security.authentication.AnonymousAuthenticationToken) {
+        if (!(auth instanceof UsernamePasswordAuthenticationToken)) {
             return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
         }
         Patient patient = patientRepository.findByEmail(auth.getName()).orElse(null);
