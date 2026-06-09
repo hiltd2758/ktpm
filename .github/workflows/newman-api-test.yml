@@ -225,7 +225,9 @@ jobs:
       - name: Prepare reports directory
         run: mkdir -p ${{ env.REPORTS_DIR }}
 
-      - name: Write Newman environment file
+      - name: Run Newman API tests
+        id: newman
+        continue-on-error: true
         env:
           ADMIN_EMAIL:      ${{ secrets.ADMIN_EMAIL }}
           ADMIN_PASSWORD:   ${{ secrets.ADMIN_PASSWORD }}
@@ -233,35 +235,42 @@ jobs:
           DOCTOR_PASSWORD:  ${{ secrets.DOCTOR_PASSWORD }}
           PATIENT_EMAIL:    ${{ secrets.PATIENT_EMAIL }}
           PATIENT_PASSWORD: ${{ secrets.PATIENT_PASSWORD }}
-        run: |
-          DOCTOR_ID=$(docker exec mysql-local mysql -uroot -p"${DB_PASS}" "${DB_NAME}" \
-            -sNe "SELECT id FROM doctor WHERE email='${DOCTOR_EMAIL}' LIMIT 1;")
-          PATIENT_ID=$(docker exec mysql-local mysql -uroot -p"${DB_PASS}" "${DB_NAME}" \
-            -sNe "SELECT id FROM patient WHERE email='${PATIENT_EMAIL}' LIMIT 1;")
-          echo "✅ doctor_id=${DOCTOR_ID}  patient_id=${PATIENT_ID}"
-
-          cat > "${ENV_FILE}" << EOF
-          {
-            "id": "ehc-ci-environment",
-            "name": "EHC CI/CD Environment",
-            "values": [
-              { "key": "base_url",         "value": "http://localhost:${APP_PORT}", "enabled": true, "type": "default" },
-              { "key": "admin_email",      "value": "${ADMIN_EMAIL}",              "enabled": true, "type": "secret"  },
-              { "key": "admin_password",   "value": "${ADMIN_PASSWORD}",           "enabled": true, "type": "secret"  },
-              { "key": "doctor_email",     "value": "${DOCTOR_EMAIL}",             "enabled": true, "type": "secret"  },
-              { "key": "doctor_password",  "value": "${DOCTOR_PASSWORD}",          "enabled": true, "type": "secret"  },
-              { "key": "patient_email",    "value": "${PATIENT_EMAIL}",            "enabled": true, "type": "secret"  },
-              { "key": "patient_password", "value": "${PATIENT_PASSWORD}",         "enabled": true, "type": "secret"  },
-              { "key": "admin_token",      "value": "",                            "enabled": true, "type": "default" },
-              { "key": "doctor_token",     "value": "",                            "enabled": true, "type": "default" },
-              { "key": "patient_token",    "value": "",                            "enabled": true, "type": "default" },
-              { "key": "patient_id",       "value": "${PATIENT_ID}",               "enabled": true, "type": "default" },
-              { "key": "doctor_id",        "value": "${DOCTOR_ID}",                "enabled": true, "type": "default" },
-              { "key": "appointment_id",   "value": "1",                           "enabled": true, "type": "default" }
-            ]
-          }
-          EOF
-          echo "✅ Newman environment file created"
+          run: |
+            DOCTOR_ID=$(docker exec mysql-local mysql -uroot -p"${DB_PASS}" "${DB_NAME}" \
+              -sNe "SELECT id FROM doctor WHERE email='${DOCTOR_EMAIL}' LIMIT 1;")
+            PATIENT_ID=$(docker exec mysql-local mysql -uroot -p"${DB_PASS}" "${DB_NAME}" \
+              -sNe "SELECT id FROM patient WHERE email='${PATIENT_EMAIL}' LIMIT 1;")
+            echo "doctor_id=${DOCTOR_ID}  patient_id=${PATIENT_ID}"
+            mkdir -p "${REPORTS_DIR}"
+            set +e
+            npx newman run "${COLLECTION}" \
+              --env-var "base_url=http://localhost:${APP_PORT}" \
+              --env-var "admin_email=${ADMIN_EMAIL}" \
+              --env-var "admin_password=${ADMIN_PASSWORD}" \
+              --env-var "doctor_email=${DOCTOR_EMAIL}" \
+              --env-var "doctor_password=${DOCTOR_PASSWORD}" \
+              --env-var "patient_email=${PATIENT_EMAIL}" \
+              --env-var "patient_password=${PATIENT_PASSWORD}" \
+              --env-var "admin_token=" \
+              --env-var "doctor_token=" \
+              --env-var "patient_token=" \
+              --env-var "patient_id=${PATIENT_ID}" \
+              --env-var "doctor_id=${DOCTOR_ID}" \
+              --env-var "appointment_id=1" \
+              --reporters cli,junitfull,htmlextra \
+              --reporter-junitfull-export "${REPORTS_DIR}/junit.xml" \
+              --reporter-htmlextra-export "${REPORTS_DIR}/index.html" \
+              --reporter-htmlextra-title  "E-Health Care API Test Report" \
+              --reporter-htmlextra-logs \
+              --reporter-htmlextra-showEnvironmentData \
+              --reporter-htmlextra-showGlobalData \
+              --delay-request "${NEWMAN_DELAY_MS}" \
+              --timeout-request "${REQUEST_TIMEOUT_MS}" \
+              --color on
+            NEWMAN_EXIT=$?
+            set -e
+            echo "newman_exit=${NEWMAN_EXIT}" >> "$GITHUB_OUTPUT"
+            echo "Newman exited with code: ${NEWMAN_EXIT}"
 
       # [FIX-6] npx newman → dùng đúng binary local
       # [FIX-7] set +e trước → lưu $? ngay sau newman, tránh bị ghi đè
