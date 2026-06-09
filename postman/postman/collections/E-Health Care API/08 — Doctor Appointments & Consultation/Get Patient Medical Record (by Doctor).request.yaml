@@ -1,0 +1,29 @@
+$kind: http-request
+description: |-
+  GET /api/doctor/patient/{id} — Returns the patient profile + clinical info for a specific patient.
+
+  Source: ConsultationApiController.getPatientRecord(@PathVariable Long id)
+  Response: { patient: PatientDTO, clinicalInfo: PatientClinicalInforDTO }
+  ClinicalInforDTO fields: id, patientId, bloodType, allergies, chronicDiseases, familyMedicalHistory, lastUpdatedById, lastUpDatedTime
+url: "{{base_url}}/api/doctor/patient/{{patient_id}}"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{doctor_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK or 404', function () {
+          pm.expect([200, 404]).to.include(pm.response.code);
+      });
+
+      if (pm.response.code === 200) {
+          pm.test('Response has patient and clinicalInfo', function () {
+              var body = pm.response.json();
+              pm.expect(body).to.have.property('patient');
+              pm.expect(body).to.have.property('clinicalInfo');
+          });
+      }
+    language: text/javascript
+order: 5000

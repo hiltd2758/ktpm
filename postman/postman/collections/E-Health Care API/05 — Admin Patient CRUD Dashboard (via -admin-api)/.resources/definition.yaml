@@ -1,0 +1,9 @@
+$kind: collection
+name: 05 — Admin Patient CRUD Dashboard (via /admin/api)
+description: |-
+  Enhanced patient CRUD through AdminDashboardController at /admin/api.
+  This is a separate, more RESTful layer with richer error responses.
+
+  Base: /admin/api  |  Auth: AdminJwtFilter (same admin token)
+  Requires: {{admin_token}}
+order: 6000

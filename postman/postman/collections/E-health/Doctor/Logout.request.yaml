@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{base_url}}/api/doctor/logout"
+method: POST
+headers:
+  Authorization: Bearer {{doctor_token}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", () => pm.response.to.have.status(200));
+      pm.environment.set("doctor_token", "");
+    language: text/javascript
+order: 3000

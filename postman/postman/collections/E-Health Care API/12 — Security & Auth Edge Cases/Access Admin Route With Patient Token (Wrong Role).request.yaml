@@ -1,0 +1,19 @@
+$kind: http-request
+description: |-
+  Negative test — uses a valid ROLE_PATIENT token to attempt access to an ROLE_ADMIN endpoint.
+  The AdminJwtFilter checks the role claim and rejects non-ROLE_ADMIN tokens.
+  Expected: 401 or 403
+url: "{{base_url}}/api/admin/dashboard"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{patient_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Access denied with wrong role token (401 or 403)', function () {
+          pm.expect([401, 403]).to.include(pm.response.code);
+      });
+    language: text/javascript
+order: 2000

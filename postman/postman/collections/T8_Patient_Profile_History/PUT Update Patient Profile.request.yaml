@@ -1,0 +1,41 @@
+$kind: http-request
+url: "{{base_url}}/api/patient/update/{{patient_id}}"
+method: PUT
+headers:
+  Cookie: jwt-patient-token={{patient_token}}
+body:
+  type: json
+  content: "{\r
+
+    \    \"firstName\": \"Nguyen\",\r
+
+    \    \"lastName\": \"Van A\",\r
+
+    \    \"phone\": \"0999888777\",\r
+
+    \    \"address\": \"456 Le Loi, Quan 1, HCM\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{patient_token}}"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Status code is 200 OK\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Update successful message\", function () {\r
+
+      \    var jsonData = pm.response.json();\r
+
+      \    pm.expect(jsonData.message).to.eql(\"Cập nhật thành công\");\r
+
+      });"
+    language: text/javascript
+order: 2000

@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{base_url}}/api/doctor/profile"
+method: GET
+headers:
+  Authorization: Bearer {{doctor_token}}
+auth:
+  type: bearer
+  credentials:
+    token: eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9ET0NUT1IiLCJzdWIiOiJkb2N0b3JAZ21haWwuY29tIiwiaWF0IjoxNzgwMTM3Mzk4LCJleHAiOjE3ODAyMjM3OTh9.5lL7-uWaqdStwqq74fq3oXgEebdDUNg4f-MwBdfZYiBW7bfd4tVYiJE8zIOGqjaK
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", () => pm.response.to.have.status(200));
+      pm.test("Response has doctor fields", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('email');
+          pm.expect(jsonData).to.have.property('firstName');
+          pm.expect(jsonData).to.have.property('lastName');
+      });
+    language: text/javascript
+order: 4000

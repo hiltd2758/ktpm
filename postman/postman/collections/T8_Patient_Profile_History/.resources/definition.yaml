@@ -1,0 +1,9 @@
+$kind: collection
+variables:
+  patient_id: ""
+auth:
+  - id: 2f985825-342f-4526-a216-7df940381f0f
+    type: bearer
+    name: bearer auth
+    credentials:
+      token: eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9QQVRJRU5UIiwic3ViIjoicGF0aWVudDAxMjNAZ21haWwuY29tIiwiaWF0IjoxNzgwMTI1MjAzLCJleHAiOjE3ODAyMTE2MDN9.DPUuE4irZzAuLNiHRsQehDxPGvlBfXqp6OjtQ8olWAt6RROQLMaFR4wtVG6I8TjQ

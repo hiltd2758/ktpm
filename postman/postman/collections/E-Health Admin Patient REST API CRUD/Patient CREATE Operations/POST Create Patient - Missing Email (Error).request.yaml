@@ -1,0 +1,29 @@
+$kind: http-request
+description: Test validation error when email is missing. Should return 400.
+url: "{{baseUrl}}/admin/api/patients"
+method: POST
+headers:
+  Authorization: Bearer {{adminToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "password": "SecurePassword123!",
+      "firstName": "Jane",
+      "lastName": "Smith"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 400 (Bad Request)', function () {
+          pm.response.to.have.status(400);
+      });
+
+      pm.test('Response indicates validation error', function () {
+          let jsonData = pm.response.json();
+          pm.expect(jsonData.success).to.equal(false);
+          pm.expect(jsonData.message).to.include('Email').or.to.include('required');
+      });
+    language: text/javascript
+order: 2000

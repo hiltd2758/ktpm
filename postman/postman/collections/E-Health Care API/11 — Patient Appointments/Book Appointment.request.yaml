@@ -1,0 +1,38 @@
+$kind: http-request
+description: |-
+  POST /api/patient/appointment/book — Books a new appointment.
+
+  Source: PatientAppointmentApiController.book(@RequestBody AppointmentRequestDTO)
+  DTO fields: doctorId (Long), scheduleTime (LocalDateTime ISO-8601)
+  Note: patientId is injected server-side from the JWT principal (PatientPrinciple) — clients cannot spoof it.
+  Initial status: PENDING
+url: "{{base_url}}/api/patient/appointment/book"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "doctorId": {{doctor_id}},
+      "scheduleTime": "2027-03-15T10:00:00"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{patient_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK or 400 if doctor not found', function () {
+          pm.expect([200, 400]).to.include(pm.response.code);
+      });
+
+      if (pm.response.code === 200) {
+          pm.test('Booking success message', function () {
+              var body = pm.response.json();
+              pm.expect(body).to.have.property('message');
+          });
+      }
+    language: text/javascript
+order: 2000

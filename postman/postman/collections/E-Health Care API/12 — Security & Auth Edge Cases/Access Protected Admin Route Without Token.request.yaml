@@ -1,0 +1,14 @@
+$kind: http-request
+description: |-
+  Negative test — attempts to access an admin-protected endpoint without any Authorization header.
+  Expected: 401 or 403
+url: "{{base_url}}/api/admin/dashboard"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Access denied without token (401 or 403)', function () {
+          pm.expect([401, 403]).to.include(pm.response.code);
+      });
+    language: text/javascript
+order: 1000

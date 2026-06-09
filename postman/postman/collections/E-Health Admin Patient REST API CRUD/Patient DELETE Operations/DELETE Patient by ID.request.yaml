@@ -1,0 +1,21 @@
+$kind: http-request
+description: Delete a patient record by ID. This operation is irreversible. Returns 200 on success, 404 if not found.
+url: "{{baseUrl}}/admin/api/patients/{{patientId}}"
+method: DELETE
+headers:
+  Authorization: Bearer {{adminToken}}
+  Content-Type: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response indicates successful deletion', function () {
+          let jsonData = pm.response.json();
+          pm.expect(jsonData.success).to.equal(true);
+          pm.expect(jsonData.message).to.include('deleted');
+      });
+    language: text/javascript
+order: 1000

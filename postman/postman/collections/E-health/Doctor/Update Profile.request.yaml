@@ -1,0 +1,35 @@
+$kind: http-request
+url: "{{base_url}}/api/doctor/profile/update"
+method: PUT
+headers:
+  Authorization: Bearer {{doctor_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\r
+
+    \    \"email\": \"nguyenledaiphi0252005@gmail.com\",\r
+
+    \    \"password\": \"password123\",\r
+
+    \    \"firstName\": \"Dai\",\r
+
+    \    \"lastName\": \"Phi\",\r
+
+    \    \"phone\": \"0909123456\",\r
+
+    \    \"address\": \"Ho Chi Minh City\",\r
+
+    \    \"field\": \"Cardiology\"\r
+
+    }"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", () => pm.response.to.have.status(200));
+      pm.test("Update success message", function () {
+          var jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('message');
+      });
+    language: text/javascript
+order: 2000

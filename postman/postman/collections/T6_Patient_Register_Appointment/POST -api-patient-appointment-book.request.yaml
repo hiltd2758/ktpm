@@ -1,0 +1,24 @@
+$kind: http-request
+name: POST /api/patient/appointment/book
+url: "{{base_url}}/api/patient/appointment/book"
+method: POST
+headers:
+  - key: Proxy-Authorization
+    value: Bearer {{admin_token}}
+    disabled: true
+body:
+  type: json
+  content: "{\r
+
+    \    \"doctorId\": 1,\r
+
+    \    \"scheduleTime\": \"2026-06-05T08:30:00\",\r
+
+    \    \"reason\": \"Khám tổng quát\"\r
+
+    }"
+auth:
+  type: bearer
+  credentials:
+    token: "{{jwt_patient_token}}"
+order: 3000

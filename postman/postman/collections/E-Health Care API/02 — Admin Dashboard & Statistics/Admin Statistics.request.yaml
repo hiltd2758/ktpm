@@ -1,0 +1,37 @@
+$kind: http-request
+description: |-
+  GET /api/admin/statistics — Returns aggregate counts and appointment breakdowns.
+
+  Source: AdminApiController.getStatistics()
+  Response: { totalDoctors, totalPatients, totalAppointments, pending, confirmed, cancelled }
+url: "{{base_url}}/api/admin/statistics"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response has all statistics fields', function () {
+          var body = pm.response.json();
+          pm.expect(body).to.have.property('totalDoctors');
+          pm.expect(body).to.have.property('totalPatients');
+          pm.expect(body).to.have.property('totalAppointments');
+          pm.expect(body).to.have.property('pending');
+          pm.expect(body).to.have.property('confirmed');
+          pm.expect(body).to.have.property('cancelled');
+      });
+
+      pm.test('All counts are numbers', function () {
+          var body = pm.response.json();
+          pm.expect(body.totalDoctors).to.be.a('number');
+          pm.expect(body.totalPatients).to.be.a('number');
+          pm.expect(body.totalAppointments).to.be.a('number');
+      });
+    language: text/javascript
+order: 2000

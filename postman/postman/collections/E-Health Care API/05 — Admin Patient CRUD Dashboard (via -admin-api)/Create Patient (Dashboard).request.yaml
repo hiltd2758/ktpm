@@ -1,0 +1,47 @@
+$kind: http-request
+description: |-
+  POST /admin/api/patients — Creates a new patient. Password is BCrypt-encoded server-side.
+
+  Source: AdminDashboardController.createPatient(@RequestBody PatientCreateDTO)
+  DTO fields: email*, firstName, lastName, address, password*, phone, dateOfBirth, medicalHistory, avatar
+  Validation: email and password are required; email must be unique.
+url: "{{base_url}}/admin/api/patients"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "newpatient_{{$timestamp}}@ehealthcare.com",
+      "firstName": "New",
+      "lastName": "Patient",
+      "password": "Patient@123",
+      "phone": "0987654321",
+      "address": "789 Test Avenue, Da Nang",
+      "dateOfBirth": "1990-01-15",
+      "medicalHistory": "None",
+      "avatar": ""
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 201 Created or 400 email conflict', function () {
+          pm.expect([201, 400]).to.include(pm.response.code);
+      });
+
+      if (pm.response.code === 201) {
+          pm.test('Created patient has id', function () {
+              var body = pm.response.json();
+              pm.expect(body.success).to.be.true;
+              pm.expect(body.data).to.have.property('id');
+              // Store for subsequent tests
+              pm.collectionVariables.set('created_patient_id', String(body.data.id));
+          });
+      }
+    language: text/javascript
+order: 3000

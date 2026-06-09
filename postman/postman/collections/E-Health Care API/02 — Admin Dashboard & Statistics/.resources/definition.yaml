@@ -1,0 +1,6 @@
+$kind: collection
+description: |-
+  Admin-only dashboard, statistics and data views.
+
+  Base: /api/admin  |  Requires: {{admin_token}}
+order: 3000

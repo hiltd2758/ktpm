@@ -1,0 +1,7 @@
+$kind: collection
+description: |-
+  Doctor-side appointment management and patient record access.
+
+  Base: /api/doctor  |  Requires: {{doctor_token}}
+  Appointment statuses: PENDING | CONFIRMED | CANCELLED | COMPLETED
+order: 9000

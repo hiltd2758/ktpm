@@ -1,0 +1,11 @@
+$kind: http-request
+name: GET /api/patient/appointment/list
+url: "{{base_url}}/api/patient/appointment/list"
+method: GET
+headers:
+  Authorization: Bearer {{admin_token}}
+auth:
+  type: bearer
+  credentials:
+    token: "{{jwt_patient_token}}"
+order: 5000

@@ -1,0 +1,30 @@
+$kind: http-request
+name: POST /api/patient/register
+url: "{{base_url}}/api/patient/register"
+method: POST
+headers:
+  Authorization: Bearer {{admin_token}}
+body:
+  type: json
+  content: "{\r
+
+    \    \"email\": \"patient0123@gmail.com\",\r
+
+    \    \"password\": \"patient123\",\r
+
+    \    \"firstName\": \"Nguyen\",\r
+
+    \    \"lastName\": \"Van A\",\r
+
+    \    \"phone\": \"0909123456\",\r
+
+    \    \"address\": \"123 Nguyen Trai, HCM\",\r
+
+    \    \"dateOfBirth\": \"1990-01-01\"\r
+
+    }"
+scripts:
+  - type: afterResponse
+    code: pm.test("Status 200", () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 4000

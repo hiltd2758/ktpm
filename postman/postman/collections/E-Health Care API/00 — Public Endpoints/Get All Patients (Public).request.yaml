@@ -1,0 +1,27 @@
+$kind: http-request
+description: |-
+  GET /api/patients — Returns a summary list of all patients. Public endpoint, no token required.
+
+  Source: UserAPIController → PatientSummaryDTO { id, email, fullName, phone, address, dateOfBirth, firstName, lastName, avatar }
+url: "{{base_url}}/api/patients"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is an array', function () {
+          var body = pm.response.json();
+          pm.expect(body).to.be.an('array');
+      });
+
+      pm.test('Capture first patient_id if available', function () {
+          var body = pm.response.json();
+          if (body.length > 0) {
+              pm.collectionVariables.set('patient_id', String(body[0].id));
+          }
+      });
+    language: text/javascript
+order: 2000

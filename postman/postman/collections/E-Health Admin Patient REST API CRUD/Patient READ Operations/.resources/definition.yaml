@@ -1,0 +1,3 @@
+$kind: collection
+description: Retrieve patient information
+order: 1000

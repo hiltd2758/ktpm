@@ -1,0 +1,40 @@
+$kind: http-request
+description: Update patient information (excluding password). All fields are optional - only provided fields are updated.
+url: "{{baseUrl}}/admin/api/patients/{{patientId}}"
+method: PUT
+headers:
+  Authorization: Bearer {{adminToken}}
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "email": "patient.updated@example.com",
+      "firstName": "Jane",
+      "lastName": "Smith Updated",
+      "address": "456 Wellness Avenue, Health City, HC 67890",
+      "phone": "+1-555-9876",
+      "dateOfBirth": "1992-03-20",
+      "medicalHistory": "Treated for diabetes in 2020",
+      "avatar": "https://example.com/avatars/patient-updated.jpg"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response indicates successful update', function () {
+          let jsonData = pm.response.json();
+          pm.expect(jsonData.success).to.equal(true);
+          pm.expect(jsonData.message).to.include('updated');
+      });
+
+      pm.test('Updated patient data is returned', function () {
+          let jsonData = pm.response.json();
+          pm.expect(jsonData.data).to.have.property('id');
+          pm.expect(jsonData.data).to.have.property('lastName', 'Smith Updated');
+      });
+    language: text/javascript
+order: 1000

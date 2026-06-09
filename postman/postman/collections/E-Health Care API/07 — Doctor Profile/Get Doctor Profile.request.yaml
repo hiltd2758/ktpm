@@ -1,0 +1,32 @@
+$kind: http-request
+description: |-
+  GET /api/doctor/profile — Returns the authenticated doctor's profile from SecurityContext.
+
+  Source: DoctorApiController.getProfile()
+  Response: DoctorDTO { id, email, firstName, lastName, field, phone, address, avatar }
+  Token identity is used to look up the doctor — no ID path parameter needed.
+url: "{{base_url}}/api/doctor/profile"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{doctor_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Profile has expected fields', function () {
+          var body = pm.response.json();
+          pm.expect(body).to.have.property('id');
+          pm.expect(body).to.have.property('email');
+          pm.expect(body).to.have.property('firstName');
+          pm.expect(body).to.have.property('lastName');
+          pm.expect(body).to.have.property('field');
+          // Capture doctor_id from profile
+          pm.collectionVariables.set('doctor_id', String(body.id));
+      });
+    language: text/javascript
+order: 2000

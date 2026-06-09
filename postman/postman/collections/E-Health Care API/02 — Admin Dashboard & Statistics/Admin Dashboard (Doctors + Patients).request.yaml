@@ -1,0 +1,38 @@
+$kind: http-request
+description: |-
+  GET /api/admin/dashboard — Returns full Doctor[] and Patient[] lists.
+
+  Source: AdminApiController.dashboard()
+  Response shape: { doctors: [...], patients: [...] }
+url: "{{base_url}}/api/admin/dashboard"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response has doctors and patients arrays', function () {
+          var body = pm.response.json();
+          pm.expect(body).to.have.property('doctors');
+          pm.expect(body).to.have.property('patients');
+          pm.expect(body.doctors).to.be.an('array');
+          pm.expect(body.patients).to.be.an('array');
+      });
+
+      pm.test('Capture IDs for downstream tests', function () {
+          var body = pm.response.json();
+          if (body.doctors && body.doctors.length > 0) {
+              pm.collectionVariables.set('doctor_id', String(body.doctors[0].id));
+          }
+          if (body.patients && body.patients.length > 0) {
+              pm.collectionVariables.set('patient_id', String(body.patients[0].id));
+          }
+      });
+    language: text/javascript
+order: 1000

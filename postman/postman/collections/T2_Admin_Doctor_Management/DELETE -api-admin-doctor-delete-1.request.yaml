@@ -1,0 +1,13 @@
+$kind: http-request
+name: DELETE /api/admin/doctor/delete/1
+url: "{{base_url}}/api/admin/doctor/delete/1"
+method: DELETE
+headers:
+  Authorization: Bearer {{admin_token}}
+scripts:
+  - type: beforeRequest
+    code: |-
+      pm.test("Status 200 OK", () => pm.response.to.have.status(200));
+      pm.test("Doctor deleted", () => pm.response.json().message.includes('thành công'));
+    language: text/javascript
+order: 4000

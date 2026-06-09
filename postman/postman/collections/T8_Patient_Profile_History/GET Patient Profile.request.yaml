@@ -1,0 +1,54 @@
+$kind: http-request
+url: "{{base_url}}/api/patient/profile"
+method: GET
+headers:
+  Cookie: jwt-patient-token={{patient_token}}
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: "var jsonData = pm.response.json();\r
+
+      pm.collectionVariables.set(\"patient_id\", jsonData.id);\r
+
+      \r
+
+      pm.test(\"Status code is 200 OK\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Response time is less than 1000ms\", function () {\r
+
+      \    pm.expect(pm.response.responseTime).to.be.below(1000);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Response body contains correct patient info\", function () {\r
+
+      \    var jsonData = pm.response.json();\r
+
+      \    \r
+
+      \    // Kiểm tra phải có trường email và email phải khớp với tài khoản test\r
+
+      \    pm.expect(jsonData).to.have.property('email');\r
+
+      \    pm.expect(jsonData.email).to.eql(\"patient0123@gmail.com\");\r
+
+      \    \r
+
+      \    // Kiểm tra họ và tên không được để trống\r
+
+      \    pm.expect(jsonData.firstName).to.not.be.null;\r
+
+      \    pm.expect(jsonData.lastName).to.not.be.null;\r
+
+      });"
+    language: text/javascript
+order: 1000

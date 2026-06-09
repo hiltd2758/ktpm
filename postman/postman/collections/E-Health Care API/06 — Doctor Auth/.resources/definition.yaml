@@ -1,0 +1,8 @@
+$kind: collection
+description: |-
+  Authentication for the Doctor role.
+
+  Base: /api/doctor  |  JWT role claim: ROLE_DOCTOR
+  Token stored in: {{doctor_token}}
+  Filter: DoctorJwtFilter — reads Authorization: Bearer header first, then jwt-doctor-token cookie
+order: 7000

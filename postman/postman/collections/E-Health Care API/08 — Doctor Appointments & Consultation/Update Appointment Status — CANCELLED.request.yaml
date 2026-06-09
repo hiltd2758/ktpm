@@ -1,0 +1,16 @@
+$kind: http-request
+description: Same as above but sets status to CANCELLED.
+url: "{{base_url}}/api/doctor/appointment/update/{{appointment_id}}/CANCELLED"
+method: POST
+auth:
+  type: bearer
+  credentials:
+    token: "{{doctor_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK or 400', function () {
+          pm.expect([200, 400]).to.include(pm.response.code);
+      });
+    language: text/javascript
+order: 3000

@@ -1,0 +1,3 @@
+$kind: collection
+description: "Cross-cutting security tests: missing tokens, wrong role tokens, and protected route access."
+order: 13000
