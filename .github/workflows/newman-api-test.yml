@@ -221,7 +221,23 @@ jobs:
           -e "SELECT 'admin' as tbl, email, LEFT(password,20) FROM admin;
           SELECT 'doctor' as tbl, email, LEFT(password,20) FROM doctor;
           SELECT 'patient' as tbl, email, LEFT(password,20) FROM patient;"
-
+      - name: Debug — Test login endpoints
+        env:
+            ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+            ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+            DOCTOR_EMAIL: ${{ secrets.DOCTOR_EMAIL }}
+            DOCTOR_PASSWORD: ${{ secrets.DOCTOR_PASSWORD }}
+        run: |
+            echo "=== Test Admin Login ==="
+            curl -s -X POST http://localhost:${APP_PORT}/api/admin/login \
+              -H "Content-Type: application/json" \
+              -d "{\"email\":\"${ADMIN_EMAIL}\",\"password\":\"${ADMIN_PASSWORD}\"}" | head -c 200
+            
+            echo ""
+            echo "=== Test Doctor Login ==="
+            curl -s -X POST http://localhost:${APP_PORT}/api/doctor/login \
+              -H "Content-Type: application/json" \
+              -d "{\"email\":\"${DOCTOR_EMAIL}\",\"password\":\"${DOCTOR_PASSWORD}\"}" | head -c 200
       # ── 11. Prepare reports directory ─────────────────────
       - name: Prepare reports directory
         run: mkdir -p ${{ env.REPORTS_DIR }}
