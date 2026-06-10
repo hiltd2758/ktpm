@@ -90,14 +90,12 @@ public class AdminJwtFilter extends OncePerRequestFilter {
                         context.getBean(AdminDetailsService.class)
                                 .loadUserByUsername(email);
 
-                if (jwtService.validateToken(token, userDetails)) {
-
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    userDetails.getAuthorities()
-                            );
+                if (jwtService.validateToken(token, userDetails)) {UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                userDetails.getAuthorities()
+                        );
 
                     authToken.setDetails(
                             new WebAuthenticationDetailsSource()
