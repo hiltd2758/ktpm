@@ -1,0 +1,7 @@
+$kind: collection
+name: 04 — Admin Patient Management (via /api/admin)
+description: |-
+  Admin CRUD operations on Patient records through the AdminApiController.
+
+  Base: /api/admin/patient  |  Requires: {{admin_token}}
+order: 5000

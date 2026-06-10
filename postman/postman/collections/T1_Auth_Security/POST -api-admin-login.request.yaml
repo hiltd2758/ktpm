@@ -1,0 +1,22 @@
+$kind: http-request
+name: POST /api/admin/login
+url: "{{base_url}}/api/admin/login"
+method: POST
+headers:
+  Authorization: Bearer {{admin_token}}
+body:
+  type: json
+  content: "{\r
+
+    \  \"email\": \"admin@ehealth.com\",\r
+
+    \  \"password\": \"password123\"\r
+
+    }"
+scripts:
+  - type: afterResponse
+    code: "pm.test(\"Status 200\", () => pm.response.to.have.status(200));\r
+
+      pm.environment.set(\"admin_token\", pm.response.json().token);"
+    language: text/javascript
+order: 1000

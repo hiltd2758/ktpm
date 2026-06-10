@@ -1,0 +1,6 @@
+$kind: collection
+description: |-
+  Doctor self-service profile endpoints.
+
+  Base: /api/doctor  |  Requires: {{doctor_token}}
+order: 8000

@@ -1,0 +1,29 @@
+$kind: http-request
+description: |-
+  GET /api/patient/profile — Returns the full Patient entity for the authenticated patient.
+
+  Source: PatientAuthApiController.getProfile()
+  Patient identity resolved from JWT via SecurityContextHolder.
+  Response: Patient { id, email, firstName, lastName, address, phone, dateOfBirth, medicalHistory, avatar }
+url: "{{base_url}}/api/patient/profile"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{patient_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Profile has required fields', function () {
+          var body = pm.response.json();
+          pm.expect(body).to.have.property('id');
+          pm.expect(body).to.have.property('email');
+          // Capture patient_id from profile response
+          pm.environment.set('patient_id', String(body.id));
+      });
+    language: text/javascript
+order: 2000

@@ -1,0 +1,6 @@
+$kind: collection
+description: |-
+  Patient self-service profile and clinical info endpoints.
+
+  Base: /api/patient  |  Requires: {{patient_token}}
+order: 11000

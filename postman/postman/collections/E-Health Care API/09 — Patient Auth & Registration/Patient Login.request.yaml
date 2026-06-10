@@ -1,0 +1,41 @@
+$kind: http-request
+description: |-
+  POST /api/patient/login — Authenticates with PatientDTO { email, password }.
+
+  On success returns { message: 'Login successful', token: '<jwt>' }.
+  The token is also set as the jwt-patient-token cookie.
+  JWT claims: { sub: email, role: 'ROLE_PATIENT', iat, exp (24h) }
+  Secret: jwt.patient.secret from application.properties
+url: "{{base_url}}/api/patient/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{patient_email}}",
+      "password": "{{patient_password}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response contains token', function () {
+          var body = pm.response.json();
+          pm.expect(body).to.have.property('token');
+          pm.expect(body.token).to.be.a('string').and.to.have.length.above(20);
+      });
+
+      pm.test('Store patient_token', function () {
+          var body = pm.response.json();
+          if (body.token) {
+              pm.environment.set('patient_token', body.token);
+              console.log('patient_token stored:', body.token.substring(0, 30) + '...');
+          }
+      });
+    language: text/javascript
+order: 2000

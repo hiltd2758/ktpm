@@ -1,0 +1,27 @@
+$kind: http-request
+description: Retrieve all patients. Returns array of patients with success flag and message.
+url: "{{baseUrl}}/admin/api/patients"
+method: GET
+headers:
+  Authorization: Bearer {{adminToken}}
+  Content-Type: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response contains success flag and data', function () {
+          let jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('success', true);
+          pm.expect(jsonData).to.have.property('message');
+          pm.expect(jsonData).to.have.property('data');
+      });
+
+      pm.test('Data contains array of patients', function () {
+          let jsonData = pm.response.json();
+          pm.expect(jsonData.data).to.be.an('array');
+      });
+    language: text/javascript
+order: 1000

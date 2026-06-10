@@ -1,0 +1,43 @@
+$kind: http-request
+description: |-
+  POST /api/doctor/login — Authenticates with DoctorDTO { email, password }.
+
+  On success returns { message: 'Login successful', token: '<jwt>' }.
+  The token is also set as the jwt-doctor-token cookie.
+  JWT claims: { sub: email, role: 'ROLE_DOCTOR', iat, exp (24h) }
+  Secret: jwt.doctor.secret from application.properties
+
+  Note: DoctorDTO has @NotBlank on email and password.
+url: "{{base_url}}/api/doctor/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{doctor_email}}",
+      "password": "{{doctor_password}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response contains token', function () {
+          var body = pm.response.json();
+          pm.expect(body).to.have.property('token');
+          pm.expect(body.token).to.be.a('string').and.to.have.length.above(20);
+      });
+
+      pm.test('Store doctor_token', function () {
+          var body = pm.response.json();
+          if (body.token) {
+              pm.environment.set('doctor_token', body.token);
+              console.log('doctor_token stored:', body.token.substring(0, 30) + '...');
+          }
+      });
+    language: text/javascript
+order: 1000

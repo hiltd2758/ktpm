@@ -157,3 +157,4 @@ public class DoctorJwtFilter extends OncePerRequestFilter {
         response.getWriter().write("{\"error\":\"" + message + "\"}");
     }
 }
+

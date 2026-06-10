@@ -1,0 +1,27 @@
+$kind: http-request
+name: PUT /api/admin/doctor/update/info
+url: "{{base_url}}/api/admin/doctor/update/info"
+method: PUT
+headers:
+  Authorization: Bearer {{admin_token}}
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "id": 1,
+      "email": "doctor1@ehealth.com",
+      "firstName": "Nguyễn",
+      "lastName": "Văn A",
+      "field": "Cardiology",
+      "phone": "+84912345678",
+      "address": "123 Đường ABC, TP HCM",
+      "avatar": ""
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200 OK", () => pm.response.to.have.status(200));
+      pm.test("Success message", () => pm.response.json().message.includes('thành công'));
+    language: text/javascript
+order: 2000

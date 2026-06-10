@@ -1,0 +1,34 @@
+$kind: http-request
+description: |-
+  GET /api/doctor/appointment/list — Returns all appointments where the authenticated doctor is assigned.
+
+  Source: DoctorApiController.getAppointments()
+  Doctor identity resolved from JWT via SecurityContextHolder.
+  Response: Appointment[] { id, patient, doctor, scheduleTime, status }
+url: "{{base_url}}/api/doctor/appointment/list"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{doctor_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is an array', function () {
+          var body = pm.response.json();
+          pm.expect(body).to.be.an('array');
+      });
+
+      pm.test('Capture first appointment_id if available', function () {
+          var body = pm.response.json();
+          if (body.length > 0) {
+              pm.collectionVariables.set('appointment_id', String(body[0].id));
+              console.log('appointment_id set to:', body[0].id);
+          }
+      });
+    language: text/javascript
+order: 1000

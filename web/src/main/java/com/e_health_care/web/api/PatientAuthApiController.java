@@ -4,6 +4,7 @@ import com.e_health_care.web.patient.dto.PatientDTO;
 import com.e_health_care.web.patient.service.PatientAuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 import com.e_health_care.web.patient.model.Patient;
 import com.e_health_care.web.patient.repository.PatientRepository;
@@ -48,16 +49,22 @@ public class PatientAuthApiController {
     @GetMapping("/profile")
     public ResponseEntity<?> getProfile() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
-
-        Patient patient = patientRepository.findByEmail(auth.getName())
-                .orElse(null);
+        if (!(auth instanceof UsernamePasswordAuthenticationToken)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+        }
+        Patient patient = patientRepository.findByEmail(auth.getName()).orElse(null);
         if (patient == null) return ResponseEntity.notFound().build();
         return ResponseEntity.ok(patient);
     }
 
     @PutMapping("/update/{id}")
     public ResponseEntity<?> updateProfile(@PathVariable Long id, @RequestBody PatientDTO patientDTO) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // Verify id thuộc về patient đang login
+        Patient current = patientRepository.findByEmail(auth.getName()).orElse(null);
+        if (current == null || !current.getId().equals(id)) {
+            return ResponseEntity.status(403).body(Map.of("error", "Forbidden"));
+        }
         try {
             patientService.updatePatient(patientDTO, id);
             return ResponseEntity.ok(Map.of("message", "Cập nhật thành công"));

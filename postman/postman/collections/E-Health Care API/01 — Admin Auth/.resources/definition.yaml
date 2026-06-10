@@ -1,0 +1,8 @@
+$kind: collection
+description: |-
+  Authentication for the Admin role.
+
+  Base: /api/admin  |  JWT role claim: ROLE_ADMIN
+  Token stored in: {{admin_token}}
+  Filter: AdminJwtFilter reads Authorization: Bearer header
+order: 2000

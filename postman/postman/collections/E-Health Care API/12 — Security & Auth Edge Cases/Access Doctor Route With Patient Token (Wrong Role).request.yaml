@@ -1,0 +1,18 @@
+$kind: http-request
+description: |-
+  Negative test — uses a ROLE_PATIENT token to access a ROLE_DOCTOR endpoint.
+  Expected: 401 or 403
+url: "{{base_url}}/api/doctor/dashboard"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{patient_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Access denied with wrong role token (401 or 403)', function () {
+          pm.expect([401, 403]).to.include(pm.response.code);
+      });
+    language: text/javascript
+order: 3000

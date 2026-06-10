@@ -1,0 +1,244 @@
+{
+  "info": {
+    "_postman_id": "e4a0353d-156e-4bc3-80ee-970b3daf6493",
+    "name": "T6_Patient_Register_Appointment",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "51498319",
+    "_collection_link": "https://go.postman.co/collection/51498319-e4a0353d-156e-4bc3-80ee-970b3daf6493?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "POST /api/patient/register",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"test@gmail.com\",\r\n    \"password\": \"123\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/patient/register",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "patient",
+            "register"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "POST /api/patient/login",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();\r",
+              "if (jsonData.token) {\r",
+              "    pm.environment.set(\"jwt_patient_token\", jsonData.token);\r",
+              "    console.log(\"Đã tự động lưu Token Bệnh nhân nha!\");\r",
+              "}\r",
+              "pm.test(\"Status code is 200\", function () {\r",
+              "    pm.response.to.have.status(200);\r",
+              "});"
+            ],
+            "type": "text/javascript",
+            "packages": {},
+            "requests": {}
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"email\": \"test@gmail.com\" ,\r\n    \"password\": \"123\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/patient/login",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "patient",
+            "login"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "POST /api/patient/appointment/book",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{jwt_patient_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "POST",
+        "header": [
+          {
+            "key": "Proxy-Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text",
+            "disabled": true
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"doctorId\": 1,\r\n    \"scheduleTime\": \"2026-06-05T08:30:00\",\r\n    \"reason\": \"Khám tổng quát\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{base_url}}/api/patient/appointment/book",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "patient",
+            "appointment",
+            "book"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "DELETE /api/patient/appointment/cancel/1",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/patient/appointment/cancel/1",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "patient",
+            "appointment",
+            "cancel",
+            "1"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET /api/patient/appointment/list",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{jwt_patient_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/patient/appointment/list",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "patient",
+            "appointment",
+            "list"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET /api/patient/appointment/doctors",
+      "request": {
+        "auth": {
+          "type": "bearer",
+          "bearer": [
+            {
+              "key": "token",
+              "value": "{{jwt_patient_token}}",
+              "type": "string"
+            }
+          ]
+        },
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{admin_token}}",
+            "type": "text"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/patient/appointment/doctors",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "api",
+            "patient",
+            "appointment",
+            "doctors"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

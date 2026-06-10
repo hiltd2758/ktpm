@@ -1,0 +1,13 @@
+$kind: collection
+description: Postman Collection for testing patient management REST API endpoints (CRUD operations) - Updated for new RESTful Controller
+variables:
+  baseUrl: http://localhost:8080
+  adminToken: ""
+  patientId: "1"
+scripts:
+  - type: http:beforeRequest
+    code: // Global pre-request setup if needed
+    language: text/javascript
+  - type: http:afterResponse
+    code: // Global test setup if needed
+    language: text/javascript

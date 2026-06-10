@@ -1,0 +1,39 @@
+$kind: http-request
+description: |-
+  PUT /api/patient/update/{id} — Updates the patient's own profile information.
+
+  Source: PatientAuthApiController.updateProfile(@PathVariable Long id, @RequestBody PatientDTO)
+  Path variable: id (must match authenticated patient's ID)
+  DTO fields: firstName, lastName, phone, address, dateOfBirth, medicalHistory, avatar
+url: "{{base_url}}/api/patient/update/{{patient_id}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "firstName": "Tran",
+      "lastName": "Thi B",
+      "phone": "0912345678",
+      "address": "456 Health Street, Ha Noi",
+      "dateOfBirth": "1995-08-20",
+      "medicalHistory": "Updated medical history"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{patient_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Success message returned', function () {
+          var body = pm.response.json();
+          pm.expect(body).to.have.property('message');
+      });
+    language: text/javascript
+order: 3000

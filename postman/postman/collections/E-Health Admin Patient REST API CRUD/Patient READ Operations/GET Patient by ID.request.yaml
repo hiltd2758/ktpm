@@ -1,0 +1,32 @@
+$kind: http-request
+description: Retrieve a specific patient by ID. Replace {{patientId}} with the actual patient ID.
+url: "{{baseUrl}}/admin/api/patients/{{patientId}}"
+method: GET
+headers:
+  Authorization: Bearer {{adminToken}}
+  Content-Type: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 200 or 404', function () {
+          pm.expect([200, 404]).to.include(pm.response.code);
+      });
+
+      pm.test('Response contains success flag and message', function () {
+          let jsonData = pm.response.json();
+          pm.expect(jsonData).to.have.property('success');
+          pm.expect(jsonData).to.have.property('message');
+          pm.expect(jsonData).to.have.property('data');
+      });
+
+      pm.test('Valid response has patient object with ID, email, firstName, lastName', function () {
+          if (pm.response.code === 200) {
+              let jsonData = pm.response.json();
+              pm.expect(jsonData.data).to.have.property('id');
+              pm.expect(jsonData.data).to.have.property('email');
+              pm.expect(jsonData.data).to.have.property('firstName');
+              pm.expect(jsonData.data).to.have.property('lastName');
+          }
+      });
+    language: text/javascript
+order: 2000

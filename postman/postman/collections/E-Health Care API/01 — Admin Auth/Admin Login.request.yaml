@@ -1,0 +1,43 @@
+$kind: http-request
+description: |-
+  POST /api/admin/login — Authenticates with AdminDTO { email, password }.
+
+  On success returns { "token": "<jwt>" }.
+  The test script extracts and stores the token in {{admin_token}}.
+
+  JWT claims: { sub: email, role: "ROLE_ADMIN", iat, exp (24h) }
+  Secret: jwt.admin.secret from application.properties
+url: "{{base_url}}/api/admin/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{admin_email}}",
+      "password": "{{admin_password}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response contains token', function () {
+          var body = pm.response.json();
+          pm.expect(body).to.have.property('token');
+          pm.expect(body.token).to.be.a('string').and.to.have.length.above(20);
+      });
+
+      pm.test('Store admin_token', function () {
+          var body = pm.response.json();
+          if (body.token) {
+              pm.environment.set('admin_token', body.token);
+              pm.environment.set('token', body.token);
+              console.log('admin_token stored:', body.token.substring(0, 30) + '...');
+          }
+      });
+    language: text/javascript
+order: 1000

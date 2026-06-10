@@ -1,0 +1,7 @@
+$kind: collection
+description: |-
+  Patient-side appointment booking and listing.
+
+  Base: /api/patient/appointment  |  Requires: {{patient_token}}
+  Appointment flow: Book → Doctor confirms/cancels
+order: 12000
