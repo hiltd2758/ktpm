@@ -54,6 +54,12 @@ class DoctorViewPatientServiceTest extends BaseServiceTest {
         assertEquals("patient@test.com", result.get(0).getEmail());
     }
     @Test
+    void getAllPatients_shouldReturnEmptyList_whenNoPatientsExist() {
+        when(patientRepository.findAll()).thenReturn(List.of());
+        var result = service.getAllPatients();
+        assertEquals(0, result.size());
+    }
+    @Test
     void getPatientProfile_shouldReturnDTO_whenFound() {
         Patient p = new Patient();
         p.setId(1L);
