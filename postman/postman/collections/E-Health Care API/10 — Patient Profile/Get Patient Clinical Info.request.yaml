@@ -1,0 +1,27 @@
+$kind: http-request
+description: |-
+  GET /api/patient/clinical-info/{id} — Retrieves the patient's clinical information record.
+
+  Source: PatientAuthApiController.getClinicalInfo(@PathVariable Long id)
+  Response: PatientClinicalInforDTO { id, patientId, bloodType, allergies, chronicDiseases, familyMedicalHistory, lastUpdatedById, lastUpDatedTime }
+url: "{{base_url}}/api/patient/clinical-info/{{patient_id}}"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{patient_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK or 400 if no clinical record yet', function () {
+          pm.expect([200, 400]).to.include(pm.response.code);
+      });
+
+      if (pm.response.code === 200) {
+          pm.test('Clinical info DTO fields present', function () {
+              var body = pm.response.json();
+              pm.expect(body).to.have.property('patientId');
+          });
+      }
+    language: text/javascript
+order: 4000

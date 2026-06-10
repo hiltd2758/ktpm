@@ -1,0 +1,39 @@
+$kind: http-request
+description: |-
+  PUT /api/doctor/profile/update — Updates the authenticated doctor's own profile.
+
+  Source: DoctorApiController.updateProfile(@RequestBody DoctorDTO)
+  The doctor ID is extracted from the JWT token — clients cannot set a different ID.
+  Updatable fields via DoctorDTO: firstName, lastName, field, phone, address, avatar
+url: "{{base_url}}/api/doctor/profile/update"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "firstName": "John",
+      "lastName": "Smith",
+      "field": "Cardiology",
+      "phone": "0901234567",
+      "address": "123 Medical Avenue, Ho Chi Minh City",
+      "avatar": ""
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{doctor_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Success message returned', function () {
+          var body = pm.response.json();
+          pm.expect(body).to.have.property('message');
+      });
+    language: text/javascript
+order: 3000

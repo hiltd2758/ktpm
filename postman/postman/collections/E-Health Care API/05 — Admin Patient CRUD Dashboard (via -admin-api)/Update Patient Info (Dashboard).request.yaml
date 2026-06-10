@@ -1,0 +1,40 @@
+$kind: http-request
+description: |-
+  PUT /admin/api/patients/{id} — Updates patient info (excluding password).
+
+  Source: AdminDashboardController.updatePatient(@PathVariable, @RequestBody PatientUpdateDTO)
+  DTO fields: email, firstName, lastName, address, phone, dateOfBirth, medicalHistory, avatar
+url: "{{base_url}}/admin/api/patients/{{patient_id}}"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "firstName": "Updated",
+      "lastName": "Patient",
+      "phone": "0911111111",
+      "address": "Updated Address, Ho Chi Minh City",
+      "dateOfBirth": "1990-05-20",
+      "medicalHistory": "Hypertension"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK or 404 not found', function () {
+          pm.expect([200, 404]).to.include(pm.response.code);
+      });
+
+      if (pm.response.code === 200) {
+          pm.test('Updated patient returned', function () {
+              var body = pm.response.json();
+              pm.expect(body.success).to.be.true;
+          });
+      }
+    language: text/javascript
+order: 4000

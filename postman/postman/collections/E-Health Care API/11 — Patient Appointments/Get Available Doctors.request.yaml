@@ -1,0 +1,32 @@
+$kind: http-request
+description: |-
+  GET /api/patient/appointment/doctors — Returns the full Doctor entity list for the booking UI.
+
+  Source: PatientAppointmentApiController.getDoctors()
+  Response: Doctor[] { id, email, firstName, lastName, field, phone, address, ROLE, avatar }
+url: "{{base_url}}/api/patient/appointment/doctors"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{patient_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is an array', function () {
+          var body = pm.response.json();
+          pm.expect(body).to.be.an('array');
+      });
+
+      pm.test('Capture doctor_id for booking test', function () {
+          var body = pm.response.json();
+          if (body.length > 0) {
+              pm.collectionVariables.set('doctor_id', String(body[0].id));
+          }
+      });
+    language: text/javascript
+order: 1000

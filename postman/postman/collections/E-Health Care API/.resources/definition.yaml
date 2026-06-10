@@ -1,0 +1,32 @@
+$kind: collection
+description: |-
+  Complete API test suite for the E-Health Care system.
+
+  **Roles & Authentication:**
+  - Admin  → `POST /api/admin/login`  → stores `{{admin_token}}`
+  - Doctor → `POST /api/doctor/login` → stores `{{doctor_token}}`
+  - Patient → `POST /api/patient/login` → stores `{{patient_token}}`
+
+  All protected endpoints use `Authorization: Bearer {{<role>_token}}`.
+
+  **Variables required (environment or collection):**
+  - `base_url`        – e.g. `http://localhost:8080`
+  - `admin_email`, `admin_password`
+  - `doctor_email`, `doctor_password`
+  - `patient_email`, `patient_password`
+  - `admin_token`, `doctor_token`, `patient_token` (auto-populated by login scripts)
+  - `patient_id`, `doctor_id`, `appointment_id` (seeded / captured during run)
+variables:
+  base_url: http://localhost:8080
+  admin_email: admin@ehealthcare.com
+  admin_password: Admin@123
+  doctor_email: doctor@ehealthcare.com
+  doctor_password: Doctor@123
+  patient_email: patient@ehealthcare.com
+  patient_password: Patient@123
+  admin_token: ""
+  doctor_token: ""
+  patient_token: ""
+  patient_id: "1"
+  doctor_id: "1"
+  appointment_id: "1"

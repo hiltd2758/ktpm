@@ -1,0 +1,34 @@
+$kind: http-request
+name: POST /api/patient/login
+url: "{{base_url}}/api/patient/login"
+method: POST
+headers:
+  Authorization: Bearer {{admin_token}}
+body:
+  type: json
+  content: "{\r
+
+    \    \"email\": \"test@gmail.com\" ,\r
+
+    \    \"password\": \"123\"\r
+
+    }"
+scripts:
+  - type: afterResponse
+    code: "var jsonData = pm.response.json();\r
+
+      if (jsonData.token) {\r
+
+      \    pm.environment.set(\"jwt_patient_token\", jsonData.token);\r
+
+      \    console.log(\"Đã tự động lưu Token Bệnh nhân nha!\");\r
+
+      }\r
+
+      pm.test(\"Status code is 200\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });"
+    language: text/javascript
+order: 2000

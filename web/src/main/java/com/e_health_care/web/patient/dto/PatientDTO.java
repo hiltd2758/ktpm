@@ -1,45 +1,48 @@
 package com.e_health_care.web.patient.dto;
 
 import java.time.LocalDate;
-
+import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class PatientDTO {
-private long id;
-private String email;
-private String password;
-private String firstName;
-private String lastName;
-private String address;
-private String phone;
+    private Long id; // đổi long → Long
 
-private String role = "patient";
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
+    private String email;
 
-public String getUppercase_role() {
-    return this.role.toUpperCase();
-}
+    @NotBlank(message = "Password is required")
+    @Size(min = 8, max = 50, message = "Password must be 8-50 characters")
+    private String password;
 
-private LocalDate dateOfBirth; // Example field
-private String medicalHistory; // Example field for records
-private String avatar;
-private MultipartFile avatarFile; // Trường này dùng để upload
+    @NotBlank(message = "First name is required")
+    @Size(min = 1, max = 50)
+    private String firstName;
 
-// Getters và Setters
-public String getAvatar() {
-    return avatar;
-}
+    @NotBlank(message = "Last name is required")
+    @Size(min = 1, max = 50)
+    private String lastName;
 
-public void setAvatar(String avatar) {
-    this.avatar = avatar;
-}
+    private String address;
 
-public MultipartFile getAvatarFile() {
-    return avatarFile;
-}
+    @Size(max = 10, message = "Phone max 10 digits")
+    private String phone;
 
-public void setAvatarFile(MultipartFile avatarFile) {
-    this.avatarFile = avatarFile;
-}
+    private String role = "patient";
+
+    public String getUppercase_role() {
+        return this.role.toUpperCase();
+    }
+
+    private LocalDate dateOfBirth;
+    private String medicalHistory;
+    private String avatar;
+    private MultipartFile avatarFile;
+
+    public String getAvatar() { return avatar; }
+    public void setAvatar(String avatar) { this.avatar = avatar; }
+    public MultipartFile getAvatarFile() { return avatarFile; }
+    public void setAvatarFile(MultipartFile avatarFile) { this.avatarFile = avatarFile; }
 }

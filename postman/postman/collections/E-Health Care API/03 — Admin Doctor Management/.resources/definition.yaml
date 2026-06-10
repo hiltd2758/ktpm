@@ -1,0 +1,7 @@
+$kind: collection
+description: |-
+  Admin CRUD operations on Doctor records.
+
+  Base: /api/admin/doctor  |  Requires: {{admin_token}}
+  Note: Admin can update doctor info and password, and delete doctors.
+order: 4000

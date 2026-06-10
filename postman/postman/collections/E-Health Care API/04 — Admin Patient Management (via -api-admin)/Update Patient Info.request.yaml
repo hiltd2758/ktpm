@@ -1,0 +1,42 @@
+$kind: http-request
+description: |-
+  PUT /api/admin/patient/update/info — Updates patient record. Password is preserved from the existing record.
+
+  Source: AdminApiController.updatePatientInfo(@RequestBody Patient)
+  Body maps to Patient entity: id, email, firstName, lastName, phone, address, dateOfBirth, medicalHistory
+url: "{{base_url}}/api/admin/patient/update/info"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "id": {{patient_id}},
+      "email": "patient@ehealthcare.com",
+      "firstName": "Tran",
+      "lastName": "Thi B",
+      "phone": "0912345678",
+      "address": "456 Health Street, Ha Noi",
+      "dateOfBirth": "1995-08-20",
+      "medicalHistory": "No known allergies"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK or 404 if no patients seeded', function () {
+          pm.expect([200, 404]).to.include(pm.response.code);
+      });
+
+      if (pm.response.code === 200) {
+          pm.test('Success message present', function () {
+              var body = pm.response.json();
+              pm.expect(body).to.have.property('message');
+          });
+      }
+    language: text/javascript
+order: 1000

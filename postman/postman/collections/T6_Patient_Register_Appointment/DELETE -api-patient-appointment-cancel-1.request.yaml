@@ -1,0 +1,7 @@
+$kind: http-request
+name: DELETE /api/patient/appointment/cancel/1
+url: "{{base_url}}/api/patient/appointment/cancel/1"
+method: DELETE
+headers:
+  Authorization: Bearer {{admin_token}}
+order: 4000

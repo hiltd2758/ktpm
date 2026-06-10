@@ -1,0 +1,24 @@
+$kind: http-request
+description: Re-authenticates the patient for the profile section tests.
+url: "{{base_url}}/api/patient/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{patient_email}}",
+      "password": "{{patient_password}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      if (pm.response.code === 200) {
+          var body = pm.response.json();
+          if (body.token) {
+              pm.environment.set('patient_token', body.token);
+          }
+      }
+    language: text/javascript
+order: 1000

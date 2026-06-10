@@ -1,0 +1,41 @@
+$kind: http-request
+description: |-
+  PUT /api/admin/doctor/update/info — Updates doctor metadata (id, email, firstName, lastName, field, phone, address).
+
+  Source: AdminApiController.updateDoctorInfo(@RequestBody Doctor)
+  Note: Password and ROLE are preserved from the existing record — they cannot be changed via this endpoint.
+url: "{{base_url}}/api/admin/doctor/update/info"
+method: PUT
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "id": {{doctor_id}},
+      "email": "doctor@ehealthcare.com",
+      "firstName": "John",
+      "lastName": "Smith",
+      "field": "Cardiology",
+      "phone": "0901234567",
+      "address": "123 Medical Avenue, Ho Chi Minh City"
+    }
+auth:
+  type: bearer
+  credentials:
+    token: "{{admin_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK or 404 if no doctors seeded', function () {
+          pm.expect([200, 404]).to.include(pm.response.code);
+      });
+
+      if (pm.response.code === 200) {
+          pm.test('Response has success message', function () {
+              var body = pm.response.json();
+              pm.expect(body).to.have.property('message');
+          });
+      }
+    language: text/javascript
+order: 1000

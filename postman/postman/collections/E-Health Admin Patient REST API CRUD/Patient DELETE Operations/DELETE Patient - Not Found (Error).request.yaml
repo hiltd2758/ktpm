@@ -1,0 +1,21 @@
+$kind: http-request
+description: Test 404 error when patient ID does not exist.
+url: "{{baseUrl}}/admin/api/patients/99999"
+method: DELETE
+headers:
+  Authorization: Bearer {{adminToken}}
+  Content-Type: application/json
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status code is 404 (Not Found)', function () {
+          pm.response.to.have.status(404);
+      });
+
+      pm.test('Response indicates patient not found', function () {
+          let jsonData = pm.response.json();
+          pm.expect(jsonData.success).to.equal(false);
+          pm.expect(jsonData.message).to.include('not found');
+      });
+    language: text/javascript
+order: 2000

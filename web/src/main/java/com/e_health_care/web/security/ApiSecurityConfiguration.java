@@ -1,5 +1,6 @@
 package com.e_health_care.web.security;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,7 +48,7 @@ public class ApiSecurityConfiguration {
     @Bean
     public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
         http
-                .securityMatcher("/api/**")
+                .securityMatcher("/api/**", "/admin/api/**")
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -57,10 +58,19 @@ public class ApiSecurityConfiguration {
                                 "/api/patient/register",
                                 "/api/doctor/login",
                                 "/api/admin/login",
-                                "/api/admin/generate-hash","/api/patients",   // thêm
+                                "/api/admin/generate-hash",
+                                "/api/patients",
                                 "/api/doctors"
                         ).permitAll()
+                        .requestMatchers("/admin/api/**").authenticated()
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\":\"Unauthorized - token required\"}");
+                        })
                 )
                 .addFilterBefore(doctorJwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(adminJwtFilter, UsernamePasswordAuthenticationFilter.class)

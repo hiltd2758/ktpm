@@ -1,0 +1,25 @@
+$kind: http-request
+description: |-
+  GET /api/doctor/dashboard — Returns all patients as PatientSummaryDTO[].
+
+  Source: ConsultationApiController.getDashboard()
+  Response: PatientSummaryDTO[] { id, email, fullName, phone, address, dateOfBirth, firstName, lastName, avatar }
+url: "{{base_url}}/api/doctor/dashboard"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{doctor_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is an array of patients', function () {
+          var body = pm.response.json();
+          pm.expect(body).to.be.an('array');
+      });
+    language: text/javascript
+order: 4000

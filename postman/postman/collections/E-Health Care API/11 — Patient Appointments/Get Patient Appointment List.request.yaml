@@ -1,0 +1,33 @@
+$kind: http-request
+description: |-
+  GET /api/patient/appointment/list — Returns all appointments for the authenticated patient.
+
+  Source: PatientAppointmentApiController.list()
+  Patient identity resolved from JWT principal (PatientPrinciple instance-of check).
+  Response: Appointment[] { id, patient, doctor, scheduleTime, status }
+url: "{{base_url}}/api/patient/appointment/list"
+method: GET
+auth:
+  type: bearer
+  credentials:
+    token: "{{patient_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Response is an array', function () {
+          var body = pm.response.json();
+          pm.expect(body).to.be.an('array');
+      });
+
+      pm.test('Capture appointment_id if any', function () {
+          var body = pm.response.json();
+          if (body.length > 0) {
+              pm.collectionVariables.set('appointment_id', String(body[0].id));
+          }
+      });
+    language: text/javascript
+order: 3000

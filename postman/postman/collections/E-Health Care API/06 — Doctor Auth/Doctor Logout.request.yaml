@@ -1,0 +1,24 @@
+$kind: http-request
+description: |-
+  POST /api/doctor/logout — Clears SecurityContext and expires the jwt-doctor-token cookie.
+
+  Requires: Authorization: Bearer {{doctor_token}}
+url: "{{base_url}}/api/doctor/logout"
+method: POST
+auth:
+  type: bearer
+  credentials:
+    token: "{{doctor_token}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK', function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test('Logout message present', function () {
+          var body = pm.response.json();
+          pm.expect(body).to.have.property('message');
+      });
+    language: text/javascript
+order: 3000

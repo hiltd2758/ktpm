@@ -1,0 +1,14 @@
+$kind: http-request
+name: GET /api/admin/dashboard
+url: "{{base_url}}/api/admin/dashboard"
+method: GET
+headers:
+  Authorization: Bearer {{admin_token}}
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200 OK", () => pm.response.to.have.status(200));
+      pm.test("Response has doctors", () => pm.response.json().doctors !== undefined);
+      pm.test("Response has patients", () => pm.response.json().patients !== undefined);
+    language: text/javascript
+order: 1000

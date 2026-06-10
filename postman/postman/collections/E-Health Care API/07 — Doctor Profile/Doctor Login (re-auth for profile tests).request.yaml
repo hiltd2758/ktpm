@@ -1,0 +1,24 @@
+$kind: http-request
+description: Re-authenticates the doctor so that the profile and appointment tests have a valid token, even if the previous logout test cleared it.
+url: "{{base_url}}/api/doctor/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{doctor_email}}",
+      "password": "{{doctor_password}}"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      if (pm.response.code === 200) {
+          var body = pm.response.json();
+          if (body.token) {
+              pm.environment.set('doctor_token', body.token);
+          }
+      }
+    language: text/javascript
+order: 1000

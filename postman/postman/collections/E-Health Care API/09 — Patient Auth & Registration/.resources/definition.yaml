@@ -1,0 +1,8 @@
+$kind: collection
+description: |-
+  Authentication and registration for the Patient role.
+
+  Base: /api/patient  |  JWT role claim: ROLE_PATIENT
+  Token stored in: {{patient_token}}
+  Filter: PatientJwtFilter — reads jwt-patient-token cookie first, then Authorization: Bearer header
+order: 10000

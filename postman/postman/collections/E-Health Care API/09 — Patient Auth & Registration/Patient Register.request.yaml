@@ -1,0 +1,39 @@
+$kind: http-request
+description: |-
+  POST /api/patient/register — Registers a new patient account.
+
+  Source: PatientAuthApiController.register(@RequestBody PatientDTO)
+  PatientDTO fields: email, password, firstName, lastName, address, phone, dateOfBirth, medicalHistory
+  Security: permitAll (no token required)
+  Note: If the email already exists this will return an error — the CI pipeline pre-seeds unique credentials.
+url: "{{base_url}}/api/patient/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{patient_email}}",
+      "password": "{{patient_password}}",
+      "firstName": "Tran",
+      "lastName": "Thi B",
+      "phone": "0912345678",
+      "address": "456 Health Street, Ha Noi",
+      "dateOfBirth": "1995-08-20"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('Status 200 OK or 4xx if email exists', function () {
+          pm.expect([200, 400, 409, 500]).to.include(pm.response.code);
+      });
+
+      if (pm.response.code === 200) {
+          pm.test('Registration success message', function () {
+              var body = pm.response.json();
+              pm.expect(body).to.have.property('message');
+          });
+      }
+    language: text/javascript
+order: 1000

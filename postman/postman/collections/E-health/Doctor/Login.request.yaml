@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{base_url}}/api/doctor/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: "{\r
+
+    \    \"email\": \"truong25@gmail.com\",\r
+
+    \    \"password\": \"123456\"\r
+
+    }"
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test("Status 200", () => pm.response.to.have.status(200));
+      var jsonData = pm.response.json();
+      pm.environment.set("doctor_token", jsonData.token);
+    language: text/javascript
+order: 1000
