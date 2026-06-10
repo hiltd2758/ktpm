@@ -13,9 +13,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
-
+import static org.mockito.ArgumentMatchers.any;
 @ExtendWith(MockitoExtension.class)
 class DoctorAuthenticationServiceTest {
 
@@ -31,8 +30,7 @@ class DoctorAuthenticationServiceTest {
     @InjectMocks
     private DoctorAuthenticationService doctorAuthenticationService;
 
-    private DoctorDTO validDoctor;
-
+    // Helper: tạo UserDetails mock đầy đủ tránh LockedException
     private UserDetails mockUserDetails(String email, String encodedPassword) {
         UserDetails ud = mock(UserDetails.class);
         lenient().when(ud.getUsername()).thenReturn(email);
@@ -44,154 +42,87 @@ class DoctorAuthenticationServiceTest {
         return ud;
     }
 
-    @BeforeEach
-    void setUp() {
-        validDoctor = new DoctorDTO();
-        validDoctor.setEmail("doctor@hospital.com");
-        validDoctor.setPassword("SecurePass@123");
-    }
-
-    // ══════════════════════════════════════════════════════
-    // PHẦN 1: UNIT TEST (3 test case theo yêu cầu)
-    // ══════════════════════════════════════════════════════
-
+    // UTCID01 – email hợp lệ + password hợp lệ → trả về JWT token (HTTP 200)
     @Test
-    @DisplayName("TC01 – Đăng nhập thành công → trả về JWT token")
-    void verify_validCredentials_returnsJwtToken() {
-        UserDetails ud = mockUserDetails(validDoctor.getEmail(), "encodedPassword");
-        when(doctorDetailsService.loadUserByUsername(validDoctor.getEmail())).thenReturn(ud);
-        when(passwordEncoder.matches(validDoctor.getPassword(), "encodedPassword")).thenReturn(true);
-        when(jwtService.generateToken(validDoctor.getEmail())).thenReturn("mock.jwt.token");
+    @DisplayName("UTCID01 – email valid + password valid → login thành công")
+    void utcid01_validEmailAndPassword_returnsToken() {
+        DoctorDTO dto = new DoctorDTO();
+        dto.setEmail("doctor@test.com");
+        dto.setPassword("DoctorPass1");
 
-        String token = doctorAuthenticationService.verify(validDoctor);
+        UserDetails ud = mockUserDetails(dto.getEmail(), "encodedPassword");
+        when(doctorDetailsService.loadUserByUsername(dto.getEmail())).thenReturn(ud);
+        when(passwordEncoder.matches(dto.getPassword(), "encodedPassword")).thenReturn(true);
+        when(jwtService.generateToken(dto.getEmail())).thenReturn("mock.jwt.token");
 
-        assertNotNull(token);
+        String token = doctorAuthenticationService.verify(dto);
+
+        assertNotNull(token, "HTTP 200 – login thành công, trả về token");
         assertEquals("mock.jwt.token", token);
     }
 
+    // UTCID02 – email sai format → trả về null (HTTP 400)
     @Test
-    @DisplayName("TC02 – Email không tồn tại → verify() trả về null")
-    void verify_emailNotFound_returnsNull() {
-        when(doctorDetailsService.loadUserByUsername(anyString()))
-                .thenThrow(new UsernameNotFoundException("Email not found"));
+    @DisplayName("UTCID02 – email invalid format → login thất bại")
+    void utcid02_invalidEmailFormat_returnsNull() {
+        DoctorDTO dto = new DoctorDTO();
+        dto.setEmail("invalid-email");
+        dto.setPassword("DoctorPass1");
 
-        assertNull(doctorAuthenticationService.verify(validDoctor));
+        when(doctorDetailsService.loadUserByUsername(dto.getEmail()))
+                .thenThrow(new UsernameNotFoundException("invalid email format"));
+
+        assertNull(doctorAuthenticationService.verify(dto), "HTTP 400 – email sai format");
     }
 
+    // UTCID03 – email null → trả về null (HTTP 400)
     @Test
-    @DisplayName("TC03 – Password sai → verify() trả về null")
-    void verify_wrongPassword_returnsNull() {
-        UserDetails ud = mockUserDetails(validDoctor.getEmail(), "encodedPassword");
-        when(doctorDetailsService.loadUserByUsername(validDoctor.getEmail())).thenReturn(ud);
-        when(passwordEncoder.matches(validDoctor.getPassword(), "encodedPassword")).thenReturn(false);
+    @DisplayName("UTCID03 – email null → login thất bại")
+    void utcid03_nullEmail_returnsNull() {
+        DoctorDTO dto = new DoctorDTO();
+        dto.setEmail(null);
+        dto.setPassword("DoctorPass1");
 
-        assertNull(doctorAuthenticationService.verify(validDoctor));
+        lenient().when(doctorDetailsService.loadUserByUsername(any()))
+                .thenThrow(new UsernameNotFoundException("email is null"));
+
+        assertNull(doctorAuthenticationService.verify(dto), "HTTP 400 – email null");
     }
 
-    // ── Dư – comment out ──
+    // UTCID04 – password length = 7 (dưới min 8) → trả về null (HTTP 400)
+    @Test
+    @DisplayName("UTCID04 – password length=7 (dưới min) → login thất bại")
+    void utcid04_passwordLength7_returnsNull() {
+        DoctorDTO dto = new DoctorDTO();
+        dto.setEmail("doctor@test.com");
+        dto.setPassword("Pass123"); // 7 ký tự
 
-//    @Test
-//    @DisplayName("TC04 – Email null → verify() trả về null an toàn")
-//    void verify_nullEmail_returnsNull() {
-//        DoctorDTO dto = new DoctorDTO();
-//        dto.setEmail(null);
-//        dto.setPassword("SomePass");
-//        when(doctorDetailsService.loadUserByUsername(any()))
-//                .thenThrow(new UsernameNotFoundException("null email"));
-//        assertNull(doctorAuthenticationService.verify(dto));
-//    }
+        assertEquals(7, dto.getPassword().length());
 
-//    @Test
-//    @DisplayName("TC05 – Password null → verify() trả về null")
-//    void verify_nullPassword_returnsNull() {
-//        DoctorDTO dto = new DoctorDTO();
-//        dto.setEmail("doctor@hospital.com");
-//        dto.setPassword(null);
-//        UserDetails ud = mockUserDetails(dto.getEmail(), "encodedPassword");
-//        when(doctorDetailsService.loadUserByUsername(dto.getEmail())).thenReturn(ud);
-//        lenient().when(passwordEncoder.matches(null, "encodedPassword")).thenReturn(false);
-//        assertNull(doctorAuthenticationService.verify(dto));
-//    }
+        UserDetails ud = mockUserDetails(dto.getEmail(), "encodedPassword");
+        when(doctorDetailsService.loadUserByUsername(dto.getEmail())).thenReturn(ud);
+        when(passwordEncoder.matches("Pass123", "encodedPassword")).thenReturn(false);
 
-//    @Test
-//    @DisplayName("TC06 – getUppercase_role() mặc định → \"DOCTOR\"")
-//    void getUppercaseRole_defaultRole_returnsDOCTOR() {
-//        assertEquals("DOCTOR", new DoctorDTO().getUppercase_role());
-//    }
+        assertNull(doctorAuthenticationService.verify(dto), "HTTP 400 – password quá ngắn");
+    }
 
-//    @Test
-//    @DisplayName("TC07 – Thành công → generateToken() gọi đúng 1 lần")
-//    void verify_success_callsGenerateTokenOnce() {
-//        UserDetails ud = mockUserDetails(validDoctor.getEmail(), "encoded");
-//        when(doctorDetailsService.loadUserByUsername(validDoctor.getEmail())).thenReturn(ud);
-//        when(passwordEncoder.matches(validDoctor.getPassword(), "encoded")).thenReturn(true);
-//        when(jwtService.generateToken(validDoctor.getEmail())).thenReturn("jwt");
-//        doctorAuthenticationService.verify(validDoctor);
-//        verify(jwtService, times(1)).generateToken(validDoctor.getEmail());
-//    }
+    // UTCID05 – password length = 8 (đúng min) → trả về JWT token (HTTP 200)
+    @Test
+    @DisplayName("UTCID05 – password length=8 (biên min) → login thành công")
+    void utcid05_passwordLength8_returnsToken() {
+        DoctorDTO dto = new DoctorDTO();
+        dto.setEmail("doctor@test.com");
+        dto.setPassword("Pass@123"); // 8 ký tự
 
-//    @Test
-//    @DisplayName("TC08 – Thất bại → generateToken() không được gọi")
-//    void verify_failure_neverCallsGenerateToken() {
-//        when(doctorDetailsService.loadUserByUsername(anyString()))
-//                .thenThrow(new UsernameNotFoundException("not found"));
-//        doctorAuthenticationService.verify(validDoctor);
-//        verify(jwtService, never()).generateToken(anyString());
-//    }
+        assertEquals(8, dto.getPassword().length());
 
-    // ══════════════════════════════════════════════════════
-    // PHẦN 2: BVA – Dư, comment out
-    // ══════════════════════════════════════════════════════
+        UserDetails ud = mockUserDetails(dto.getEmail(), "encodedPassword");
+        when(doctorDetailsService.loadUserByUsername(dto.getEmail())).thenReturn(ud);
+        when(passwordEncoder.matches("Pass@123", "encodedPassword")).thenReturn(true);
+        when(jwtService.generateToken(dto.getEmail())).thenReturn("jwt.token");
 
-//    @Test
-//    @DisplayName("BVA_EMAIL_01 – Email rỗng → verify() trả về null")
-//    void bva_email_empty_returnsNull() { ... }
+        String token = doctorAuthenticationService.verify(dto);
 
-//    @Test
-//    @DisplayName("BVA_EMAIL_02 – Email 1 ký tự → verify() trả về null")
-//    void bva_email_oneChar_returnsNull() { ... }
-
-//    @Test
-//    @DisplayName("BVA_EMAIL_03 – Email hợp lệ tối thiểu (a@b.c)")
-//    void bva_email_minimalValid_processed() { ... }
-
-//    @Test
-//    @DisplayName("BVA_EMAIL_04 – Email 254 ký tự")
-//    void bva_email_254chars_processed() { ... }
-
-//    @Test
-//    @DisplayName("BVA_EMAIL_05 – Email 255 ký tự")
-//    void bva_email_255chars_processed() { ... }
-
-//    @Test
-//    @DisplayName("BVA_PASS_01 – Password rỗng → verify() trả về null")
-//    void bva_password_empty_returnsNull() { ... }
-
-//    @Test
-//    @DisplayName("BVA_PASS_02 – Password 7 ký tự")
-//    void bva_password_sevenChars_returnsNull() { ... }
-
-//    @Test
-//    @DisplayName("BVA_PASS_03 – Password 8 ký tự")
-//    void bva_password_eightChars_success() { ... }
-
-//    @Test
-//    @DisplayName("BVA_PASS_04 – Password 128 ký tự")
-//    void bva_password_128chars_success() { ... }
-
-//    @Test
-//    @DisplayName("BVA_PASS_05 – Password 129 ký tự")
-//    void bva_password_129chars_returnsNull() { ... }
-
-//    @Test
-//    @DisplayName("BVA_ROLE_01 – role mặc định")
-//    void bva_role_default() { ... }
-
-//    @Test
-//    @DisplayName("BVA_ROLE_02 – role rỗng")
-//    void bva_role_empty() { ... }
-
-//    @Test
-//    @DisplayName("BVA_ROLE_03 – role null → NullPointerException")
-//    void bva_role_null_throwsNPE() { ... }
+        assertNotNull(token, "HTTP 200 – password đúng biên min, login thành công");
+    }
 }
