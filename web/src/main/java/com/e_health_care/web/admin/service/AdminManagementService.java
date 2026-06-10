@@ -67,7 +67,25 @@ public class AdminManagementService {
         return patientRepository.findById(id);
     }
 
+    public Patient createPatient(Patient patient) {
+        if (patientRepository.findByEmail(patient.getEmail()).isPresent()) {
+            throw new RuntimeException("Email already exists: " + patient.getEmail());
+        }
+        return patientRepository.save(patient);
+    }
+
+    public Patient updatePatient(Patient patient) {
+        if (patient == null || patient.getId() == null || !patientRepository.existsById(patient.getId())) {
+            throw new RuntimeException("Patient not found");
+        }
+        return patientRepository.save(patient);
+    }
+
     public void deletePatient(long id) {
+        if (!patientRepository.existsById(id)) {
+            throw new RuntimeException("Patient not found with ID: " + id);
+        }
+
         // First delete dependent clinical info records
         patientClinicalInforRepository.findByPatientId(id).ifPresent(clinicalInfo -> {
             patientClinicalInforRepository.delete(clinicalInfo);
