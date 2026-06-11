@@ -1,10 +1,10 @@
 package com.e_health_care.web.admin.dto;
 
-import com.e_health_care.web.BvaValidationHelper;
-
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.e_health_care.web.BvaValidationHelper;
 
 /**
  * BVA (Boundary Value Analysis) Test cho PatientCreateDTO
@@ -34,6 +34,13 @@ class PatientCreateDTOBvaTest {
         dto.setLastName("Doe");
         dto.setPhone("0123456789");      // 10 ký tự – hợp lệ
         return dto;
+    }
+
+    @Test
+    void allNominal_shouldBeValid() {
+        PatientCreateDTO dto = validDto();
+        assertTrue(BvaValidationHelper.isValid(dto),
+                "DTO với tất cả field nominal phải hợp lệ");
     }
 
     // =========================================================================
@@ -87,6 +94,15 @@ class PatientCreateDTOBvaTest {
         dto.setPassword("Abcd1234");  // đúng 8 ký tự
         assertTrue(BvaValidationHelper.isValid(dto),
                 "password 8 ký tự phải hợp lệ (boundary dưới)");
+    }
+
+    /** Password = 25 ký tự (nominal) → valid */
+    @Test
+    void password_25chars_nominal_isValid() {
+        PatientCreateDTO dto = validDto();
+        dto.setPassword("A".repeat(25));
+        assertTrue(BvaValidationHelper.isValid(dto),
+                "password 25 ký tự (nominal) phải hợp lệ");
     }
 
     /** Password = 50 ký tự → valid (ranh giới trên hợp lệ) */
@@ -190,6 +206,19 @@ class PatientCreateDTOBvaTest {
     // =========================================================================
     // PHẦN 5: PHONE
     // =========================================================================
+
+
+    /**
+     * phone = null
+     * Yêu cầu @NotNull trên field `phone` để test này pass (xem mục 3 ghi chú).
+     */
+    @Test
+    void phone_null_isInvalid() {
+        PatientCreateDTO dto = validDto();
+        dto.setPhone(null);
+        assertFalse(BvaValidationHelper.isValid(dto),
+                "phone = null phải không hợp lệ");
+    }
 
     /** phone = 10 ký tự → valid (đúng max) */
     @Test
