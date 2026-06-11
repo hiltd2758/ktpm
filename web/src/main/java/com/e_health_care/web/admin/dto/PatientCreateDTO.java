@@ -1,7 +1,11 @@
 package com.e_health_care.web.admin.dto;
 
 import java.time.LocalDate;
-import jakarta.validation.constraints.*;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -32,6 +36,7 @@ public class PatientCreateDTO {
     @Size(min = 8, max = 50, message = "Password must be 8-50 characters")
     private String password;
 
+    @NotNull(message = "Phone is required")
     @Size(max = 10, message = "Phone max 10 digits")
     private String phone;
 
