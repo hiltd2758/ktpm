@@ -10,64 +10,102 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class AppointmentRequestDTOBvaTest {
 
+    private AppointmentRequestDTO createValidDTO() {
+        AppointmentRequestDTO dto = new AppointmentRequestDTO();
+        dto.setPatientId(1L);
+        dto.setDoctorId(1L);
+        dto.setScheduleTime(LocalDateTime.now().plusDays(1));
+        return dto;
+    }
+
     @Test
     void patientId_null_shouldBeInvalid() {
-        AppointmentRequestDTO dto = new AppointmentRequestDTO();
-        dto.setDoctorId(1L); // Các trường khác phải hợp lệ
-        dto.setScheduleTime(LocalDateTime.now().plusDays(1));
-
-        dto.setPatientId(null); // Trường bị lỗi
-        // Lưu ý: Nhấn Alt + Enter vào chữ BvaValidationHelper để máy tự import nha
+        AppointmentRequestDTO dto = createValidDTO();
+        dto.setPatientId(null);
         assertFalse(BvaValidationHelper.isValid(dto));
     }
 
     @Test
-    void patientId_valid_shouldBeValid() {
-        AppointmentRequestDTO dto = new AppointmentRequestDTO();
-        dto.setDoctorId(1L);
-        dto.setScheduleTime(LocalDateTime.now().plusDays(1));
+    void patientId_min_shouldBeValid() {
+        AppointmentRequestDTO dto = createValidDTO();
         dto.setPatientId(1L);
+        assertTrue(BvaValidationHelper.isValid(dto));
+    }
 
+    @Test
+    void patientId_nominal_shouldBeValid() {
+        AppointmentRequestDTO dto = createValidDTO();
+        dto.setPatientId(500L);
+        assertTrue(BvaValidationHelper.isValid(dto));
+    }
+
+    @Test
+    void patientId_max_shouldBeValid() {
+        AppointmentRequestDTO dto = createValidDTO();
+        dto.setPatientId(Long.MAX_VALUE);
         assertTrue(BvaValidationHelper.isValid(dto));
     }
 
     @Test
     void doctorId_null_shouldBeInvalid() {
-        AppointmentRequestDTO dto = new AppointmentRequestDTO();
-        dto.setPatientId(1L);
-        dto.setScheduleTime(LocalDateTime.now().plusDays(1));
-
+        AppointmentRequestDTO dto = createValidDTO();
         dto.setDoctorId(null);
         assertFalse(BvaValidationHelper.isValid(dto));
     }
 
     @Test
-    void scheduleTime_null_shouldBeInvalid() {
-        AppointmentRequestDTO dto = new AppointmentRequestDTO();
-        dto.setPatientId(1L);
+    void doctorId_min_shouldBeValid() {
+        AppointmentRequestDTO dto = createValidDTO();
         dto.setDoctorId(1L);
+        assertTrue(BvaValidationHelper.isValid(dto));
+    }
 
+    @Test
+    void doctorId_nominal_shouldBeValid() {
+        AppointmentRequestDTO dto = createValidDTO();
+        dto.setDoctorId(500L);
+        assertTrue(BvaValidationHelper.isValid(dto));
+    }
+
+    @Test
+    void doctorId_max_shouldBeValid() {
+        AppointmentRequestDTO dto = createValidDTO();
+        dto.setDoctorId(Long.MAX_VALUE);
+        assertTrue(BvaValidationHelper.isValid(dto));
+    }
+
+    @Test
+    void scheduleTime_null_shouldBeInvalid() {
+        AppointmentRequestDTO dto = createValidDTO();
         dto.setScheduleTime(null);
         assertFalse(BvaValidationHelper.isValid(dto));
     }
 
     @Test
     void scheduleTime_past_shouldBeInvalid() {
-        AppointmentRequestDTO dto = new AppointmentRequestDTO();
-        dto.setPatientId(1L);
-        dto.setDoctorId(1L);
-
-        dto.setScheduleTime(LocalDateTime.now().minusDays(1)); // Quá khứ
+        AppointmentRequestDTO dto = createValidDTO();
+        dto.setScheduleTime(LocalDateTime.now().minusDays(1));
         assertFalse(BvaValidationHelper.isValid(dto));
     }
 
     @Test
-    void scheduleTime_future_shouldBeValid() {
-        AppointmentRequestDTO dto = new AppointmentRequestDTO();
-        dto.setPatientId(1L);
-        dto.setDoctorId(1L);
+    void scheduleTime_present_shouldBeInvalid() {
+        AppointmentRequestDTO dto = createValidDTO();
+        dto.setScheduleTime(LocalDateTime.now());
+        assertFalse(BvaValidationHelper.isValid(dto));
+    }
 
-        dto.setScheduleTime(LocalDateTime.now().plusDays(1)); // Tương lai
+    @Test
+    void scheduleTime_nearFuture_shouldBeValid() {
+        AppointmentRequestDTO dto = createValidDTO();
+        dto.setScheduleTime(LocalDateTime.now().plusMinutes(5));
+        assertTrue(BvaValidationHelper.isValid(dto));
+    }
+
+    @Test
+    void scheduleTime_farFuture_shouldBeValid() {
+        AppointmentRequestDTO dto = createValidDTO();
+        dto.setScheduleTime(LocalDateTime.now().plusDays(30));
         assertTrue(BvaValidationHelper.isValid(dto));
     }
 }
