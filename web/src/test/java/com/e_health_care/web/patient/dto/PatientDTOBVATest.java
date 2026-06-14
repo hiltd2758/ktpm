@@ -344,4 +344,94 @@ class PatientDTOBVATest {
         patientDTO.setId(-1L);
         assertEquals(-1L, patientDTO.getId());
     }
+
+    // ══════ VALIDATION HELPER ══════
+
+    private jakarta.validation.Validator getValidator() {
+        return jakarta.validation.Validation.buildDefaultValidatorFactory().getValidator();
+    }
+
+    private boolean isValid(PatientDTO dto) {
+        return getValidator().validate(dto).isEmpty();
+    }
+
+    private PatientDTO validDto() {
+        PatientDTO dto = new PatientDTO();
+        dto.setEmail("patient@test.com");
+        dto.setPassword("A".repeat(25));
+        dto.setFirstName("John");
+        dto.setLastName("Doe");
+        dto.setPhone("0909123456");
+        return dto;
+    }
+
+// ══════ BVA VALIDATION THỰC SỰ (4n+1) ══════
+
+    @Test
+    void allNominal_shouldBeValid() {
+        assertTrue(isValid(validDto()));
+    }
+
+    @Test
+    void email_invalid_shouldFail() {
+        PatientDTO dto = validDto();
+        dto.setEmail("patienttest.com");
+        assertFalse(isValid(dto));
+    }
+
+    @Test
+    void email_null_shouldFail() {
+        PatientDTO dto = validDto();
+        dto.setEmail(null);
+        assertFalse(isValid(dto));
+    }
+
+    @Test
+    void password_7chars_shouldFail() {
+        PatientDTO dto = validDto();
+        dto.setPassword("1234567");
+        assertFalse(isValid(dto));
+    }
+
+    @Test
+    void password_8chars_shouldPass() {
+        PatientDTO dto = validDto();
+        dto.setPassword("12345678");
+        assertTrue(isValid(dto));
+    }
+
+    @Test
+    void password_51chars_shouldFail() {
+        PatientDTO dto = validDto();
+        dto.setPassword("A".repeat(51));
+        assertFalse(isValid(dto));
+    }
+
+    @Test
+    void firstName_empty_shouldFail() {
+        PatientDTO dto = validDto();
+        dto.setFirstName("");
+        assertFalse(isValid(dto));
+    }
+
+    @Test
+    void lastName_empty_shouldFail() {
+        PatientDTO dto = validDto();
+        dto.setLastName("");
+        assertFalse(isValid(dto));
+    }
+
+    @Test
+    void lastName_51chars_shouldFail() {
+        PatientDTO dto = validDto();
+        dto.setLastName("A".repeat(51));
+        assertFalse(isValid(dto));
+    }
+
+    @Test
+    void phone_11chars_shouldFail() {
+        PatientDTO dto = validDto();
+        dto.setPhone("09876543210");
+        assertFalse(isValid(dto));
+    }
 }
