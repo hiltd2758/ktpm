@@ -96,4 +96,17 @@ public class AdminDTOBvaTest {
         Set<ConstraintViolation<AdminDTO>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty(), "Password 51 ký tự phải bị báo lỗi (Invalid)");
     }
+
+    @Test
+    void allNominal_shouldBeValid() {
+        AdminDTO dto = new AdminDTO();
+
+        dto.setEmail("admin@test.com");
+
+        dto.setPassword("A".repeat(25));
+
+        Set<ConstraintViolation<AdminDTO>> violations = validator.validate(dto);
+
+        assertTrue(violations.isEmpty(), "Trường hợp Nominal (giá trị an toàn nhất) phải hoàn toàn hợp lệ");
+    }
 }
