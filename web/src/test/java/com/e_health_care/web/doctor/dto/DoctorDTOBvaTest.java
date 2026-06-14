@@ -1,10 +1,12 @@
 package com.e_health_care.web.doctor.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -14,6 +16,32 @@ import com.e_health_care.web.testsupport.BvaValidationHelper;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class DoctorDTOBvaTest {
+
+    @Test
+    @DisplayName("All nominal values should be valid")
+    void allNominal_shouldBeValid() {
+        DoctorDTO doctorDTO = buildValidDoctorDto();
+
+        assertTrue(BvaValidationHelper.isValidDoctorDto(doctorDTO));
+    }
+
+    @Test
+    @DisplayName("Short nominal email should be valid")
+    void email_nominalShort_isValid() {
+        DoctorDTO doctorDTO = buildValidDoctorDto();
+        doctorDTO.setEmail("a@b.com");
+
+        assertTrue(BvaValidationHelper.isValidDoctorDto(doctorDTO));
+    }
+
+    @Test
+    @DisplayName("Long nominal email should be valid")
+    void email_nominalLong_isValid() {
+        DoctorDTO doctorDTO = buildValidDoctorDto();
+        doctorDTO.setEmail(repeat('a', 40) + "@b.com");
+
+        assertTrue(BvaValidationHelper.isValidDoctorDto(doctorDTO));
+    }
 
     @ParameterizedTest(name = "email boundary: {0}")
     @MethodSource("emailCases")
@@ -83,6 +111,7 @@ class DoctorDTOBvaTest {
 
     Stream<Arguments> phoneCases() {
         return Stream.of(
+                Arguments.of("012345678", false),
                 Arguments.of("0123456789", true),
                 Arguments.of("01234567890", false)
         );
