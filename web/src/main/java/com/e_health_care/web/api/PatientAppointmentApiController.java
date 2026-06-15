@@ -63,4 +63,18 @@ public class PatientAppointmentApiController {
         List<Appointment> appointments = appointmentService.getAppointmentsByPatient(patientId);
         return ResponseEntity.ok(appointments);
     }
+
+    @PostMapping("/update/{id}/{status}")
+    public ResponseEntity<?> updateStatus(@PathVariable Long id, @PathVariable String status) {
+        Long patientId = getCurrentPatientId();
+        if (patientId == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+        }
+        try {
+            appointmentService.updateAppointmentStatus(id, status);
+            return ResponseEntity.ok(Map.of("message", "Cập nhật trạng thái thành công"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
 }
