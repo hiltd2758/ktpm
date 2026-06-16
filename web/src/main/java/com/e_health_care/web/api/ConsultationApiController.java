@@ -68,7 +68,10 @@ public class ConsultationApiController {
             doctorViewPatientService.updatePatientClinicalInfo(id, clinicalInforDTO, doctor.getEmail());
             return ResponseEntity.ok(Map.of("message", "Cập nhật bệnh án thành công"));
         } catch (RuntimeException e) {
+            if (e.getMessage() != null && e.getMessage().contains("Patient not found")) {
+                return ResponseEntity.status(400).body(Map.of("error", e.getMessage()));
+            }
             return ResponseEntity.status(404).body(Map.of("error", e.getMessage()));
         }
-}
+    }
 }

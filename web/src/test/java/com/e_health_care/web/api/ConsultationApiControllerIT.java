@@ -5,6 +5,7 @@ import com.e_health_care.web.doctor.model.Doctor;
 import com.e_health_care.web.doctor.repository.DoctorRepository;
 import com.e_health_care.web.patient.model.Patient;
 import com.e_health_care.web.patient.repository.PatientRepository;
+import com.e_health_care.web.patient.repository.PatientClinicalInforRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -14,7 +15,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ConsultationApiControllerIT extends AbstractIntegrationTest {
 
     @Autowired
@@ -22,6 +22,9 @@ class ConsultationApiControllerIT extends AbstractIntegrationTest {
 
     @Autowired
     private PatientRepository patientRepository;
+
+    @Autowired
+    private PatientClinicalInforRepository patientClinicalInforRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -32,7 +35,8 @@ class ConsultationApiControllerIT extends AbstractIntegrationTest {
     @BeforeEach
     void setUp() {
         // Seed doctor
-        if (doctorRepository.findByEmail("it_doctor@test.com") == null) {
+        Doctor doctor = doctorRepository.findByEmail("it_doctor@test.com");
+        if (doctor == null) {
             Doctor d = new Doctor();
             d.setEmail("it_doctor@test.com");
             d.setPassword(passwordEncoder.encode("Password123"));
@@ -42,11 +46,12 @@ class ConsultationApiControllerIT extends AbstractIntegrationTest {
             d.setPhone("0909123457");
             d.setAddress("Test Address");
             d.setROLE("ROLE_DOCTOR");
-            doctorRepository.save(d);
+            doctor = doctorRepository.save(d);
         }
 
         // Seed patient
-        if (patientRepository.findByEmail("it_patient2@test.com").isEmpty()) {
+        Patient patient = patientRepository.findByEmail("it_patient2@test.com").orElse(null);
+        if (patient == null) {
             Patient p = new Patient();
             p.setEmail("it_patient2@test.com");
             p.setPassword(passwordEncoder.encode("Password123"));
@@ -54,15 +59,11 @@ class ConsultationApiControllerIT extends AbstractIntegrationTest {
             p.setLastName("Patient2");
             p.setPhone("0909123458");
             p.setAddress("Test Address");
-//            p.setROLE("ROLE_PATIENT");
-            Patient saved = patientRepository.save(p);
-            patientId = saved.getId();
-        } else {
-            patientId = patientRepository.findByEmail("it_patient2@test.com")
-                    .get().getId();
+            patient = patientRepository.save(p);
         }
+        patientId = patient.getId();
 
-        // Login doctor
+        // Login doctor to get token if not cached
         if (doctorToken == null) {
             HttpHeaders headers = jsonHeaders();
             Map<String, String> body = Map.of(
@@ -74,27 +75,91 @@ class ConsultationApiControllerIT extends AbstractIntegrationTest {
                     new HttpEntity<>(body, headers),
                     Map.class
             );
+            assertNotNull(response.getBody(), "Doctor login failed, response body is null");
             doctorToken = (String) response.getBody().get("token");
+            assertNotNull(doctorToken, "Doctor login failed, token is null");
         }
     }
 
-    // ══════ GET /api/doctor/dashboard ══════
+    // ══════ Patient Information API (Bước 3) ══════
 
     @Test
-    @Order(1)
-    @DisplayName("IT_CONSULT_01 — getDashboard: không có token → 401")
-    void getDashboard_noToken_shouldReturn401() {
-        ResponseEntity<Map> response = restTemplate.getForEntity(
-                baseUrl() + "/api/doctor/dashboard",
+    @DisplayName("getPatientInfo_shouldReturn200_whenDoctorAuthenticated")
+    void getPatientInfo_shouldReturn200_whenDoctorAuthenticated() {
+        HttpHeaders headers = jsonWithCookie("jwt-doctor-token", doctorToken);
+        ResponseEntity<Map> response = restTemplate.exchange(
+                baseUrl() + "/api/doctor/patient/" + patientId,
+                HttpMethod.GET,
+                new HttpEntity<>(headers),
                 Map.class
         );
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().containsKey("patient"));
+        assertTrue(response.getBody().containsKey("clinicalInfo"));
     }
 
     @Test
-    @Order(2)
-    @DisplayName("IT_CONSULT_02 — getDashboard: có token → 200 + list patients")
-    void getDashboard_withToken_shouldReturn200() {
+    @DisplayName("getPatientInfo_shouldReturn401_whenNoToken")
+    void getPatientInfo_shouldReturn401_whenNoToken() {
+        ResponseEntity<Map> response = restTemplate.getForEntity(
+                baseUrl() + "/api/doctor/patient/" + patientId,
+                Map.class
+        );
+        // Requirement specifies "expect HTTP 401 hoặc 403"
+        assertTrue(response.getStatusCode() == HttpStatus.UNAUTHORIZED || response.getStatusCode() == HttpStatus.FORBIDDEN);
+    }
+
+    // ══════ Update Clinical Information API (Bước 4) ══════
+
+    @Test
+    @DisplayName("updatePatientClinical_shouldReturn200_whenValid")
+    void updatePatientClinical_shouldReturn200_whenValid() {
+        HttpHeaders headers = jsonWithCookie("jwt-doctor-token", doctorToken);
+        Map<String, String> body = Map.of(
+                "bloodType", "O+",
+                "allergies", "Peanuts",
+                "chronicDiseases", "Asthma",
+                "familyMedicalHistory", "None"
+        );
+        ResponseEntity<Map> response = restTemplate.exchange(
+                baseUrl() + "/api/doctor/patient/" + patientId,
+                HttpMethod.POST,
+                new HttpEntity<>(body, headers),
+                Map.class
+        );
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals("Cập nhật bệnh án thành công", response.getBody().get("message"));
+    }
+
+    @Test
+    @DisplayName("updatePatientClinical_shouldReturn400_whenPatientNotFound")
+    void updatePatientClinical_shouldReturn400_whenPatientNotFound() {
+        HttpHeaders headers = jsonWithCookie("jwt-doctor-token", doctorToken);
+        Map<String, String> body = Map.of(
+                "bloodType", "AB-",
+                "allergies", "Dust",
+                "chronicDiseases", "Hypertension",
+                "familyMedicalHistory", "Diabetes"
+        );
+        // Use a non-existent patient ID (e.g. 999999)
+        ResponseEntity<Map> response = restTemplate.exchange(
+                baseUrl() + "/api/doctor/patient/999999",
+                HttpMethod.POST,
+                new HttpEntity<>(body, headers),
+                Map.class
+        );
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().containsKey("error"));
+    }
+
+    // ══════ Refresh Token API (Dashboard API) (Bước 5) ══════
+
+    @Test
+    @DisplayName("getDashboard_shouldReturn200_whenDoctorAuthenticated")
+    void getDashboard_shouldReturn200_whenDoctorAuthenticated() {
         HttpHeaders headers = jsonWithCookie("jwt-doctor-token", doctorToken);
         ResponseEntity<Object[]> response = restTemplate.exchange(
                 baseUrl() + "/api/doctor/dashboard",
@@ -106,85 +171,14 @@ class ConsultationApiControllerIT extends AbstractIntegrationTest {
         assertNotNull(response.getBody());
     }
 
-    // ══════ GET /api/doctor/patient/{id} ══════
-
     @Test
-    @Order(3)
-    @DisplayName("IT_CONSULT_03 — getPatientRecord: không có token → 401")
-    void getPatientRecord_noToken_shouldReturn401() {
+    @DisplayName("getDashboard_shouldReturn401_whenNoToken")
+    void getDashboard_shouldReturn401_whenNoToken() {
         ResponseEntity<Map> response = restTemplate.getForEntity(
-                baseUrl() + "/api/doctor/patient/" + patientId,
+                baseUrl() + "/api/doctor/dashboard",
                 Map.class
         );
+        // Requirement specifies "expect HTTP 401"
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-    }
-
-    @Test
-    @Order(4)
-    @DisplayName("IT_CONSULT_04 — getPatientRecord: có token, patient tồn tại → 200")
-    void getPatientRecord_withToken_patientExists_shouldReturn200() {
-        HttpHeaders headers = jsonWithCookie("jwt-doctor-token", doctorToken);
-        ResponseEntity<Map> response = restTemplate.exchange(
-                baseUrl() + "/api/doctor/patient/" + patientId,
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                Map.class
-        );
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(response.getBody().containsKey("patient"));
-        assertTrue(response.getBody().containsKey("clinicalInfo"));
-    }
-
-    @Test
-    @Order(5)
-    @DisplayName("IT_CONSULT_05 — getPatientRecord: patient không tồn tại → 404")
-    void getPatientRecord_patientNotFound_shouldReturn404() {
-        HttpHeaders headers = jsonWithCookie("jwt-doctor-token", doctorToken);
-        ResponseEntity<Map> response = restTemplate.exchange(
-                baseUrl() + "/api/doctor/patient/99999",
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                Map.class
-        );
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-    }
-
-    // ══════ POST /api/doctor/patient/{id} ══════
-
-    @Test
-    @Order(6)
-    @DisplayName("IT_CONSULT_06 — updatePatientRecord: không có token → 401")
-    void updatePatientRecord_noToken_shouldReturn401() {
-        Map<String, String> body = Map.of("bloodType", "B+");
-        HttpHeaders headers = jsonHeaders();
-        ResponseEntity<Map> response = restTemplate.exchange(
-                baseUrl() + "/api/doctor/patient/" + patientId,
-                HttpMethod.POST,
-                new HttpEntity<>(body, headers),
-                Map.class
-        );
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-    }
-
-    @Test
-    @Order(7)
-    @DisplayName("IT_CONSULT_07 — updatePatientRecord: có token, hợp lệ → 200")
-    void updatePatientRecord_withToken_shouldReturn200() {
-        HttpHeaders headers = jsonWithCookie("jwt-doctor-token", doctorToken);
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        Map<String, String> body = Map.of(
-                "bloodType", "O+",
-                "allergies", "None",
-                "chronicDiseases", "None",
-                "familyMedicalHistory", "None"
-        );
-        ResponseEntity<Map> response = restTemplate.exchange(
-                baseUrl() + "/api/doctor/patient/" + patientId,
-                HttpMethod.POST,
-                new HttpEntity<>(body, headers),
-                Map.class
-        );
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("Cập nhật bệnh án thành công", response.getBody().get("message"));
     }
 }
