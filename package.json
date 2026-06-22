@@ -1,0 +1,27 @@
+{
+  "name": "ktpm",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hiltd2758/ktpm.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hiltd2758/ktpm/issues"
+  },
+  "homepage": "https://github.com/hiltd2758/ktpm#readme",
+  "devDependencies": {
+    "codeceptjs": "^4.0.8",
+    "playwright": "^1.61.0"
+  }
+}
