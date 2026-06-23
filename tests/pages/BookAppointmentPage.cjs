@@ -17,33 +17,21 @@ module.exports = {
   // ───────── Open Page ─────────
 
   open() {
-    I.amOnPage(
-      '/patient/appointment/book'
-    );
+    I.amOnPage('/patient/appointment/book');
 
-    I.waitForElement(
-      this.doctorSelect,
-      10
-    );
+    I.waitForElement(this.doctorSelect, 10);
   },
 
   // ───────── Select Doctor ─────────
 
   async selectDoctor(name = null) {
 
-    I.waitForElement(
-      this.doctorSelect,
-      10
-    );
+    I.waitForElement( this.doctorSelect, 10);
 
     // chọn theo tên
     if (name) {
 
-      I.selectOption(
-        this.doctorSelect,
-        name
-      );
-
+      I.selectOption(this.doctorSelect, name);
       return;
 
     }
@@ -53,9 +41,7 @@ module.exports = {
       await I.executeScript(() => {
 
         const select =
-          document.querySelector(
-            '#doctorId'
-          );
+          document.querySelector('#doctorId');
 
         if (!select) {
           return [];
@@ -79,20 +65,11 @@ module.exports = {
 
     }
 
-    const doctor =
-      doctors[
-        doctors.length - 1
-      ];
+    const doctor = doctors[ doctors.length - 1];
 
-    console.log(
-      'Using doctor:',
-      doctor
-    );
+    console.log('Using doctor:', doctor);
 
-    I.selectOption(
-      this.doctorSelect,
-      doctor.value
-    );
+    I.selectOption(this.doctorSelect, doctor.value);
 
   },
 
@@ -100,18 +77,12 @@ module.exports = {
 
   fillDateTime(value) {
 
-    I.waitForElement(
-      this.dateTimeInput,
-      10
-    );
+    I.waitForElement( this.dateTimeInput, 10);
 
     // datetime-local thường lỗi với fillField
     I.executeScript((v) => {
 
-      const input =
-        document.querySelector(
-          '#scheduleTime'
-        );
+      const input = document.querySelector('#scheduleTime');
 
       if (!input) {
         return;
@@ -145,15 +116,9 @@ module.exports = {
 
   clickSubmit() {
 
-    I.waitForElement(
-      this.submitBtn,
-      10
-    );
+    I.waitForElement( this.submitBtn, 10);
 
-    I.click(
-      this.submitBtn
-    );
-
+    I.click( this.submitBtn);
   },
 
   // ───────── Assertions ─────────
@@ -162,22 +127,15 @@ module.exports = {
 
     I.wait(5);
 
-    I.seeInCurrentUrl(
-      '/patient/appointment/list'
-    );
+    I.seeInCurrentUrl('/patient/appointment/list');
 
   },
 
   seeError() {
 
-    I.waitForVisible(
-      this.errorMsg,
-      5
-    );
+    I.waitForVisible(this.errorMsg, 5);
 
-    I.seeElement(
-      this.errorMsg
-    );
+    I.seeElement(this.errorMsg);
 
   }
 
