@@ -2,6 +2,9 @@ package com.e_health_care.web.admin.service;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -9,6 +12,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+
+import com.e_health_care.web.doctor.model.Doctor;
+import com.e_health_care.web.patient.model.PatientClinicalInfor;
 
 import java.util.Optional;
 
@@ -151,5 +157,112 @@ class AdminManagementServiceTest extends BaseServiceTest {
         // Assert
         verify(patientRepository, times(1)).deleteById(id);
         verify(entityManager, times(1)).flush();
+    }
+
+    @Test
+    void getDoctorById_callsRepository() {
+        when(doctorRepository.findById(1L)).thenReturn(Optional.of(new Doctor()));
+        assertTrue(adminManagementService.getDoctorById(1L).isPresent());
+        verify(doctorRepository).findById(1L);
+    }
+
+    @Test
+    void deleteDoctor_callsDeleteById() {
+        adminManagementService.deleteDoctor(1L);
+        verify(doctorRepository).deleteById(1L);
+    }
+
+    @Test
+    void updateDoctorInformation_callsSave() {
+        Doctor doctor = new Doctor();
+        when(doctorRepository.save(doctor)).thenReturn(doctor);
+        assertNotNull(adminManagementService.updateDoctorInformation(doctor));
+        verify(doctorRepository).save(doctor);
+    }
+
+    @Test
+    void updateDoctorPassword_doctorExists_updatesAndReturnsTrue() {
+        Doctor doctor = new Doctor();
+        when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));
+        when(passwordEncoder.encode("newPass")).thenReturn("encodedPass");
+
+        boolean result = adminManagementService.updateDoctorPassword(1L, "newPass");
+
+        assertTrue(result);
+        assertEquals("encodedPass", doctor.getPassword());
+        verify(doctorRepository).save(doctor);
+    }
+
+    @Test
+    void updateDoctorPassword_doctorDoesNotExist_returnsFalse() {
+        when(doctorRepository.findById(1L)).thenReturn(Optional.empty());
+        boolean result = adminManagementService.updateDoctorPassword(1L, "newPass");
+        assertFalse(result);
+        verify(doctorRepository, never()).save(any());
+    }
+
+    @Test
+    void getPatientById_callsRepository() {
+        when(patientRepository.findById(1L)).thenReturn(Optional.of(new Patient()));
+        assertTrue(adminManagementService.getPatientById(1L).isPresent());
+        verify(patientRepository).findById(1L);
+    }
+
+    @Test
+    void updatePatient_patientIsNull_throwsException() {
+        assertThrows(RuntimeException.class, () -> adminManagementService.updatePatient(null));
+    }
+
+    @Test
+    void updatePatient_patientIdIsNull_throwsException() {
+        Patient patient = new Patient(); // ID is null by default
+        assertThrows(RuntimeException.class, () -> adminManagementService.updatePatient(patient));
+    }
+
+    @Test
+    void deletePatient_withClinicalInfo_deletesDependencies() {
+        long id = 1L;
+        when(patientRepository.existsById(id)).thenReturn(true);
+
+        PatientClinicalInfor clinicalInfo = new PatientClinicalInfor();
+        when(patientClinicalInforRepository.findByPatientId(id)).thenReturn(Optional.of(clinicalInfo));
+        when(entityManager.createNativeQuery(anyString())).thenReturn(nativeQuery);
+
+        adminManagementService.deletePatient(id);
+
+        verify(patientClinicalInforRepository).delete(clinicalInfo);
+        verify(nativeQuery).setParameter(1, id);
+        verify(nativeQuery).executeUpdate();
+        verify(patientRepository).deleteById(id);
+        verify(entityManager).flush();
+    }
+
+    @Test
+    void updatePatientInformation_callsSave() {
+        Patient patient = new Patient();
+        when(patientRepository.save(patient)).thenReturn(patient);
+        assertNotNull(adminManagementService.updatePatientInformation(patient));
+        verify(patientRepository).save(patient);
+    }
+
+    @Test
+    void updatePatientPassword_patientExists_updatesAndReturnsTrue() {
+        Patient patient = new Patient();
+        when(patientRepository.findById(1L)).thenReturn(Optional.of(patient));
+        when(passwordEncoder.encode("newPass")).thenReturn("encodedPass");
+
+        boolean result = adminManagementService.updatePatientPassword(1L, "newPass");
+
+        assertTrue(result);
+        assertEquals("encodedPass", patient.getPassword());
+        verify(patientRepository).save(patient);
+    }
+
+    @Test
+    void updatePatientPassword_patientDoesNotExist_returnsFalse() {
+        when(patientRepository.findById(1L)).thenReturn(Optional.empty());
+        boolean result = adminManagementService.updatePatientPassword(1L, "newPass");
+        assertFalse(result);
+        verify(patientRepository, never()).save(any());
     }
 }

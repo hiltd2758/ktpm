@@ -37,14 +37,12 @@ public class DoctorService {
 
         if (optionalDoctor.isPresent()) {
             Doctor doctor = optionalDoctor.get();
-            // Cập nhật thông tin cơ bản
             doctor.setFirstName(doctorDTO.getFirstName());
             doctor.setLastName(doctorDTO.getLastName());
             doctor.setPhone(doctorDTO.getPhone());
             doctor.setAddress(doctorDTO.getAddress());
             doctor.setField(doctorDTO.getField());
 
-            // --- XỬ LÝ UPLOAD ẢNH (ĐÃ SỬA LẠI ĐƯỜNG DẪN) ---
             MultipartFile file = doctorDTO.getAvatarFile();
 
             if (file != null && !file.isEmpty()) {
@@ -52,8 +50,7 @@ public class DoctorService {
                     // 1. Tạo tên file duy nhất: UUID + Tên gốc
                     String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
 
-                    // 2. Đường dẫn lưu file (QUAN TRỌNG: Phải khớp với bên Patient và WebConfig)
-                    // Sửa đường dẫn src/... thành đường dẫn đầy đủ từ thư mục gốc dự án
+                    // 2. Đường dẫn lưu file
                     Path uploadPath = Paths.get("DoAnThucTeCNPM/web/src/main/resources/static/img/avatars/");
 
                     // Tạo thư mục nếu chưa có
@@ -76,9 +73,6 @@ public class DoctorService {
                     throw new RuntimeException("Không thể lưu file ảnh: " + e.getMessage());
                 }
             }
-
-            // Logic cũ của bạn: nếu không up ảnh mới mà DTO có string avatar thì giữ nguyên (thường thì không cần thiết nếu logic trên đã set, nhưng giữ lại cũng không sao)
-            // if (doctorDTO.getAvatar() != null && !doctorDTO.getAvatar().isEmpty()) { ... }
 
             doctorRepository.save(doctor);
         } else {
