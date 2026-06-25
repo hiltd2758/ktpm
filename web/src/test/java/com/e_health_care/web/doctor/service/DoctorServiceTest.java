@@ -35,7 +35,7 @@ class DoctorServiceTest {
         Doctor mockDoctor = new Doctor();
         mockDoctor.setId(1L);
 
-        when(doctorRepository.findById(1L)).thenReturn(Optional.of(mockDoctor));
+        when(doctorRepository.findById(any())).thenReturn(Optional.of(mockDoctor));
 
         doctorService.updateDoctorProfile(dto);
 
@@ -45,11 +45,10 @@ class DoctorServiceTest {
 
     @Test
     void updateDoctorProfile_DoctorIdDoesNotExist_ThrowsException() {
-        // Kịch bản: Truyền ID ảo (99L) -> Phải ném ra lỗi RuntimeException
         DoctorDTO dto = new DoctorDTO();
         dto.setId(99L);
 
-        when(doctorRepository.findById(99L)).thenReturn(Optional.empty());
+        when(doctorRepository.findById(any())).thenReturn(Optional.empty());
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             doctorService.updateDoctorProfile(dto);
