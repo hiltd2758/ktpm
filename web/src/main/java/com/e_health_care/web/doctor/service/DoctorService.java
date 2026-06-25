@@ -41,7 +41,7 @@ public class DoctorService {
             doctor.setFirstName(doctorDTO.getFirstName());
             doctor.setLastName(doctorDTO.getLastName());
             doctor.setPhone(doctorDTO.getPhone());
-            doctor.setAddress(doctorDTO.getAddress());
+//            doctor.setAddress(doctorDTO.getAddress());
             doctor.setField(doctorDTO.getField());
 
             // --- XỬ LÝ UPLOAD ẢNH (ĐÃ SỬA LẠI ĐƯỜNG DẪN) ---

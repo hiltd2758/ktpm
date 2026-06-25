@@ -6,7 +6,7 @@ services:
     container_name: mysql-local
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: e_health
+      MYSQL_DATABASE: e_health_care
     ports:
       - "3307:3306"
     volumes:
