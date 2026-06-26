@@ -77,7 +77,7 @@ VALUES
     '$2a$10$c3ypo0UPY/iYUKw51HFPbuYxK8UwnP8Be6L7oq.q/rAz7ppNX9uPm',
     'Truong',
     'Doctor',
-    'ROLE_DOCTOR',
+    'doctor',
     123456789,
     'HCM',
     'General'
