@@ -1,0 +1,5 @@
+$kind: collection
+description: "Reproduce BUG 1: Password lưu plain text khi update profile patient"
+variables:
+  base_url: http://localhost:8081
+  patient_token: ""

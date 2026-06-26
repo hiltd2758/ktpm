@@ -1,0 +1,26 @@
+$kind: http-request
+description: "Login bằng password mới. Mong đợi: 401 FAIL → confirm bug plain text"
+url: "{{base_url}}/api/patient/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "email": "bugtest@gmail.com",
+      "password": "newpassword123"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('STEP 4 - ❌ BUG CONFIRMED: Login fail sau khi đổi password', function() {
+          pm.expect(pm.response.code).to.be.oneOf([401, 403]);
+          console.log('BUG 1 CONFIRMED: password lưu plain text → login fail!');
+      });
+
+      if (pm.response.code === 200) {
+          console.log('✅ BUG đã được fix hoặc chưa reproduce được');
+      }
+    language: text/javascript
+order: 4000
