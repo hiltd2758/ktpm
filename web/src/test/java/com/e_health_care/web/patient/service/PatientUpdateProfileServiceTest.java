@@ -280,4 +280,6 @@ class PatientUpdateProfileServiceTest extends BaseServiceTest {
         when(patientRepository.findById(99L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class, () -> service.getPatientById(99L));
     }
+
+
 }
