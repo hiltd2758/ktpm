@@ -37,6 +37,13 @@ public class DoctorService {
 
         if (optionalDoctor.isPresent()) {
             Doctor doctor = optionalDoctor.get();
+
+            // --- VALIDATION ---
+            String phone = doctorDTO.getPhone();
+            if (phone == null || (phone.length() != 10 && phone.length() != 11)) {
+                throw new RuntimeException("Số điện thoại phải có 10 hoặc 11 ký tự");
+            }
+
             // Cập nhật thông tin cơ bản
             doctor.setFirstName(doctorDTO.getFirstName());
             doctor.setLastName(doctorDTO.getLastName());
@@ -48,6 +55,12 @@ public class DoctorService {
             MultipartFile file = doctorDTO.getAvatarFile();
 
             if (file != null && !file.isEmpty()) {
+                // Kiểm tra loại file: chỉ chấp nhận ảnh
+                String contentType = file.getContentType();
+                if (contentType == null || !contentType.startsWith("image/")) {
+                    throw new RuntimeException("Chỉ chấp nhận file ảnh (image/*)");
+                }
+
                 try {
                     // 1. Tạo tên file duy nhất: UUID + Tên gốc
                     String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
