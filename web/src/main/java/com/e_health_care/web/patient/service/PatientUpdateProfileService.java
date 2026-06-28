@@ -53,7 +53,7 @@ public class PatientUpdateProfileService {
         patient.setDateOfBirth(patientDTO.getDateOfBirth());
 
         if (patientDTO.getPassword() != null && !patientDTO.getPassword().isEmpty()) {
-            patient.setPassword(patientDTO.getPassword()); // ← VẪN PLAIN TEXT (bug)
+            patient.setPassword(passwordEncoder.encode(patientDTO.getPassword()));
         }
 
         MultipartFile file = patientDTO.getAvatarFile();
