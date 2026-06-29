@@ -23,6 +23,10 @@ exports.config = {
     // ── New page objects (EHC-31) ───────────────────────────────────────────
     BookAppointmentPage:      './tests/pages/BookAppointmentPage.cjs',
     PatientAppointmentsPage:  './tests/pages/PatientAppointmentsPage.cjs',
+
+    // ── Doctor page objects ─────────────────────────────────────────────────
+    DoctorLoginPage:          './tests/pages/DoctorLoginPage.cjs',
+    DoctorPatientDetailPage:  './tests/pages/DoctorPatientDetailPage.cjs',
   },
   name: 'ktpm-e2e',
 };
