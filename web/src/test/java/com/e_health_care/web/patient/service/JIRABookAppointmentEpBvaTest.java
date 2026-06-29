@@ -170,4 +170,39 @@ class JIRABookAppointmentEpBvaTest extends BaseServiceTest {
                 "Code kiểm tra patient trước doctor và scheduleTime — " +
                         "dù 3 điều kiện đều sai, chỉ lỗi đầu tiên được throw.");
     }
+    @Test
+    @DisplayName("TC10: getAppointmentsByPatient() trả về danh sách lịch hẹn của bệnh nhân")
+    void tc10_getAppointmentsByPatient_shouldReturnList() {
+        when(appointmentRepository.findByPatientId(1L))
+                .thenReturn(List.of(new Appointment()));
+
+        List<Appointment> result = service.getAppointmentsByPatient(1L);
+
+        assertEquals(1, result.size());
+        verify(appointmentRepository, times(1)).findByPatientId(1L);
+    }
+
+    @Test
+    @DisplayName("TC11: getAppointmentsByDoctor() trả về danh sách lịch hẹn của bác sĩ")
+    void tc11_getAppointmentsByDoctor_shouldReturnList() {
+        when(appointmentRepository.findByDoctorId(1L))
+                .thenReturn(List.of(new Appointment()));
+
+        List<Appointment> result = service.getAppointmentsByDoctor(1L);
+
+        assertEquals(1, result.size());
+        verify(appointmentRepository, times(1)).findByDoctorId(1L);
+    }
+
+    @Test
+    @DisplayName("TC12: getAllAppointments() trả về toàn bộ danh sách lịch hẹn")
+    void tc12_getAllAppointments_shouldReturnAllList() {
+        when(appointmentRepository.findAll())
+                .thenReturn(List.of(new Appointment(), new Appointment()));
+
+        List<Appointment> result = service.getAllAppointments();
+
+        assertEquals(2, result.size());
+        verify(appointmentRepository, times(1)).findAll();
+    }
 }
