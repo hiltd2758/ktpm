@@ -68,9 +68,18 @@ public class AdminManagementService {
     }
 
     public Patient createPatient(Patient patient) {
+        if (patient.getEmail() == null || patient.getEmail().isBlank()) {
+            throw new RuntimeException("Email must not be blank");
+        }
+
+        if (!patient.getEmail().contains("@")) {
+            throw new RuntimeException("Invalid email format");
+        }
+
         if (patientRepository.findByEmail(patient.getEmail()).isPresent()) {
             throw new RuntimeException("Email already exists: " + patient.getEmail());
         }
+
         return patientRepository.save(patient);
     }
 
