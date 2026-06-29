@@ -25,6 +25,7 @@ public class PatientAppointmentService {
 
     @Autowired
     private DoctorRepository doctorRepository;
+    private static final List<String> TERMINAL_STATES = List.of("CANCELLED", "COMPLETED");
 
     public Appointment bookAppointment(AppointmentRequestDTO request) {
         // Kiểm tra bệnh nhân tồn tại
@@ -71,11 +72,13 @@ public class PatientAppointmentService {
     }
 
     public Appointment updateAppointmentStatus(Long appointmentId, String status) {
-        Optional<Appointment> appointmentOpt = appointmentRepository.findById(appointmentId);
-        if (appointmentOpt.isEmpty()) {
-            throw new RuntimeException("Appointment not found");
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Appointment not found"));
+
+        if (TERMINAL_STATES.contains(appointment.getStatus())) {
+            throw new IllegalStateException("Cannot change status from terminal state: " + appointment.getStatus());
         }
-        Appointment appointment = appointmentOpt.get();
+
         appointment.setStatus(status);
         return appointmentRepository.save(appointment);
     }
