@@ -75,9 +75,24 @@ public class AdminManagementService {
     }
 
     public Patient updatePatient(Patient patient) {
-        if (patient == null || patient.getId() == null || !patientRepository.existsById(patient.getId())) {
+
+        if (patient == null
+                || patient.getId() == null
+                || !patientRepository.existsById(patient.getId())) {
             throw new RuntimeException("Patient not found");
         }
+
+        Optional<Patient> existingPatient =
+                patientRepository.findByEmail(patient.getEmail());
+
+        if (existingPatient.isPresent()
+                && !existingPatient.get().getId().equals(patient.getId())) {
+
+            throw new RuntimeException(
+                    "Email already exists and belongs to another patient."
+            );
+        }
+
         return patientRepository.save(patient);
     }
 
