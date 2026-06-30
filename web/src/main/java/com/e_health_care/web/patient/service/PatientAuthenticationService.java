@@ -42,14 +42,29 @@ public class PatientAuthenticationService {
     }
 
     public String verify(PatientDTO patientDTO) {
+        // 1. Kiểm tra Email rỗng hoặc null
+        if (patientDTO.getEmail() == null || patientDTO.getEmail().isBlank()) {
+            throw new RuntimeException("Email is required");
+        }
+
+        // 2. Kiểm tra định dạng Email (phải chứa @)
+        if (!patientDTO.getEmail().contains("@")) {
+            throw new RuntimeException("Invalid email format");
+        }
+
+        // 3. Kiểm tra độ dài Password (8-50 ký tự)
+        if (patientDTO.getPassword() == null || patientDTO.getPassword().length() < 8 || patientDTO.getPassword().length() > 50) {
+            throw new RuntimeException("Password must be 8-50 characters");
+        }
+
         try {
             DaoAuthenticationProvider provider = new DaoAuthenticationProvider(patientDetailsService);
             provider.setPasswordEncoder(passwordEncoder);
-            
+
             AuthenticationManager authManager = new ProviderManager(provider);
 
             authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(patientDTO.getEmail(), patientDTO.getPassword()));
+                    new UsernamePasswordAuthenticationToken(patientDTO.getEmail(), patientDTO.getPassword()));
 
             return jwtService.generateToken(patientDTO.getEmail());
 
