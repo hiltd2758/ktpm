@@ -52,16 +52,22 @@ class JIRABookAppointmentEpBvaTest extends BaseServiceTest {
     @Test
     @DisplayName("TC01 [V1,V2,V3,V4]: tất cả điều kiện hợp lệ -> tạo appointment PENDING")
     void tc01_allValid_shouldCreateAppointment() {
-        when(patientRepository.findById(1L)).thenReturn(Optional.of(new Patient()));
-        when(doctorRepository.findById(1L)).thenReturn(Optional.of(new Doctor()));
+        Patient patient = new Patient();
+        Doctor doctor = new Doctor();
+        LocalDateTime time = LocalDateTime.now().plusDays(1);
+
+        when(patientRepository.findById(1L)).thenReturn(Optional.of(patient));
+        when(doctorRepository.findById(1L)).thenReturn(Optional.of(doctor));
         when(appointmentRepository.findByDoctorIdAndScheduleTimeBetween(any(), any(), any()))
                 .thenReturn(List.of());
         when(appointmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        Appointment result = service.bookAppointment(
-                request(1L, 1L, LocalDateTime.now().plusDays(1)));
+        Appointment result = service.bookAppointment(request(1L, 1L, time));
 
         assertEquals("PENDING", result.getStatus());
+        assertEquals(patient, result.getPatient());        // mới — giết mutant line 57
+        assertEquals(doctor, result.getDoctor());           // mới — giết mutant line 58
+        assertEquals(time, result.getScheduleTime());       // mới — giết mutant line 59
     }
 
     // TC02 — X1 — patient không tồn tại
@@ -101,14 +107,14 @@ class JIRABookAppointmentEpBvaTest extends BaseServiceTest {
 
     // TC05 — X4,B2 — scheduleTime = now() chính xác
     @Test
-    @DisplayName("TC05 [X4,B2]: scheduleTime = now() -> throw (do độ trễ thực thi, rơi vào quá khứ)")
+    @DisplayName("TC05 [X4,B2]: scheduleTime = now()-1ms -> throw (boundary sát now())")
     void tc05_scheduleTimeExactlyNow_shouldThrow() {
         when(patientRepository.findById(1L)).thenReturn(Optional.of(new Patient()));
         when(doctorRepository.findById(1L)).thenReturn(Optional.of(new Doctor()));
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime almostNow = LocalDateTime.now().minusNanos(1);
         Exception ex = assertThrows(RuntimeException.class, () ->
-                service.bookAppointment(request(1L, 1L, now)));
+                service.bookAppointment(request(1L, 1L, almostNow)));
         assertEquals("Cannot book appointment in the past", ex.getMessage());
     }
 
