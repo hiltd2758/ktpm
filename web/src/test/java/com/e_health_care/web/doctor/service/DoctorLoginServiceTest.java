@@ -134,8 +134,7 @@ public class DoctorLoginServiceTest {
 
         String token = doctorAuthenticationService.verify(buildDoctorDto(email, "AnyPass1"));
 
-        // ❌ Sai có chủ đích: service trả null nhưng ta assert là NOT null → FAIL
-        assertNotNull(token, "[FAIL] Kỳ vọng sai: mong nhận token dù email không tồn tại");
+        assertNull(token, "HTTP 401 – email không tồn tại phải trả về null");
     }
 
     // UTCID03 – email sai định dạng → service trả null
@@ -152,9 +151,7 @@ public class DoctorLoginServiceTest {
 
         String token = doctorAuthenticationService.verify(buildDoctorDto(invalidEmail, "DoctorPass1"));
 
-        // ❌ Sai có chủ đích: service trả null nhưng ta assertEquals với chuỗi → FAIL
-        assertEquals("mock.jwt.token", token,
-                "[FAIL] Kỳ vọng sai: mong nhận token dù email sai định dạng");
+        assertNull(token, "HTTP 400 – email sai định dạng phải trả về null");
     }
 
     // UTCID04 – email null → trả về null (HTTP 400)
@@ -188,8 +185,7 @@ public class DoctorLoginServiceTest {
 
         String token = doctorAuthenticationService.verify(buildDoctorDto(email, wrongPassword));
 
-        // ❌ Sai có chủ đích: mật khẩu sai → service trả null, nhưng ta assert NOT null → FAIL
-        assertNotNull(token, "[FAIL] Kỳ vọng sai: mong nhận token dù mật khẩu không khớp");
+        assertNull(token, "HTTP 401 – mật khẩu sai phải trả về null");
     }
 
     // UTCID06 – password length = 7 (dưới biên min 8) → trả về null (HTTP 400)
@@ -247,9 +243,7 @@ public class DoctorLoginServiceTest {
 
         String token = doctorAuthenticationService.verify(buildDoctorDto(email, null));
 
-        // ❌ Sai có chủ đích: password null → service trả null, ta assert bằng chuỗi → FAIL
-        assertEquals("expected.token.for.null.password", token,
-                "[FAIL] Kỳ vọng sai: mong nhận token cụ thể dù password là null");
+        assertNull(token, "HTTP 400 – password null phải trả về null");
     }
 
     // UTCID09 – password để trống ("") → trả về null (HTTP 400)
