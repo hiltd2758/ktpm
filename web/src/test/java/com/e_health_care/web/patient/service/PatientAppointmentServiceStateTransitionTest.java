@@ -93,51 +93,45 @@ class PatientAppointmentServiceStateTransitionTest extends BaseServiceTest {
         assertEquals("CANCELLED", result.getStatus());
     }
 
-    // ══════ INVALID TRANSITIONS — DEFECT GHI NHẬN ══════
-    // Các test này PASS vì xác nhận đúng HÀNH VI THỰC TẾ (bug),
-    // không phải hành vi mong đợi theo nghiệp vụ.
+// ══════ INVALID TRANSITIONS — DEFECT ĐÃ ĐƯỢC FIX ══════
+// Cập nhật 30/06/2026: Dev đã thêm validate terminal state.
+// Service hiện throw IllegalStateException khi cố chuyển từ CANCELLED/COMPLETED.
+// Test được cập nhật lại để khớp hành vi đúng nghiệp vụ — Retest PASS.
 
     @Test
-    @DisplayName("STT-05 [DEFECT-01]: CANCELLED -> PENDING — code chấp nhận sai, lẽ ra phải reject")
-    void cancelled_to_pending_currentlyAccepted_shouldBeFlaggedAsDefect() {
+    @DisplayName("STT-05 [DEFECT-01 - RESOLVED]: CANCELLED -> PENDING -> throw IllegalStateException")
+    void cancelled_to_pending_shouldThrow() {
         Appointment existing = appointmentWithStatus("CANCELLED");
         when(appointmentRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(appointmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        // Hành vi thực tế: code không validate, set thành công
-        Appointment result = service.updateAppointmentStatus(1L, "PENDING");
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
+                service.updateAppointmentStatus(1L, "PENDING"));
 
-        assertEquals("PENDING", result.getStatus(),
-                "DEFECT-01: service cho phép chuyển CANCELLED -> PENDING, " +
-                        "đây là transition không hợp lệ theo nghiệp vụ. Cần thêm validate.");
+        assertEquals("Cannot change status from terminal state: CANCELLED", ex.getMessage());
     }
 
     @Test
-    @DisplayName("STT-06 [DEFECT-02]: COMPLETED -> PENDING — code chấp nhận sai, lẽ ra phải reject")
-    void completed_to_pending_currentlyAccepted_shouldBeFlaggedAsDefect() {
+    @DisplayName("STT-06 [DEFECT-02 - RESOLVED]: COMPLETED -> PENDING -> throw IllegalStateException")
+    void completed_to_pending_shouldThrow() {
         Appointment existing = appointmentWithStatus("COMPLETED");
         when(appointmentRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(appointmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        Appointment result = service.updateAppointmentStatus(1L, "PENDING");
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
+                service.updateAppointmentStatus(1L, "PENDING"));
 
-        assertEquals("PENDING", result.getStatus(),
-                "DEFECT-02: service cho phép chuyển COMPLETED -> PENDING, " +
-                        "đây là transition không hợp lệ vì COMPLETED là trạng thái cuối.");
+        assertEquals("Cannot change status from terminal state: COMPLETED", ex.getMessage());
     }
 
     @Test
-    @DisplayName("STT-07 [DEFECT-03]: COMPLETED -> CONFIRMED — code chấp nhận sai, lẽ ra phải reject")
-    void completed_to_confirmed_currentlyAccepted_shouldBeFlaggedAsDefect() {
+    @DisplayName("STT-07 [DEFECT-03 - RESOLVED]: COMPLETED -> CONFIRMED -> throw IllegalStateException")
+    void completed_to_confirmed_shouldThrow() {
         Appointment existing = appointmentWithStatus("COMPLETED");
         when(appointmentRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(appointmentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        Appointment result = service.updateAppointmentStatus(1L, "CONFIRMED");
+        IllegalStateException ex = assertThrows(IllegalStateException.class, () ->
+                service.updateAppointmentStatus(1L, "CONFIRMED"));
 
-        assertEquals("CONFIRMED", result.getStatus(),
-                "DEFECT-03: service cho phép chuyển COMPLETED -> CONFIRMED, " +
-                        "đây là transition không hợp lệ vì COMPLETED là trạng thái cuối.");
+        assertEquals("Cannot change status from terminal state: COMPLETED", ex.getMessage());
     }
 
     // ══════ EDGE CASE ══════

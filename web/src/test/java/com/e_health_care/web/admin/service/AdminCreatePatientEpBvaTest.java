@@ -71,31 +71,26 @@ class AdminCreatePatientEpBvaTest extends BaseServiceTest {
         verify(patientRepository, never()).save(any());
     }
 
-    // TC03 — X2 — email null → NullPointerException hoặc throw
+    // TC03 — X2 — email null -> throw "Email must not be blank"
     @Test
-    @DisplayName("TC03 [X2]: email null -> throw exception (NPE hoặc validation)")
+    @DisplayName("TC03 [X2]: email null -> throw 'Email must not be blank'")
     void tc03_nullEmail_shouldThrow() {
         Patient p = patient(null);
-        // findByEmail(null) sẽ throw NullPointerException từ service
-        when(patientRepository.findByEmail(null))
-                .thenThrow(new IllegalArgumentException("Email must not be null"));
 
-        assertThrows(Exception.class, () -> service.createPatient(p));
+        Exception ex = assertThrows(RuntimeException.class, () -> service.createPatient(p));
+        assertEquals("Email must not be blank", ex.getMessage());
         verify(patientRepository, never()).save(any());
     }
 
-    // TC04 — X2 — email rỗng
+    // TC04 — X2 — email rỗng -> throw "Email must not be blank"
     @Test
-    @DisplayName("TC04 [X2]: email rỗng -> không được lưu (lỗi validation)")
-    void tc04_emptyEmail_shouldNotSaveWithoutCheck() {
+    @DisplayName("TC04 [X2]: email rỗng -> throw 'Email must not be blank'")
+    void tc04_emptyEmail_shouldThrow() {
         Patient p = patient("");
-        when(patientRepository.findByEmail("")).thenReturn(Optional.empty());
-        when(patientRepository.save(p)).thenReturn(p);
 
-        // BUG: service hiện tại không validate email rỗng,
-        // cho phép lưu patient với email="" → đây là lỗi cần report
-        Patient result = service.createPatient(p);
-        assertEquals("", result.getEmail()); // pass nhưng sai nghiệp vụ
+        Exception ex = assertThrows(RuntimeException.class, () -> service.createPatient(p));
+        assertEquals("Email must not be blank", ex.getMessage());
+        verify(patientRepository, never()).save(any());
     }
 
     // TC05 — X1, B3 — tạo lần 2 cùng email
@@ -110,24 +105,20 @@ class AdminCreatePatientEpBvaTest extends BaseServiceTest {
                 () -> service.createPatient(p));
         assertTrue(ex.getMessage().contains("Email already exists"));
     }
-
+    // TC_Bug -> đã RESOLVED, đổi tên và sửa lại kỳ vọng đúng theo code thật
     @Test
-    @DisplayName("TC_Bug [X2]: Email sai định dạng (thiếu @) -> kỳ vọng throw Exception")
-    void tc_invalidEmailFormat_shouldThrowException() {
-        // 1. Chuẩn bị dữ liệu (Input)
+    @DisplayName("TC06 [X2 - RESOLVED]: email sai định dạng (thiếu @) -> throw 'Invalid email format'")
+    void tc06_invalidEmailFormat_shouldThrow() {
         Patient patient = new Patient();
-        patient.setEmail("abcxyz"); // Cố tình truyền email không hợp lệ
+        patient.setEmail("abcxyz");
         patient.setFirstName("Bug");
         patient.setLastName("Nguyen Van");
         patient.setPassword("123456");
 
-        // 2. Mock behavior: Giả lập email này chưa tồn tại trong DB để vượt qua lệnh if đầu tiên
-        when(patientRepository.findByEmail("abcxyz")).thenReturn(Optional.empty());
+        // Không cần mock findByEmail vì code throw trước khi gọi tới nó
 
-        // 3. Thực thi và Kỳ vọng (Expected)
-        // Thực tế code hiện tại: Không có code chặn -> Không ném lỗi -> Test sẽ báo FAIL (Đỏ).
-        assertThrows(RuntimeException.class, () -> {
-            service.createPatient(patient);
-        }, "Hệ thống phải ném lỗi khi email sai định dạng, nhưng lại cho lưu thành công!");
+        Exception ex = assertThrows(RuntimeException.class,
+                () -> service.createPatient(patient));
+        assertEquals("Invalid email format", ex.getMessage());
     }
 }

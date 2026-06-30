@@ -32,3 +32,19 @@ build/
 ### VS Code ###
 .vscode/
 src/main/resources/application.properties
+
+### Allure ###
+.allure/
+allure-results/
+target/site/allure-maven-plugin/
+
+### AspectJ crash dumps (rác cũ từ thời còn dùng -javaagent, đã bỏ) ###
+ajcore.*.txt
+
+### Thư mục avatar trùng lặp sinh ra khi chạy test do app.upload.dir
+### dùng đường dẫn tương đối, JVM resolve sai working directory ###
+DoAnThucTeCNPM/
+
+### Uploaded avatar thật sinh ra lúc chạy app/test, không phải static asset gốc ###
+src/main/resources/static/img/avatars/*
+!src/main/resources/static/img/avatars/.gitkeep

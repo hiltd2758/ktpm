@@ -28,6 +28,16 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version> <!-- Fix: đồng bộ với maven-compiler-plugin -->
+		<!-- Fix: encoding UTF-8 cho compile + report (tránh lỗi tiếng Việt thành ???) -->
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+		<!-- Allure -->
+		<allure.version>2.29.0</allure.version>
+		<!-- Fix: nơi allure-junit5 ghi kết quả test, phải khớp với nơi
+		     plugin allure-maven đọc (target/allure-results), nếu không
+		     set, AllureJunit5 ghi vào ./allure-results (working dir của
+		     fork JVM) -> allure:serve báo "Directory ... not found" -->
+		<allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -101,6 +111,17 @@
 			<groupId>org.thymeleaf.extras</groupId>
 			<artifactId>thymeleaf-extras-java8time</artifactId>
 			<version>3.0.4.RELEASE</version>
+		</dependency>
+
+		<!-- Fix: bỏ AspectJ weaving hoàn toàn. allure-junit5 đăng ký TestExecutionListener
+		     qua ServiceLoader (META-INF/services), JUnit Platform tự detect mặc định.
+		     Không cần -javaagent, không conflict với Lombok, không bị abort bởi class lạ
+		     như AspectJ. -->
+		<dependency>
+			<groupId>io.qameta.allure</groupId>
+			<artifactId>allure-junit5</artifactId>
+			<version>${allure.version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
@@ -183,6 +204,35 @@
 					</outputFormats>
 					<timestampedReports>false</timestampedReports>
 					<mutationThreshold>70</mutationThreshold>
+				</configuration>
+			</plugin>
+
+			<!-- Fix: encoding UTF-8 + trỏ đúng allure.results.directory về
+			     target/allure-results (đây là nguyên nhân chính khiến
+			     "allure:serve" báo Directory ... allure-results not found) -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>-Dfile.encoding=UTF-8</argLine>
+					<systemPropertyVariables>
+						<allure.results.directory>${project.build.directory}/allure-results</allure.results.directory>
+					</systemPropertyVariables>
+					<properties>
+						<configurationParameters>
+							junit.jupiter.extensions.autodetection.enabled=true
+						</configurationParameters>
+					</properties>
+				</configuration>
+			</plugin>
+
+			<!-- Allure: sinh report HTML từ allure-results -->
+			<plugin>
+				<groupId>io.qameta.allure</groupId>
+				<artifactId>allure-maven</artifactId>
+				<version>2.12.0</version>
+				<configuration>
+					<reportVersion>${allure.version}</reportVersion>
 				</configuration>
 			</plugin>
 		</plugins>

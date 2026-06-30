@@ -1,2 +1,50 @@
-.idea/
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
 .vscode/
+src/main/resources/application.properties
+
+### Allure ###
+.allure/
+allure-results/
+target/site/allure-maven-plugin/
+
+### AspectJ crash dumps (rác cũ từ thời còn dùng -javaagent, đã bỏ) ###
+ajcore.*.txt
+
+### Thư mục avatar trùng lặp sinh ra khi chạy test do app.upload.dir
+### dùng đường dẫn tương đối, JVM resolve sai working directory ###
+DoAnThucTeCNPM/
+
+### Uploaded avatar thật sinh ra lúc chạy app/test, không phải static asset gốc ###
+src/main/resources/static/img/avatars/*
+!src/main/resources/static/img/avatars/.gitkeep

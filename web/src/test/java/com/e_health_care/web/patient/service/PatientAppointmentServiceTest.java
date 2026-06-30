@@ -24,7 +24,19 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+// Fix: thêm import Allure annotations để gắn nhãn nghiệp vụ cho report
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Description;
+
 @ExtendWith(MockitoExtension.class)
+// Fix: @Epic/@Feature dùng để nhóm test theo nghiệp vụ, hiển thị ở tab "Behaviors"
+// trong Allure report thay vì chỉ hiển thị theo tên class kỹ thuật
+@Epic("Patient Management")
+@Feature("Appointment Booking")
 public class PatientAppointmentServiceTest {
 
     @Mock
@@ -64,6 +76,9 @@ public class PatientAppointmentServiceTest {
     // ==========================================
 
     @Test
+    @Story("Patient not found")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Đặt lịch hẹn phải bị từ chối nếu patientId không tồn tại trong hệ thống")
     void bookAppointment_PatientNotFound_ThrowsException() {
         when(patientRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -77,6 +92,9 @@ public class PatientAppointmentServiceTest {
     }
 
     @Test
+    @Story("Doctor not found")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Đặt lịch hẹn phải bị từ chối nếu doctorId không tồn tại trong hệ thống")
     void bookAppointment_DoctorNotFound_ThrowsException() {
         when(patientRepository.findById(1L)).thenReturn(Optional.of(mockPatient));
         when(doctorRepository.findById(99L)).thenReturn(Optional.empty());
@@ -91,6 +109,9 @@ public class PatientAppointmentServiceTest {
     }
 
     @Test
+    @Story("Invalid schedule time")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Không cho phép đặt lịch hẹn với thời gian nằm trong quá khứ")
     void bookAppointment_TimeInPast_ThrowsException() {
         AppointmentRequestDTO request = new AppointmentRequestDTO();
         request.setPatientId(1L);
@@ -102,6 +123,9 @@ public class PatientAppointmentServiceTest {
     }
 
     @Test
+    @Story("Doctor schedule conflict")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Không cho phép đặt lịch trùng khung giờ Bác sĩ đã có lịch hẹn khác")
     void bookAppointment_DoctorAlreadyBooked_ThrowsException() {
         LocalDateTime scheduleTime = LocalDateTime.now().plusDays(1);
         LocalDateTime endTime = scheduleTime.plusHours(1);
@@ -122,6 +146,9 @@ public class PatientAppointmentServiceTest {
     }
 
     @Test
+    @Story("Successful booking")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Đặt lịch hẹn thành công khi dữ liệu hợp lệ, lưu Appointment vào repository")
     void bookAppointment_ValidData_Success() {
         LocalDateTime scheduleTime = LocalDateTime.now().plusDays(1);
 
@@ -144,6 +171,9 @@ public class PatientAppointmentServiceTest {
     // TEST CASE CHO HÀM getAppointmentsByPatient()
 
     @Test
+    @Story("View patient appointments")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Lấy đúng danh sách lịch hẹn của một bệnh nhân theo patientId")
     void getAppointmentsByPatient_Success() {
         List<Appointment> mockList = Arrays.asList(mockAppointment);
         when(appointmentRepository.findByPatientId(1L)).thenReturn(mockList);
@@ -157,6 +187,9 @@ public class PatientAppointmentServiceTest {
 
     // TEST CASE CHO HÀM updateStatus()
     @Test
+    @Story("Update appointment status")
+    @Severity(SeverityLevel.MINOR)
+    @Description("Ném lỗi khi cập nhật trạng thái cho lịch hẹn không tồn tại")
     void updateStatus_AppointmentNotFound_ThrowsException() {
         when(appointmentRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -164,6 +197,9 @@ public class PatientAppointmentServiceTest {
     }
 
     @Test
+    @Story("Update appointment status")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Cập nhật trạng thái lịch hẹn thành công và lưu lại vào repository")
     void updateStatus_Success() {
         when(appointmentRepository.findById(10L)).thenReturn(Optional.of(mockAppointment));
 

@@ -26,11 +26,12 @@ class DoctorServiceTest {
 
     @Test
     void updateDoctorProfile_DoctorIdExists_CallsRepositorySave() {
-        // Kịch bản: ID hợp lệ -> Phải gọi hàm save()
         DoctorDTO dto = new DoctorDTO();
         dto.setId(1L);
         dto.setFirstName("Kha");
         dto.setLastName("Nhu");
+        dto.setField("Tim mạch");      // bắt buộc — validate "Chuyên khoa không được để trống"
+        dto.setPhone("0987654321");     // bắt buộc — phải đúng 10 hoặc 11 ký tự
 
         Doctor mockDoctor = new Doctor();
         mockDoctor.setId(1L);
@@ -39,7 +40,6 @@ class DoctorServiceTest {
 
         doctorService.updateDoctorProfile(dto);
 
-        // Kiểm tra xem database có được lệnh lưu (save) hay không
         verify(doctorRepository, times(1)).save(any(Doctor.class));
     }
 
