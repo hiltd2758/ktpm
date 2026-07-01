@@ -1,23 +1,19 @@
 package com.e_health_care.web.admin.service;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-
-import java.util.Optional;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.Query;
-
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.e_health_care.web.BaseServiceTest;
@@ -26,6 +22,18 @@ import com.e_health_care.web.patient.model.Patient;
 import com.e_health_care.web.patient.repository.PatientClinicalInforRepository;
 import com.e_health_care.web.patient.repository.PatientRepository;
 
+import io.qameta.allure.Description;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Story;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
+
+// Fix: @Epic/@Feature dùng để nhóm test theo nghiệp vụ ở tab "Behaviors"
+@Epic("Admin Management")
+@Feature("Admin Patient Management")
 class AdminManagementServiceTest extends BaseServiceTest {
 
     @Mock
@@ -52,14 +60,15 @@ class AdminManagementServiceTest extends BaseServiceTest {
     // --- Part 1: createPatient Tests ---
 
     @Test
+    @Story("Tạo tài khoản bệnh nhân với email đã tồn tại")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra hệ thống ném RuntimeException và không gọi hàm save khi admin cố tạo tài khoản bệnh nhân với email đã được đăng ký trước đó trong cơ sở dữ liệu.")
     void createPatient_emailAlreadyExists_throwsRuntimeException() {
-        // Arrange
         Patient patient = new Patient();
         patient.setEmail("existing@example.com");
 
         when(patientRepository.findByEmail("existing@example.com")).thenReturn(Optional.of(new Patient()));
 
-        // Act & Assert
         assertThrows(RuntimeException.class, () -> {
             adminManagementService.createPatient(patient);
         });
@@ -68,18 +77,18 @@ class AdminManagementServiceTest extends BaseServiceTest {
     }
 
     @Test
+    @Story("Tạo tài khoản bệnh nhân mới thành công")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra admin tạo thành công tài khoản bệnh nhân mới khi email chưa tồn tại, hệ thống gọi đúng một lần hàm save và trả về đối tượng Patient không null.")
     void createPatient_newEmail_callsSave() {
-        // Arrange
         Patient patient = new Patient();
         patient.setEmail("new@example.com");
 
         when(patientRepository.findByEmail("new@example.com")).thenReturn(Optional.empty());
         when(patientRepository.save(patient)).thenReturn(patient);
 
-        // Act
         Patient result = adminManagementService.createPatient(patient);
 
-        // Assert
         assertNotNull(result);
         verify(patientRepository, times(1)).save(patient);
     }
@@ -87,14 +96,15 @@ class AdminManagementServiceTest extends BaseServiceTest {
     // --- Part 2: updatePatient Tests ---
 
     @Test
+    @Story("Cập nhật thông tin bệnh nhân với ID không tồn tại")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra hệ thống ném RuntimeException và không gọi hàm save khi admin cố cập nhật thông tin bệnh nhân với ID không tồn tại trong cơ sở dữ liệu.")
     void updatePatient_patientIdDoesNotExist_throwsRuntimeException() {
-        // Arrange
         Patient patient = new Patient();
         patient.setId(99L);
 
         when(patientRepository.existsById(99L)).thenReturn(false);
 
-        // Act & Assert
         assertThrows(RuntimeException.class, () -> {
             adminManagementService.updatePatient(patient);
         });
@@ -103,18 +113,18 @@ class AdminManagementServiceTest extends BaseServiceTest {
     }
 
     @Test
+    @Story("Cập nhật thông tin bệnh nhân thành công")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra admin cập nhật thành công thông tin bệnh nhân khi ID tồn tại, hệ thống gọi đúng một lần hàm save và trả về đối tượng Patient đã cập nhật.")
     void updatePatient_patientIdExists_callsSave() {
-        // Arrange
         Patient patient = new Patient();
         patient.setId(1L);
 
         when(patientRepository.existsById(1L)).thenReturn(true);
         when(patientRepository.save(patient)).thenReturn(patient);
 
-        // Act
         Patient result = adminManagementService.updatePatient(patient);
 
-        // Assert
         assertNotNull(result);
         verify(patientRepository, times(1)).save(patient);
     }
@@ -122,13 +132,14 @@ class AdminManagementServiceTest extends BaseServiceTest {
     // --- Part 3: deletePatient Tests ---
 
     @Test
+    @Story("Xóa tài khoản bệnh nhân với ID không tồn tại")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra hệ thống ném RuntimeException và không gọi hàm deleteById khi admin cố xóa tài khoản bệnh nhân với ID không tồn tại trong cơ sở dữ liệu.")
     void deletePatient_patientIdDoesNotExist_throwsRuntimeException() {
-        // Arrange
         long id = 99L;
 
         when(patientRepository.existsById(id)).thenReturn(false);
 
-        // Act & Assert
         assertThrows(RuntimeException.class, () -> {
             adminManagementService.deletePatient(id);
         });
@@ -137,18 +148,18 @@ class AdminManagementServiceTest extends BaseServiceTest {
     }
 
     @Test
+    @Story("Xóa tài khoản bệnh nhân thành công")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra admin xóa thành công tài khoản bệnh nhân khi ID tồn tại, hệ thống gọi đúng hàm deleteById và flush EntityManager để đảm bảo dữ liệu liên quan được dọn sạch.")
     void deletePatient_patientIdExists_callsDelete() {
-        // Arrange
         long id = 1L;
 
         when(patientRepository.existsById(id)).thenReturn(true);
         when(patientClinicalInforRepository.findByPatientId(id)).thenReturn(Optional.empty());
         when(entityManager.createNativeQuery(anyString())).thenReturn(nativeQuery);
 
-        // Act
         adminManagementService.deletePatient(id);
 
-        // Assert
         verify(patientRepository, times(1)).deleteById(id);
         verify(entityManager, times(1)).flush();
     }

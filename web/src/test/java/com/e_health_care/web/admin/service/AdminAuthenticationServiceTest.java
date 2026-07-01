@@ -21,6 +21,13 @@ import com.e_health_care.web.admin.dto.AdminDTO;
 import com.e_health_care.web.admin.model.Admin;
 import com.e_health_care.web.admin.repository.AdminRepository;
 
+import io.qameta.allure.Description;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Story;
+
 /**
  * Unit Test cho AdminAuthenticationService
  *
@@ -28,6 +35,9 @@ import com.e_health_care.web.admin.repository.AdminRepository;
  * nên chúng ta mock AdminDetailsService (thay vì AdminRepository trực tiếp)
  * và AdminJwtService để kiểm soát hoàn toàn luồng login().
  */
+// Fix: @Epic/@Feature dùng để nhóm test theo nghiệp vụ ở tab "Behaviors"
+@Epic("Admin Management")
+@Feature("Admin Authentication")
 class AdminAuthenticationServiceTest extends BaseServiceTest {
 
     @Mock
@@ -46,11 +56,9 @@ class AdminAuthenticationServiceTest extends BaseServiceTest {
     @InjectMocks
     private AdminAuthenticationService adminAuthenticationService;
 
-
     private static final String VALID_EMAIL    = "admin@hospital.com";
     private static final String VALID_PASSWORD = "Secret@123";
     private static final String FAKE_JWT       = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.fake";
-
 
     @BeforeEach
     void setUp() {
@@ -63,8 +71,10 @@ class AdminAuthenticationServiceTest extends BaseServiceTest {
         ReflectionTestUtils.setField(adminAuthenticationService, "jwtService",          jwtService);
     }
 
-
     @Test
+    @Story("Đăng nhập với email không tồn tại")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra hệ thống trả về null và không gọi hàm sinh JWT token khi admin đăng nhập bằng email chưa được đăng ký trong cơ sở dữ liệu.")
     void login_emailNotFound_returnsNull() {
         // Arrange
         AdminDTO adminDTO = new AdminDTO();
@@ -82,16 +92,15 @@ class AdminAuthenticationServiceTest extends BaseServiceTest {
         verify(jwtService, never()).generateToken(anyString());
     }
 
-    // -----------------------------------------------------------------------
-    // Test Case 2: Sai mật khẩu → login() phải trả về null
-    // -----------------------------------------------------------------------
-
     @Test
+    @Story("Đăng nhập với mật khẩu sai")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra hệ thống trả về null và không gọi hàm sinh JWT token khi admin nhập đúng email nhưng sai mật khẩu, đảm bảo không cấp quyền truy cập trái phép.")
     void login_wrongPassword_returnsNull() {
         // Arrange
         Admin admin = new Admin();
         admin.setEmail(VALID_EMAIL);
-        admin.setPassword(passwordEncoder.encode(VALID_PASSWORD)); 
+        admin.setPassword(passwordEncoder.encode(VALID_PASSWORD));
 
         when(adminRepository.findByEmail(VALID_EMAIL)).thenReturn(admin);
 
@@ -107,11 +116,10 @@ class AdminAuthenticationServiceTest extends BaseServiceTest {
         verify(jwtService, never()).generateToken(anyString());
     }
 
-    // -----------------------------------------------------------------------
-    // Test Case 3: Đúng email và mật khẩu → login() phải trả về JWT token
-    // -----------------------------------------------------------------------
-
     @Test
+    @Story("Đăng nhập thành công với email và mật khẩu hợp lệ")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra hệ thống trả về đúng JWT token khi admin đăng nhập với email và mật khẩu khớp với thông tin đã lưu trong cơ sở dữ liệu, đồng thời xác minh hàm sinh token được gọi đúng một lần.")
     void login_correctCredentials_returnsJwtToken() {
         // Arrange
         Admin admin = new Admin();
