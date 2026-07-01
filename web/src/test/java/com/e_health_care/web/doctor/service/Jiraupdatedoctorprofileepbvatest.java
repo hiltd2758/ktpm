@@ -15,6 +15,14 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+// Fix: thêm import Allure annotations để gắn nhãn nghiệp vụ cho report
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Description;
+
 /**
  * Equivalence Partitioning + Boundary Value Analysis
  * cho updateDoctorProfile() — DoctorService
@@ -34,6 +42,9 @@ import static org.mockito.Mockito.*;
  *   B3 = phone 11 ký tự (biên trên trong – hợp lệ)
  *   B4 = phone 12 ký tự (biên trên ngoài – không hợp lệ)
  */
+// Fix: @Epic/@Feature dùng để nhóm test theo nghiệp vụ ở tab "Behaviors"
+@Epic("Doctor Management")
+@Feature("Doctor Profile Update")
 class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
 
     @Mock
@@ -60,6 +71,9 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // -----------------------------------------------------------------------
     @Test
     @DisplayName("TC01 [V1,V2,V3,V4,V5,V6]: tất cả hợp lệ, không upload ảnh -> cập nhật thành công")
+    @Story("Cập nhật hồ sơ bác sĩ thành công với dữ liệu hợp lệ, không upload ảnh")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra hệ thống cập nhật thành công thông tin bác sĩ (họ tên, số điện thoại, chuyên khoa) khi toàn bộ dữ liệu đầu vào hợp lệ và không upload ảnh đại diện.")
     void tc01_allValid_noAvatar_shouldUpdateSuccessfully() {
         Doctor existing = new Doctor();
         existing.setId(1L);
@@ -82,6 +96,9 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // -----------------------------------------------------------------------
     @Test
     @DisplayName("TC02 [X1]: doctorId không tồn tại -> throw 'Không tìm thấy bác sĩ'")
+    @Story("Cập nhật hồ sơ với doctorId không tồn tại")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra hệ thống ném lỗi với thông báo 'Không tìm thấy bác sĩ' khi doctorId truyền vào không tồn tại trong cơ sở dữ liệu.")
     void tc02_doctorNotFound_shouldThrow() {
         when(doctorRepository.findById(999L)).thenReturn(Optional.empty());
 
@@ -98,6 +115,9 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // -----------------------------------------------------------------------
     @Test
     @DisplayName("TC03 [X2]: firstName rỗng -> throw validation error")
+    @Story("Cập nhật hồ sơ với họ (firstName) rỗng")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra hệ thống từ chối cập nhật và ném lỗi validation khi trường firstName được truyền vào là chuỗi rỗng.")
     void tc03_emptyFirstName_shouldThrow() {
         Doctor existing = new Doctor();
         existing.setId(1L);
@@ -115,6 +135,9 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // -----------------------------------------------------------------------
     @Test
     @DisplayName("TC04 [X3]: lastName null -> throw validation error")
+    @Story("Cập nhật hồ sơ với tên (lastName) null")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra hệ thống từ chối cập nhật và ném lỗi validation khi trường lastName được truyền vào là null.")
     void tc04_nullLastName_shouldThrow() {
         Doctor existing = new Doctor();
         existing.setId(1L);
@@ -132,6 +155,9 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // -----------------------------------------------------------------------
     @Test
     @DisplayName("TC05 [X4,B1]: phone 9 ký tự -> throw validation error (biên dưới ngoài)")
+    @Story("Cập nhật hồ sơ với số điện thoại 9 ký tự (biên dưới ngoài)")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra giá trị biên: hệ thống từ chối số điện thoại có độ dài 9 ký tự, nằm ngoài ngưỡng hợp lệ tối thiểu là 10 ký tự.")
     void tc05_phone9Chars_shouldThrow() {
         Doctor existing = new Doctor();
         existing.setId(1L);
@@ -149,6 +175,9 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // -----------------------------------------------------------------------
     @Test
     @DisplayName("TC06 [V4,B2]: phone 10 ký tự -> hợp lệ (biên dưới trong)")
+    @Story("Cập nhật hồ sơ với số điện thoại 10 ký tự (biên dưới trong)")
+    @Severity(SeverityLevel.MINOR)
+    @Description("Kiểm tra giá trị biên: hệ thống chấp nhận số điện thoại có độ dài đúng 10 ký tự, là giá trị hợp lệ ở biên dưới của khoảng cho phép.")
     void tc06_phone10Chars_shouldSucceed() {
         Doctor existing = new Doctor();
         existing.setId(1L);
@@ -166,6 +195,9 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // -----------------------------------------------------------------------
     @Test
     @DisplayName("TC07 [V4,B3]: phone 11 ký tự -> hợp lệ (biên trên trong)")
+    @Story("Cập nhật hồ sơ với số điện thoại 11 ký tự (biên trên trong)")
+    @Severity(SeverityLevel.MINOR)
+    @Description("Kiểm tra giá trị biên: hệ thống chấp nhận số điện thoại có độ dài đúng 11 ký tự, là giá trị hợp lệ ở biên trên của khoảng cho phép.")
     void tc07_phone11Chars_shouldSucceed() {
         Doctor existing = new Doctor();
         existing.setId(1L);
@@ -183,6 +215,9 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // -----------------------------------------------------------------------
     @Test
     @DisplayName("TC08 [X4,B4]: phone 12 ký tự -> throw validation error (biên trên ngoài)")
+    @Story("Cập nhật hồ sơ với số điện thoại 12 ký tự (biên trên ngoài)")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra giá trị biên: hệ thống từ chối số điện thoại có độ dài 12 ký tự, vượt ngoài ngưỡng hợp lệ tối đa là 11 ký tự.")
     void tc08_phone12Chars_shouldThrow() {
         Doctor existing = new Doctor();
         existing.setId(1L);
@@ -200,6 +235,9 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // -----------------------------------------------------------------------
     @Test
     @DisplayName("TC09 [X5]: field rỗng -> throw validation error")
+    @Story("Cập nhật hồ sơ với chuyên khoa (field) rỗng")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra hệ thống từ chối cập nhật và ném lỗi validation khi trường chuyên khoa (field) được truyền vào là chuỗi rỗng.")
     void tc09_emptyField_shouldThrow() {
         Doctor existing = new Doctor();
         existing.setId(1L);
@@ -217,6 +255,9 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // -----------------------------------------------------------------------
     @Test
     @DisplayName("TC10 [V1,V7]: upload avatar hợp lệ (image/jpeg) -> cập nhật avatar thành công")
+    @Story("Upload ảnh đại diện hợp lệ khi cập nhật hồ sơ")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra hệ thống lưu thành công ảnh đại diện khi bác sĩ upload file ảnh hợp lệ định dạng image/jpeg, đồng thời trường avatar trong dữ liệu lưu trữ không rỗng.")
     void tc10_validAvatarUpload_shouldSaveAvatar() {
         Doctor existing = new Doctor();
         existing.setId(1L);
@@ -239,6 +280,9 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // -----------------------------------------------------------------------
     @Test
     @DisplayName("TC11 [X6]: upload file không phải ảnh (text/plain) -> throw error")
+    @Story("Upload file không phải định dạng ảnh khi cập nhật hồ sơ")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra hệ thống từ chối và ném lỗi khi bác sĩ upload file không phải ảnh (text/plain) thay vì ảnh đại diện hợp lệ, tránh lưu dữ liệu sai định dạng.")
     void tc11_invalidFileType_shouldThrow() {
         Doctor existing = new Doctor();
         existing.setId(1L);
@@ -260,6 +304,9 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // -----------------------------------------------------------------------
     @Test
     @DisplayName("TC12 [X1]: nhiều điều kiện sai -> chỉ throw lỗi doctor not found (kiểm tra đầu tiên)")
+    @Story("Cập nhật hồ sơ với nhiều trường dữ liệu sai cùng lúc")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra thứ tự ưu tiên validate: khi doctorId không tồn tại đồng thời các trường khác (firstName, lastName, phone, field) cũng không hợp lệ, hệ thống phải ném lỗi 'Không tìm thấy bác sĩ' trước tiên thay vì các lỗi validation khác.")
     void tc12_multipleInvalid_shouldThrowDoctorNotFoundFirst() {
         when(doctorRepository.findById(999L)).thenReturn(Optional.empty());
 

@@ -1,21 +1,35 @@
 package com.e_health_care.web.doctor.service;
 
-import com.e_health_care.web.doctor.dto.DoctorDTO;
-import org.junit.jupiter.api.BeforeEach;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-import static org.mockito.ArgumentMatchers.any;
+import com.e_health_care.web.doctor.dto.DoctorDTO;
+
+import io.qameta.allure.Description;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Story;
+
 @ExtendWith(MockitoExtension.class)
+// Fix: @Epic/@Feature dùng để nhóm test theo nghiệp vụ ở tab "Behaviors"
+@Epic("Doctor Management")
+@Feature("Doctor Authentication")
 class DoctorAuthenticationServiceTest {
 
     @Mock
@@ -45,6 +59,9 @@ class DoctorAuthenticationServiceTest {
     // UTCID01 – email hợp lệ + password hợp lệ → trả về JWT token (HTTP 200)
     @Test
     @DisplayName("UTCID01 – email valid + password valid → login thành công")
+    @Story("Đăng nhập thành công với email và mật khẩu hợp lệ")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra hệ thống trả về JWT token hợp lệ khi bác sĩ đăng nhập với email đúng định dạng và mật khẩu khớp với mật khẩu đã mã hóa lưu trong hệ thống.")
     void utcid01_validEmailAndPassword_returnsToken() {
         DoctorDTO dto = new DoctorDTO();
         dto.setEmail("doctor@test.com");
@@ -64,6 +81,9 @@ class DoctorAuthenticationServiceTest {
     // UTCID02 – email sai format → trả về null (HTTP 400)
     @Test
     @DisplayName("UTCID02 – email invalid format → login thất bại")
+    @Story("Đăng nhập với email sai định dạng")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra hệ thống trả về null khi email nhập vào sai định dạng, không tìm thấy người dùng tương ứng trong hệ thống.")
     void utcid02_invalidEmailFormat_returnsNull() {
         DoctorDTO dto = new DoctorDTO();
         dto.setEmail("invalid-email");
@@ -78,6 +98,9 @@ class DoctorAuthenticationServiceTest {
     // UTCID03 – email null → trả về null (HTTP 400)
     @Test
     @DisplayName("UTCID03 – email null → login thất bại")
+    @Story("Đăng nhập với email rỗng (null)")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra hệ thống trả về null khi trường email không được cung cấp (null), đảm bảo không cho phép đăng nhập với dữ liệu thiếu.")
     void utcid03_nullEmail_returnsNull() {
         DoctorDTO dto = new DoctorDTO();
         dto.setEmail(null);
@@ -92,6 +115,9 @@ class DoctorAuthenticationServiceTest {
     // UTCID04 – password length = 7 (dưới min 8) → trả về null (HTTP 400)
     @Test
     @DisplayName("UTCID04 – password length=7 (dưới min) → login thất bại")
+    @Story("Đăng nhập với mật khẩu ngắn hơn độ dài tối thiểu")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra hệ thống từ chối đăng nhập khi mật khẩu có độ dài 7 ký tự, dưới ngưỡng tối thiểu cho phép là 8 ký tự (kiểm thử biên dưới).")
     void utcid04_passwordLength7_returnsNull() {
         DoctorDTO dto = new DoctorDTO();
         dto.setEmail("doctor@test.com");
@@ -109,6 +135,9 @@ class DoctorAuthenticationServiceTest {
     // UTCID05 – password length = 8 (đúng min) → trả về JWT token (HTTP 200)
     @Test
     @DisplayName("UTCID05 – password length=8 (biên min) → login thành công")
+    @Story("Đăng nhập với mật khẩu đúng độ dài tối thiểu (biên)")
+    @Severity(SeverityLevel.MINOR)
+    @Description("Kiểm tra hệ thống cho phép đăng nhập thành công khi mật khẩu đạt đúng độ dài tối thiểu 8 ký tự (kiểm thử giá trị biên).")
     void utcid05_passwordLength8_returnsToken() {
         DoctorDTO dto = new DoctorDTO();
         dto.setEmail("doctor@test.com");
