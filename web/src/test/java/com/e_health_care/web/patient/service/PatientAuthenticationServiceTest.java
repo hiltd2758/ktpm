@@ -1,22 +1,21 @@
 package com.e_health_care.web.patient.service;
 
+import java.util.Collections;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.Collections;
-import java.util.Optional;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,7 +26,12 @@ import com.e_health_care.web.patient.dto.PatientDTO;
 import com.e_health_care.web.patient.model.Patient;
 import com.e_health_care.web.patient.repository.PatientRepository;
 
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+
 @ExtendWith(MockitoExtension.class)
+@Epic("Patient Management")
+@Feature("Patient Authentication")
 class PatientAuthenticationServiceTest {
 
     @Mock

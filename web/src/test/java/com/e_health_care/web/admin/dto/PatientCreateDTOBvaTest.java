@@ -6,6 +6,13 @@ import org.junit.jupiter.api.Test;
 
 import com.e_health_care.web.BvaValidationHelper;
 
+import io.qameta.allure.Description;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Story;
+
 /**
  * BVA (Boundary Value Analysis) Test cho PatientCreateDTO
  *
@@ -20,6 +27,8 @@ import com.e_health_care.web.BvaValidationHelper;
  * │ phone      │ 10 (valid), 11 (invalid)                         │
  * └────────────┴──────────────────────────────────────────────────┘
  */
+@Epic("Admin Management")
+@Feature("Patient Create Validation")
 class PatientCreateDTOBvaTest {
 
     // =========================================================================
@@ -29,14 +38,17 @@ class PatientCreateDTOBvaTest {
     private PatientCreateDTO validDto() {
         PatientCreateDTO dto = new PatientCreateDTO();
         dto.setEmail("patient@test.com");
-        dto.setPassword("Password1");    // 9 ký tự – hợp lệ
+        dto.setPassword("Password1"); // 9 ký tự – hợp lệ
         dto.setFirstName("John");
         dto.setLastName("Doe");
-        dto.setPhone("0123456789");      // 10 ký tự – hợp lệ
+        dto.setPhone("0123456789"); // 10 ký tự – hợp lệ
         return dto;
     }
 
     @Test
+    @Story("Nominal valid data")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra toàn bộ dữ liệu hợp lệ phải vượt qua validation")
     void allNominal_shouldBeValid() {
         PatientCreateDTO dto = validDto();
         assertTrue(BvaValidationHelper.isValid(dto),
@@ -49,6 +61,9 @@ class PatientCreateDTOBvaTest {
 
     /** Email = null → invalid (@NotBlank sẽ vi phạm) */
     @Test
+    @Story("Email is null")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra email để trống (null) phải không hợp lệ")
     void email_null_isInvalid() {
         PatientCreateDTO dto = validDto();
         dto.setEmail(null);
@@ -58,6 +73,9 @@ class PatientCreateDTOBvaTest {
 
     /** Email hợp lệ */
     @Test
+    @Story("Valid email format")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra email đúng định dạng phải hợp lệ")
     void email_valid_isValid() {
         PatientCreateDTO dto = validDto();
         dto.setEmail("patient@test.com");
@@ -67,6 +85,9 @@ class PatientCreateDTOBvaTest {
 
     /** Email thiếu ký tự '@' → invalid */
     @Test
+    @Story("Email missing @ symbol")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra email thiếu ký tự @ phải bị từ chối")
     void email_missingAtSign_isInvalid() {
         PatientCreateDTO dto = validDto();
         dto.setEmail("patienttest.com");
@@ -80,24 +101,33 @@ class PatientCreateDTOBvaTest {
 
     /** Password = 7 ký tự → invalid (min = 8) */
     @Test
+    @Story("Password below minimum length")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra password có 7 ký tự phải không hợp lệ")
     void password_7chars_isInvalid() {
         PatientCreateDTO dto = validDto();
-        dto.setPassword("Abcd123");   // đúng 7 ký tự
+        dto.setPassword("Abcd123");
         assertFalse(BvaValidationHelper.isValid(dto),
                 "password 7 ký tự phải không hợp lệ (min=8)");
     }
 
     /** Password = 8 ký tự → valid (ranh giới dưới hợp lệ) */
     @Test
+    @Story("Password at minimum boundary")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra password đúng 8 ký tự phải hợp lệ")
     void password_8chars_isValid() {
         PatientCreateDTO dto = validDto();
-        dto.setPassword("Abcd1234");  // đúng 8 ký tự
+        dto.setPassword("Abcd1234");
         assertTrue(BvaValidationHelper.isValid(dto),
                 "password 8 ký tự phải hợp lệ (boundary dưới)");
     }
 
     /** Password = 25 ký tự (nominal) → valid */
     @Test
+    @Story("Nominal password length")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra password có độ dài tiêu chuẩn phải hợp lệ")
     void password_25chars_nominal_isValid() {
         PatientCreateDTO dto = validDto();
         dto.setPassword("A".repeat(25));
@@ -107,18 +137,24 @@ class PatientCreateDTOBvaTest {
 
     /** Password = 50 ký tự → valid (ranh giới trên hợp lệ) */
     @Test
+    @Story("Password at maximum boundary")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra password đúng 50 ký tự phải hợp lệ")
     void password_50chars_isValid() {
         PatientCreateDTO dto = validDto();
-        dto.setPassword("A".repeat(50));   // đúng 50 ký tự
+        dto.setPassword("A".repeat(50));
         assertTrue(BvaValidationHelper.isValid(dto),
                 "password 50 ký tự phải hợp lệ (boundary trên)");
     }
 
     /** Password = 51 ký tự → invalid (max = 50) */
     @Test
+    @Story("Password exceeds maximum length")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra password vượt quá 50 ký tự phải không hợp lệ")
     void password_51chars_isInvalid() {
         PatientCreateDTO dto = validDto();
-        dto.setPassword("A".repeat(51));   // đúng 51 ký tự
+        dto.setPassword("A".repeat(51));
         assertFalse(BvaValidationHelper.isValid(dto),
                 "password 51 ký tự phải không hợp lệ (max=50)");
     }
@@ -127,8 +163,10 @@ class PatientCreateDTOBvaTest {
     // PHẦN 3: FIRSTNAME
     // =========================================================================
 
-    /** firstName = "" (rỗng) → invalid (@NotBlank) */
     @Test
+    @Story("First name is empty")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra firstName rỗng phải không hợp lệ")
     void firstName_empty_isInvalid() {
         PatientCreateDTO dto = validDto();
         dto.setFirstName("");
@@ -136,8 +174,10 @@ class PatientCreateDTOBvaTest {
                 "firstName rỗng phải không hợp lệ");
     }
 
-    /** firstName = 1 ký tự → valid (ranh giới dưới hợp lệ) */
     @Test
+    @Story("First name minimum boundary")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra firstName đúng 1 ký tự phải hợp lệ")
     void firstName_1char_isValid() {
         PatientCreateDTO dto = validDto();
         dto.setFirstName("A");
@@ -145,8 +185,10 @@ class PatientCreateDTOBvaTest {
                 "firstName 1 ký tự phải hợp lệ (boundary dưới)");
     }
 
-    /** firstName = 50 ký tự → valid (ranh giới trên hợp lệ) */
     @Test
+    @Story("First name maximum boundary")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra firstName đúng 50 ký tự phải hợp lệ")
     void firstName_50chars_isValid() {
         PatientCreateDTO dto = validDto();
         dto.setFirstName("A".repeat(50));
@@ -154,8 +196,10 @@ class PatientCreateDTOBvaTest {
                 "firstName 50 ký tự phải hợp lệ (boundary trên)");
     }
 
-    /** firstName = 51 ký tự → invalid (max = 50) */
     @Test
+    @Story("First name exceeds maximum length")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra firstName vượt quá 50 ký tự phải không hợp lệ")
     void firstName_51chars_isInvalid() {
         PatientCreateDTO dto = validDto();
         dto.setFirstName("A".repeat(51));
@@ -167,8 +211,10 @@ class PatientCreateDTOBvaTest {
     // PHẦN 4: LASTNAME
     // =========================================================================
 
-    /** lastName = "" (rỗng) → invalid (@NotBlank) */
     @Test
+    @Story("Last name is empty")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra lastName rỗng phải không hợp lệ")
     void lastName_empty_isInvalid() {
         PatientCreateDTO dto = validDto();
         dto.setLastName("");
@@ -176,8 +222,10 @@ class PatientCreateDTOBvaTest {
                 "lastName rỗng phải không hợp lệ");
     }
 
-    /** lastName = 1 ký tự → valid */
     @Test
+    @Story("Last name minimum boundary")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra lastName đúng 1 ký tự phải hợp lệ")
     void lastName_1char_isValid() {
         PatientCreateDTO dto = validDto();
         dto.setLastName("B");
@@ -185,8 +233,10 @@ class PatientCreateDTOBvaTest {
                 "lastName 1 ký tự phải hợp lệ (boundary dưới)");
     }
 
-    /** lastName = 50 ký tự → valid */
     @Test
+    @Story("Last name maximum boundary")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra lastName đúng 50 ký tự phải hợp lệ")
     void lastName_50chars_isValid() {
         PatientCreateDTO dto = validDto();
         dto.setLastName("B".repeat(50));
@@ -194,8 +244,10 @@ class PatientCreateDTOBvaTest {
                 "lastName 50 ký tự phải hợp lệ (boundary trên)");
     }
 
-    /** lastName = 51 ký tự → invalid */
     @Test
+    @Story("Last name exceeds maximum length")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra lastName vượt quá 50 ký tự phải không hợp lệ")
     void lastName_51chars_isInvalid() {
         PatientCreateDTO dto = validDto();
         dto.setLastName("B".repeat(51));
@@ -207,12 +259,10 @@ class PatientCreateDTOBvaTest {
     // PHẦN 5: PHONE
     // =========================================================================
 
-
-    /**
-     * phone = null
-     * Yêu cầu @NotNull trên field `phone` để test này pass (xem mục 3 ghi chú).
-     */
     @Test
+    @Story("Phone number is null")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra số điện thoại để trống phải không hợp lệ")
     void phone_null_isInvalid() {
         PatientCreateDTO dto = validDto();
         dto.setPhone(null);
@@ -220,20 +270,24 @@ class PatientCreateDTOBvaTest {
                 "phone = null phải không hợp lệ");
     }
 
-    /** phone = 10 ký tự → valid (đúng max) */
     @Test
+    @Story("Phone number valid length")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra số điện thoại đúng 10 ký tự phải hợp lệ")
     void phone_10chars_isValid() {
         PatientCreateDTO dto = validDto();
-        dto.setPhone("0123456789");   // đúng 10 ký tự
+        dto.setPhone("0123456789");
         assertTrue(BvaValidationHelper.isValid(dto),
                 "phone 10 ký tự phải hợp lệ (max=10)");
     }
 
-    /** phone = 11 ký tự → invalid (vượt max=10) */
     @Test
+    @Story("Phone number exceeds maximum length")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra số điện thoại vượt quá 10 ký tự phải không hợp lệ")
     void phone_11chars_isInvalid() {
         PatientCreateDTO dto = validDto();
-        dto.setPhone("01234567890");  // 11 ký tự
+        dto.setPhone("01234567890");
         assertFalse(BvaValidationHelper.isValid(dto),
                 "phone 11 ký tự phải không hợp lệ (max=10)");
     }
