@@ -1,10 +1,9 @@
 package com.e_health_care.web.doctor.dto;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -14,11 +13,23 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import com.e_health_care.web.testsupport.BvaValidationHelper;
 
+import io.qameta.allure.Description;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Story;
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@Epic("Doctor Management")
+@Feature("Doctor DTO Validation")
 class DoctorDTOBvaTest {
 
     @Test
     @DisplayName("All nominal values should be valid")
+    @Story("Nominal valid data")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra toàn bộ dữ liệu hợp lệ phải vượt qua validation")
     void allNominal_shouldBeValid() {
         DoctorDTO doctorDTO = buildValidDoctorDto();
 
@@ -27,6 +38,9 @@ class DoctorDTOBvaTest {
 
     @Test
     @DisplayName("Short nominal email should be valid")
+    @Story("Valid short email")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra email hợp lệ với độ dài ngắn vẫn phải vượt qua validation")
     void email_nominalShort_isValid() {
         DoctorDTO doctorDTO = buildValidDoctorDto();
         doctorDTO.setEmail("a@b.com");
@@ -36,6 +50,9 @@ class DoctorDTOBvaTest {
 
     @Test
     @DisplayName("Long nominal email should be valid")
+    @Story("Valid long email")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra email hợp lệ với độ dài lớn vẫn phải vượt qua validation")
     void email_nominalLong_isValid() {
         DoctorDTO doctorDTO = buildValidDoctorDto();
         doctorDTO.setEmail(repeat('a', 40) + "@b.com");
@@ -46,6 +63,9 @@ class DoctorDTOBvaTest {
     @ParameterizedTest(name = "email boundary: {0}")
     @MethodSource("emailCases")
     @DisplayName("Email boundary values")
+    @Story("Email boundary validation")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra các giá trị biên của trường email")
     void emailBoundaryValues(String email, boolean expectedValid) {
         DoctorDTO doctorDTO = buildValidDoctorDto();
         doctorDTO.setEmail(email);
@@ -56,6 +76,9 @@ class DoctorDTOBvaTest {
     @ParameterizedTest(name = "password boundary: {0}")
     @MethodSource("passwordCases")
     @DisplayName("Password boundary values")
+    @Story("Password boundary validation")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra các giá trị biên của trường password")
     void passwordBoundaryValues(String password, boolean expectedValid) {
         DoctorDTO doctorDTO = buildValidDoctorDto();
         doctorDTO.setPassword(password);
@@ -66,6 +89,9 @@ class DoctorDTOBvaTest {
     @ParameterizedTest(name = "first name boundary: {0}")
     @MethodSource("firstNameCases")
     @DisplayName("First name boundary values")
+    @Story("First name boundary validation")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra các giá trị biên của trường firstName")
     void firstNameBoundaryValues(String firstName, boolean expectedValid) {
         DoctorDTO doctorDTO = buildValidDoctorDto();
         doctorDTO.setFirstName(firstName);
@@ -76,6 +102,9 @@ class DoctorDTOBvaTest {
     @ParameterizedTest(name = "phone boundary: {0}")
     @MethodSource("phoneCases")
     @DisplayName("Phone boundary values")
+    @Story("Phone boundary validation")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra các giá trị biên của trường số điện thoại")
     void phoneBoundaryValues(String phone, boolean expectedValid) {
         DoctorDTO doctorDTO = buildValidDoctorDto();
         doctorDTO.setPhone(phone);
