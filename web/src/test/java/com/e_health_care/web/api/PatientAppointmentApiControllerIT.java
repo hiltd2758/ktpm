@@ -12,6 +12,7 @@ import com.e_health_care.web.patient.dto.AppointmentRequestDTO;
 import com.e_health_care.web.patient.model.Appointment;
 import com.e_health_care.web.patient.model.Patient;
 import com.e_health_care.web.patient.repository.PatientAppointmentRepository;
+import com.e_health_care.web.patient.repository.PatientClinicalInforRepository;
 import com.e_health_care.web.patient.repository.PatientRepository;
 import com.e_health_care.web.patient.service.PatientJwtService;
 
@@ -36,6 +37,9 @@ public class PatientAppointmentApiControllerIT extends AbstractIntegrationTest {
     private PatientAppointmentRepository appointmentRepository;
 
     @Autowired
+    private PatientClinicalInforRepository patientClinicalInforRepository;
+
+    @Autowired
     private PatientJwtService jwtService;
 
     private Patient savedPatient;
@@ -44,7 +48,11 @@ public class PatientAppointmentApiControllerIT extends AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // Xóa theo đúng thứ tự con -> cha để tránh vi phạm khóa ngoại (FK).
+        // appointment và patient_clinical_info đều tham chiếu tới patient,
+        // nên phải xóa hết trước khi xóa patient.
         appointmentRepository.deleteAll();
+        patientClinicalInforRepository.deleteAll();
         patientRepository.deleteAll();
         doctorRepository.deleteAll();
 

@@ -16,6 +16,8 @@ import com.e_health_care.web.patient.dto.PatientClinicalInforDTO;
 import com.e_health_care.web.patient.service.PatientRecordService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/api/patient")
 public class PatientAuthApiController {
@@ -35,7 +37,7 @@ public class PatientAuthApiController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody PatientDTO patientDTO) {
+    public ResponseEntity<?> register(@Valid @RequestBody PatientDTO patientDTO) {
         authServicePatient.register(patientDTO);
         return ResponseEntity.ok(Map.of("message", "Registered successfully"));
     }
