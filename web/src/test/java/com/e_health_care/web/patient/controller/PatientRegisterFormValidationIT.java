@@ -14,6 +14,14 @@ import com.e_health_care.web.AbstractIntegrationTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+// Fix: thêm import Allure annotations để gắn nhãn nghiệp vụ cho report
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Description;
+
 /**
  * EHC-62 — Regression test cho Lỗi 1 (phần MVC form):
  * "PatientAuthenticationController.register() thiếu @Valid".
@@ -34,6 +42,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Sau khi fix: @Valid + BindingResult chặn lại, trả về lại trang
  * đăng ký (200) kèm lỗi validation, KHÔNG gọi service, KHÔNG lưu DB.
  */
+@Epic("Patient Management")
+@Feature("Patient Registration Form Validation")
 class PatientRegisterFormValidationIT extends AbstractIntegrationTest {
 
     private static final String REGISTER_FORM_URL = "/patient/register";
@@ -46,6 +56,9 @@ class PatientRegisterFormValidationIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("register (form) — không lỗi server khi email sai định dạng")
+    @Story("Invalid email format")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra form đăng ký không văng lỗi 500 khi email nhập sai định dạng (thiếu ký tự @), phải bị chặn ở tầng validation")
     void registerForm_shouldNotError_whenEmailInvalid() {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("email", "invalid-email-format"); // thiếu ký tự @
@@ -66,6 +79,9 @@ class PatientRegisterFormValidationIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("register (form) — không lỗi server khi password ngắn hơn 8 ký tự")
+    @Story("Invalid password length")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra form đăng ký không văng lỗi 500 khi password nhập dưới 8 ký tự, vi phạm ràng buộc @Size(min = 8)")
     void registerForm_shouldNotError_whenPasswordTooShort() {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("email", "shortpass.form@example.com");
@@ -83,6 +99,9 @@ class PatientRegisterFormValidationIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("register (form) — không lỗi server khi thiếu firstName/lastName")
+    @Story("Missing required fields")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra form đăng ký không văng lỗi 500 khi thiếu firstName/lastName, vi phạm ràng buộc @NotBlank")
     void registerForm_shouldNotError_whenRequiredFieldsMissing() {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("email", "missingfields.form@example.com");
@@ -99,6 +118,9 @@ class PatientRegisterFormValidationIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("register (form) — thành công khi dữ liệu hợp lệ đầy đủ (sanity check)")
+    @Story("Successful registration")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Đăng ký thành công qua form khi dữ liệu hợp lệ đầy đủ, redirect và trả về trang login với status 200")
     void registerForm_shouldSucceed_whenAllFieldsValid() {
         MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
         form.add("email", "valid.form.ehc62@example.com");

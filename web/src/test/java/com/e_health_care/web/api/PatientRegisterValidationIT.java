@@ -12,6 +12,14 @@ import com.e_health_care.web.AbstractIntegrationTest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+// Fix: thêm import Allure annotations để gắn nhãn nghiệp vụ cho report
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Description;
+
 /**
  * EHC-62 — Regression test cho Lỗi 1:
  * "Hệ thống không kiểm tra tính hợp lệ dữ liệu đầu vào (thiếu @Valid)".
@@ -23,6 +31,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Sau khi fix: request sai định dạng phải bị chặn ở tầng validation
  * và trả về HTTP 400, KHÔNG được chạm tới service/DB.
  */
+@Epic("Patient Management")
+@Feature("Patient Registration API Validation")
 class PatientRegisterValidationIT extends AbstractIntegrationTest {
 
     private static final String REGISTER_URL = "/api/patient/register";
@@ -33,6 +43,9 @@ class PatientRegisterValidationIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("register — HTTP 400 khi email sai định dạng (thiếu ký tự @)")
+    @Story("Invalid email format")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Đăng ký phải trả về HTTP 400 khi email sai định dạng (thiếu ký tự @), request không được lọt qua tầng validation")
     void register_shouldReturn400_whenEmailFormatInvalid() {
         Map<String, String> body = Map.of(
                 "email", "invalid-email-format", // thiếu @
@@ -49,6 +62,9 @@ class PatientRegisterValidationIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("register — HTTP 400 khi mật khẩu ngắn hơn 8 ký tự")
+    @Story("Invalid password length")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Đăng ký phải trả về HTTP 400 khi mật khẩu ngắn hơn 8 ký tự, vi phạm ràng buộc @Size(min = 8)")
     void register_shouldReturn400_whenPasswordTooShort() {
         Map<String, String> body = Map.of(
                 "email", "shortpass@example.com",
@@ -65,6 +81,9 @@ class PatientRegisterValidationIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("register — HTTP 400 khi thiếu firstName/lastName bắt buộc")
+    @Story("Missing required fields")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Đăng ký phải trả về HTTP 400 khi thiếu firstName/lastName, vi phạm ràng buộc @NotBlank")
     void register_shouldReturn400_whenRequiredFieldsMissing() {
         Map<String, String> body = Map.of(
                 "email", "missingfields@example.com",
@@ -80,6 +99,9 @@ class PatientRegisterValidationIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("register — HTTP 200 khi dữ liệu hợp lệ đầy đủ (sanity check)")
+    @Story("Successful registration")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Đăng ký thành công và trả về HTTP 200 khi tất cả dữ liệu đầu vào hợp lệ")
     void register_shouldReturn200_whenAllFieldsValid() {
         Map<String, String> body = Map.of(
                 "email", "valid.ehc62@example.com",

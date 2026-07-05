@@ -12,6 +12,14 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+// Fix: thêm import Allure annotations để gắn nhãn nghiệp vụ cho report
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Description;
+
 /**
  * Integration Tests for Patient Registration & Login API.
  *
@@ -25,6 +33,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Security filter chain — no mocking.
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Epic("Patient Management")
+@Feature("Patient Authentication API")
 class PatientAuthApiControllerIT extends AbstractIntegrationTest {
 
     private static final String REGISTER_URL = "/api/patient/register";
@@ -78,6 +88,9 @@ class PatientAuthApiControllerIT extends AbstractIntegrationTest {
     @Test
     @Order(1)
     @DisplayName("register — HTTP 200 khi dữ liệu hợp lệ")
+    @Story("Patient registration")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Đăng ký bệnh nhân thành công khi dữ liệu hợp lệ, trả về 200 và lưu đúng thông tin vào database")
     void register_shouldReturn200_whenValidInput() {
         Map<String, String> body = Map.of(
                 "email",     "new_patient@test.com",
@@ -112,6 +125,9 @@ class PatientAuthApiControllerIT extends AbstractIntegrationTest {
     @Test
     @Order(2)
     @DisplayName("register — lỗi khi email đã tồn tại")
+    @Story("Patient registration")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Đăng ký phải thất bại khi email đã tồn tại trong hệ thống, không được tạo thêm bản ghi trùng")
     void register_shouldReturnError_whenEmailAlreadyExists() {
         // Use the seeded email that already exists in DB
         Map<String, String> body = Map.of(
@@ -145,6 +161,9 @@ class PatientAuthApiControllerIT extends AbstractIntegrationTest {
     @Test
     @Order(3)
     @DisplayName("register — lỗi khi thiếu trường bắt buộc (email rỗng)")
+    @Story("Patient registration")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Đăng ký phải thất bại khi thiếu các trường bắt buộc (email, password), không được trả về 2xx")
     void register_shouldReturnError_whenInvalidInput() {
         // Missing email & password — controller has no @Valid, so the
         // request may still reach the service. In either case the call
@@ -176,6 +195,9 @@ class PatientAuthApiControllerIT extends AbstractIntegrationTest {
     @Test
     @Order(4)
     @DisplayName("login — HTTP 200 + JWT token khi credentials hợp lệ")
+    @Story("Patient login")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Đăng nhập thành công với credentials hợp lệ, trả về JWT token đúng định dạng và cookie jwt-patient-token")
     void login_shouldReturn200_whenValidCredentials() {
         Map<String, String> body = Map.of(
                 "email",    SEEDED_EMAIL,
@@ -217,6 +239,9 @@ class PatientAuthApiControllerIT extends AbstractIntegrationTest {
     @Test
     @Order(5)
     @DisplayName("login — HTTP 401 khi password sai")
+    @Story("Patient login")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Đăng nhập phải thất bại với HTTP 401 khi nhập sai password")
     void login_shouldReturn401_whenWrongPassword() {
         Map<String, String> body = Map.of(
                 "email",    SEEDED_EMAIL,
@@ -239,6 +264,9 @@ class PatientAuthApiControllerIT extends AbstractIntegrationTest {
     @Test
     @Order(6)
     @DisplayName("login — HTTP 401 khi email không tồn tại")
+    @Story("Patient login")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Đăng nhập phải thất bại với HTTP 401 khi email không tồn tại trong hệ thống")
     void login_shouldReturn401_whenEmailNotFound() {
         Map<String, String> body = Map.of(
                 "email",    "nonexistent@test.com",
@@ -265,6 +293,9 @@ class PatientAuthApiControllerIT extends AbstractIntegrationTest {
     @Test
     @Order(7)
     @DisplayName("register rồi login — luồng end-to-end thành công")
+    @Story("End-to-end registration and login")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Luồng end-to-end: đăng ký tài khoản mới rồi đăng nhập ngay bằng tài khoản đó phải thành công")
     void registerThenLogin_shouldSucceed_endToEnd() {
         // ── 1. Register ──────────────────────────────────────────────────
         String e2eEmail    = "e2e_patient@test.com";
