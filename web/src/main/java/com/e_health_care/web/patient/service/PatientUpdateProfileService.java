@@ -24,6 +24,9 @@ public class PatientUpdateProfileService {
     @Autowired
     private PatientRepository patientRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     // Hàm lấy thông tin (giữ nguyên, nhưng nhớ map thêm avatar)
     public PatientDTO getPatientById(Long id) {
         // 1. Tìm bệnh nhân trong DB
@@ -63,9 +66,9 @@ public class PatientUpdateProfileService {
         patient.setMedicalHistory(patientDTO.getMedicalHistory());
         patient.setDateOfBirth(patientDTO.getDateOfBirth());
 
-        // Xử lý mật khẩu nếu có (giữ nguyên logic cũ của bạn)
+        // Xử lý mật khẩu nếu có -> mã hóa trước khi lưu (Fix EHC-62 Lỗi 3)
         if (patientDTO.getPassword() != null && !patientDTO.getPassword().isEmpty()) {
-            patient.setPassword(patientDTO.getPassword());
+            patient.setPassword(passwordEncoder.encode(patientDTO.getPassword()));
         }
 
         // --- XỬ LÝ UPLOAD ẢNH ---
