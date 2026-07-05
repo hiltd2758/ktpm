@@ -12,7 +12,6 @@ import com.e_health_care.web.patient.dto.AppointmentRequestDTO;
 import com.e_health_care.web.patient.model.Appointment;
 import com.e_health_care.web.patient.model.Patient;
 import com.e_health_care.web.patient.repository.PatientAppointmentRepository;
-import com.e_health_care.web.patient.repository.PatientClinicalInforRepository;
 import com.e_health_care.web.patient.repository.PatientRepository;
 import com.e_health_care.web.patient.service.PatientJwtService;
 
@@ -25,6 +24,15 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Description;
+
+@Epic("Patient Management")
+@Feature("Patient Appointment API")
 public class PatientAppointmentApiControllerIT extends AbstractIntegrationTest {
 
     @Autowired
@@ -37,9 +45,6 @@ public class PatientAppointmentApiControllerIT extends AbstractIntegrationTest {
     private PatientAppointmentRepository appointmentRepository;
 
     @Autowired
-    private PatientClinicalInforRepository patientClinicalInforRepository;
-
-    @Autowired
     private PatientJwtService jwtService;
 
     private Patient savedPatient;
@@ -48,11 +53,7 @@ public class PatientAppointmentApiControllerIT extends AbstractIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        // Xóa theo đúng thứ tự con -> cha để tránh vi phạm khóa ngoại (FK).
-        // appointment và patient_clinical_info đều tham chiếu tới patient,
-        // nên phải xóa hết trước khi xóa patient.
         appointmentRepository.deleteAll();
-        patientClinicalInforRepository.deleteAll();
         patientRepository.deleteAll();
         doctorRepository.deleteAll();
 
@@ -71,6 +72,9 @@ public class PatientAppointmentApiControllerIT extends AbstractIntegrationTest {
     // =========================================================================
 
     @Test
+    @Story("Đặt lịch hẹn với dữ liệu hợp lệ")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra API đặt lịch hẹn trả về HTTP 200 khi bệnh nhân đã xác thực và dữ liệu đặt lịch hợp lệ.")
     void bookAppointment_shouldReturn200_whenValid() {
         AppointmentRequestDTO request = new AppointmentRequestDTO();
         request.setPatientId(savedPatient.getId());
@@ -90,6 +94,9 @@ public class PatientAppointmentApiControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @Story("Đặt lịch hẹn với doctorId không tồn tại")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra API đặt lịch hẹn trả về HTTP 400 khi doctorId truyền vào không tồn tại trong hệ thống.")
     void bookAppointment_shouldReturn400_whenDoctorNotFound() {
         AppointmentRequestDTO request = new AppointmentRequestDTO();
         request.setPatientId(savedPatient.getId());
@@ -109,6 +116,9 @@ public class PatientAppointmentApiControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @Story("Đặt lịch hẹn khi không có token")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra API đặt lịch hẹn trả về HTTP 401 hoặc 403 khi request không có token xác thực.")
     void bookAppointment_shouldReturn401_whenNoToken() {
         AppointmentRequestDTO request = new AppointmentRequestDTO();
         request.setPatientId(savedPatient.getId());
@@ -135,6 +145,9 @@ public class PatientAppointmentApiControllerIT extends AbstractIntegrationTest {
     // =========================================================================
 
     @Test
+    @Story("Xem danh sách lịch hẹn khi đã xác thực")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra API danh sách lịch hẹn trả về HTTP 200 khi bệnh nhân đã đăng nhập hợp lệ.")
     void getAppointments_shouldReturn200_whenAuthenticated() {
         HttpHeaders headers = patientCookieHeader(validToken);
         HttpEntity<Void> entity = new HttpEntity<>(headers);
@@ -150,6 +163,9 @@ public class PatientAppointmentApiControllerIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @Story("Xem danh sách lịch hẹn khi không có token")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra API danh sách lịch hẹn trả về HTTP 401 hoặc 403 khi request không có token xác thực.")
     void getAppointments_shouldReturn401_whenNoToken() {
         HttpEntity<Void> entity = new HttpEntity<>(new HttpHeaders());
 
@@ -171,6 +187,9 @@ public class PatientAppointmentApiControllerIT extends AbstractIntegrationTest {
     // =========================================================================
 
     @Test
+    @Story("Cập nhật trạng thái lịch hẹn thành công")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra API cập nhật trạng thái lịch hẹn trả về HTTP 200 khi chuyển từ PENDING sang CONFIRMED với dữ liệu hợp lệ.")
     void updateAppointmentStatus_shouldReturn200_whenValid() {
         Appointment appointment = new Appointment();
         appointment.setPatient(savedPatient);

@@ -16,10 +16,19 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Description;
+
 /**
  * EHC-25 — Integration Tests for AdminApiController (Management)
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Epic("Admin Management")
+@Feature("Admin Dashboard & CRUD API")
 class AdminApiControllerManagementIT extends AbstractIntegrationTest {
 
     @Autowired
@@ -123,6 +132,9 @@ class AdminApiControllerManagementIT extends AbstractIntegrationTest {
     @Test
     @Order(1)
     @DisplayName("IT_ADMIN_01 — getDashboard: Admin hợp lệ → HTTP 200")
+    @Story("Xem dashboard khi admin đã xác thực")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra API dashboard trả về HTTP 200 kèm thông tin doctors, patients khi admin đã đăng nhập hợp lệ.")
     void getDashboard_shouldReturn200_whenAdminAuthenticated() {
         ResponseEntity<Map> response = restTemplate.exchange(
                 baseUrl() + "/api/admin/dashboard",
@@ -140,6 +152,9 @@ class AdminApiControllerManagementIT extends AbstractIntegrationTest {
     @Test
     @Order(2)
     @DisplayName("IT_ADMIN_02 — getDashboard: không có token → HTTP 401 hoặc 403")
+    @Story("Xem dashboard khi không có token")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra API dashboard trả về HTTP 401 hoặc 403 khi request không có token xác thực.")
     void getDashboard_shouldReturn401_whenNoToken() {
         ResponseEntity<Map> response = restTemplate.getForEntity(
                 baseUrl() + "/api/admin/dashboard",
@@ -156,6 +171,9 @@ class AdminApiControllerManagementIT extends AbstractIntegrationTest {
     @Test
     @Order(3)
     @DisplayName("IT_ADMIN_03 — getStatistics: Admin hợp lệ → HTTP 200 + các key thống kê")
+    @Story("Xem thống kê hệ thống")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra API thống kê trả về HTTP 200 kèm đầy đủ các key totalDoctors, totalPatients, totalAppointments.")
     void getStatistics_shouldReturn200_whenAdminAuthenticated() {
         ResponseEntity<Map> response = restTemplate.exchange(
                 baseUrl() + "/api/admin/statistics",
@@ -178,6 +196,9 @@ class AdminApiControllerManagementIT extends AbstractIntegrationTest {
     @Test
     @Order(4)
     @DisplayName("IT_ADMIN_04 — updateDoctorInfo: dữ liệu hợp lệ → HTTP 200")
+    @Story("Cập nhật thông tin bác sĩ")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra API cập nhật thông tin bác sĩ trả về HTTP 200 khi dữ liệu đầu vào hợp lệ.")
     void updateDoctorInfo_shouldReturn200_whenValid() {
         Map<String, Object> payload = Map.of(
                 "id",        seededDoctorId,
@@ -205,6 +226,9 @@ class AdminApiControllerManagementIT extends AbstractIntegrationTest {
     @Test
     @Order(5)
     @DisplayName("IT_ADMIN_05 — updateDoctorPassword: dữ liệu hợp lệ → HTTP 200")
+    @Story("Cập nhật mật khẩu bác sĩ")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra API cập nhật mật khẩu bác sĩ trả về HTTP 200 khi mật khẩu mới hợp lệ.")
     void updateDoctorPassword_shouldReturn200_whenValid() {
         Map<String, String> body = Map.of("newPassword", "NewDoctor@456");
 
@@ -227,6 +251,9 @@ class AdminApiControllerManagementIT extends AbstractIntegrationTest {
     @Test
     @Order(6)
     @DisplayName("IT_ADMIN_06 — updatePatientInfo: dữ liệu hợp lệ → HTTP 200")
+    @Story("Cập nhật thông tin bệnh nhân")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra API cập nhật thông tin bệnh nhân trả về HTTP 200 khi dữ liệu đầu vào hợp lệ.")
     void updatePatientInfo_shouldReturn200_whenValid() {
         Map<String, Object> payload = Map.of(
                 "id",        seededPatientId,
@@ -252,6 +279,9 @@ class AdminApiControllerManagementIT extends AbstractIntegrationTest {
     @Test
     @Order(7)
     @DisplayName("IT_ADMIN_07 — deletePatient: patient tồn tại → HTTP 200")
+    @Story("Xóa bệnh nhân đã tồn tại")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra API xóa bệnh nhân trả về HTTP 200 và bản ghi bị xóa khỏi cơ sở dữ liệu khi patientId tồn tại.")
     void deletePatient_shouldReturn200_whenFound() {
         // Tạo patient riêng để delete, không ảnh hưởng test khác
         Patient toDelete = new Patient();
