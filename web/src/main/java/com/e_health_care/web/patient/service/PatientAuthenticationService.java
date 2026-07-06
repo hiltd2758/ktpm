@@ -36,7 +36,7 @@ public class PatientAuthenticationService {
         patient.setFirstName(patientDTO.getFirstName());
         patient.setLastName(patientDTO.getLastName());
         patient.setAddress(patientDTO.getAddress());
-        patient.setPhone(String.valueOf(patientDTO.getPhone()));
+        patient.setPhone(patientDTO.getPhone());
         patient.setPassword(passwordEncoder.encode(patientDTO.getPassword()));
         return patientRepository.save(patient);
     }
@@ -45,11 +45,11 @@ public class PatientAuthenticationService {
         try {
             DaoAuthenticationProvider provider = new DaoAuthenticationProvider(patientDetailsService);
             provider.setPasswordEncoder(passwordEncoder);
-            
+
             AuthenticationManager authManager = new ProviderManager(provider);
 
             authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(patientDTO.getEmail(), patientDTO.getPassword()));
+                    new UsernamePasswordAuthenticationToken(patientDTO.getEmail(), patientDTO.getPassword()));
 
             return jwtService.generateToken(patientDTO.getEmail());
 

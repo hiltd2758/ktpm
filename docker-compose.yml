@@ -16,7 +16,25 @@ services:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 30s
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: e-health-care-web
+    environment:
+      DB_URL: jdbc:mysql://mysql-local:3306/e_health_care?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      DDL_AUTO: update
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql-local:
+        condition: service_healthy
+    restart: on-failure
 
 volumes:
   mysql_data:

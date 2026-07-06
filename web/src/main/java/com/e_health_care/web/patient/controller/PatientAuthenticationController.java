@@ -3,6 +3,7 @@ package com.e_health_care.web.patient.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,6 +12,7 @@ import com.e_health_care.web.patient.dto.PatientDTO;
 import com.e_health_care.web.patient.service.PatientAuthenticationService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
 @Controller
 @RequestMapping("/patient")
@@ -27,7 +29,11 @@ public class PatientAuthenticationController {
     }
 
     @PostMapping("/register")
-    public String register(@ModelAttribute PatientDTO patientDTO) {
+    public String register(@Valid @ModelAttribute("patient") PatientDTO patientDTO, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            // Có lỗi validation -> quay lại form đăng ký, không lưu vào DB
+            return "patient/patient-register";
+        }
         authServicePatient.register(patientDTO);
         // Redirect giữ nguyên vì nó trỏ đến URL, không phải file
         return "redirect:/patient/login";

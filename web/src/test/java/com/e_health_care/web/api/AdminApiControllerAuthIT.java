@@ -15,6 +15,15 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Description;
+
+@Epic("Admin Management")
+@Feature("Admin Authentication API")
 class AdminApiControllerAuthIT extends AbstractIntegrationTest {
 
     @Autowired
@@ -47,6 +56,9 @@ class AdminApiControllerAuthIT extends AbstractIntegrationTest {
     // ==========================================
 
     @Test
+    @Story("Đăng nhập với thông tin hợp lệ")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra API đăng nhập trả về HTTP 200 và JWT token khi admin đăng nhập với email/mật khẩu đúng.")
     void login_shouldReturn200_whenValidCredentials() {
         Map<String, String> request = new HashMap<>();
         request.put("email", adminEmail);
@@ -62,6 +74,9 @@ class AdminApiControllerAuthIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @Story("Đăng nhập với mật khẩu sai")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra API đăng nhập trả về HTTP 401 khi mật khẩu nhập vào không đúng.")
     void login_shouldReturn401_whenWrongPassword() {
         Map<String, String> request = new HashMap<>();
         request.put("email", adminEmail);
@@ -73,6 +88,9 @@ class AdminApiControllerAuthIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @Story("Đăng nhập với email không tồn tại")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra API đăng nhập trả về HTTP 401 khi email không tồn tại trong hệ thống.")
     void login_shouldReturn401_whenEmailNotFound() {
         Map<String, String> request = new HashMap<>();
         request.put("email", "notfound@example.com"); // Email ảo
@@ -84,6 +102,9 @@ class AdminApiControllerAuthIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @Story("Đăng nhập thiếu trường bắt buộc")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra API đăng nhập trả về HTTP 401 khi thiếu trường password trong request.")
     void login_shouldReturn401_whenMissingFields() {
         Map<String, String> request = new HashMap<>();
         request.put("email", adminEmail); // Thiếu field password
@@ -98,6 +119,9 @@ class AdminApiControllerAuthIT extends AbstractIntegrationTest {
     // ==========================================
 
     @Test
+    @Story("Đăng xuất khi đã xác thực")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra API đăng xuất trả về HTTP 200 khi request có kèm JWT token hợp lệ.")
     void logout_shouldReturn200_whenAuthenticated() {
         Map<String, String> loginRequest = new HashMap<>();
         loginRequest.put("email", adminEmail);
@@ -119,6 +143,9 @@ class AdminApiControllerAuthIT extends AbstractIntegrationTest {
     }
 
     @Test
+    @Story("Đăng xuất khi không có token")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra API đăng xuất trả về HTTP 401 hoặc 403 khi request không kèm token xác thực.")
     void logout_shouldReturn401_whenNoToken() {
         ResponseEntity<Map> response = restTemplate.postForEntity("/api/admin/logout", null, Map.class);
 

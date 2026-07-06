@@ -1,22 +1,21 @@
 package com.e_health_care.web.patient.service;
 
+import java.util.Collections;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.Collections;
-import java.util.Optional;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import org.mockito.Mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -27,7 +26,16 @@ import com.e_health_care.web.patient.dto.PatientDTO;
 import com.e_health_care.web.patient.model.Patient;
 import com.e_health_care.web.patient.repository.PatientRepository;
 
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Description;
+
 @ExtendWith(MockitoExtension.class)
+@Epic("Patient Management")
+@Feature("Patient Authentication")
 class PatientAuthenticationServiceTest {
 
     @Mock
@@ -54,6 +62,9 @@ class PatientAuthenticationServiceTest {
     }
 
     @Test
+    @Story("Register with existing email")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Đăng ký phải bị từ chối nếu email đã tồn tại trong hệ thống")
     void registerShouldThrowWhenEmailAlreadyExists() {
         PatientDTO patientDTO = buildPatientDto("patient@example.com", "secret123");
         when(patientRepository.findByEmail(patientDTO.getEmail())).thenReturn(Optional.of(new Patient()));
@@ -64,6 +75,9 @@ class PatientAuthenticationServiceTest {
     }
 
     @Test
+    @Story("Register with valid data")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Đăng ký thành công khi email chưa tồn tại, lưu Patient mới vào repository")
     void registerShouldSaveNewPatient() {
         PatientDTO patientDTO = buildPatientDto("new.patient@example.com", "secret123");
         when(patientRepository.findByEmail(patientDTO.getEmail())).thenReturn(Optional.empty());
@@ -77,6 +91,9 @@ class PatientAuthenticationServiceTest {
     }
 
     @Test
+    @Story("Login with wrong password")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Xác thực trả về null khi mật khẩu nhập vào không khớp với mật khẩu đã lưu")
     void verifyShouldReturnNullWhenPasswordIsWrong() {
         String email = "patient@example.com";
         String rawPassword = "wrong-password";
@@ -93,6 +110,9 @@ class PatientAuthenticationServiceTest {
     }
 
     @Test
+    @Story("Login with correct credentials")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Xác thực thành công và trả về JWT token khi email và mật khẩu chính xác")
     void verifyShouldReturnJwtTokenWhenCredentialsAreCorrect() {
         String email = "patient@example.com";
         String password = "correct-password";

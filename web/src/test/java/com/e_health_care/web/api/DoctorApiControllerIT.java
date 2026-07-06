@@ -22,6 +22,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Description;
+
 /**
  * Integration Test cho DoctorApiController.
  * - Không mock service/repository: dùng Spring context thật + H2 in-memory DB.
@@ -35,6 +42,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * code. Nếu business yêu cầu phải là 400, cần sửa lại controller, không sửa test.
  */
 @DisplayName("DoctorApiController Integration Test")
+@Epic("Doctor Management")
+@Feature("Doctor Profile & Auth API")
 class DoctorApiControllerIT extends AbstractIntegrationTest {
 
     @Autowired
@@ -103,6 +112,9 @@ class DoctorApiControllerIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("login_shouldReturn200_whenValidCredentials")
+    @Story("Đăng nhập với thông tin hợp lệ")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra API đăng nhập trả về HTTP 200 kèm JWT token hợp lệ (đúng định dạng header.payload.signature) khi email/mật khẩu chính xác.")
     void login_shouldReturn200_whenValidCredentials() {
         ResponseEntity<Map> response = login(testDoctorEmail, RAW_PASSWORD);
 
@@ -119,6 +131,9 @@ class DoctorApiControllerIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("login_shouldReturn401_whenWrongPassword")
+    @Story("Đăng nhập với mật khẩu sai")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra API đăng nhập trả về HTTP 401 kèm thông báo lỗi khi mật khẩu không đúng.")
     void login_shouldReturn401_whenWrongPassword() {
         // NOTE: Yêu cầu gốc ghi "expect 400", nhưng code thật của controller
         // trả 401 (Map.of("error","Invalid credentials")) khi verify() == null.
@@ -131,6 +146,9 @@ class DoctorApiControllerIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("login_shouldReturn401_whenEmailNotFound")
+    @Story("Đăng nhập với email không tồn tại")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra API đăng nhập trả về HTTP 401 kèm thông báo lỗi khi email không tồn tại trong hệ thống.")
     void login_shouldReturn401_whenEmailNotFound() {
         // NOTE: tương tự trên — code thật trả 401, không phải 400.
         ResponseEntity<Map> response = login("khong-ton-tai-" + System.nanoTime() + "@ehealth.test", RAW_PASSWORD);
@@ -144,6 +162,9 @@ class DoctorApiControllerIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("getProfile_shouldReturn200_whenAuthenticated")
+    @Story("Xem hồ sơ bác sĩ khi đã xác thực")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra API trả về đúng thông tin hồ sơ bác sĩ (email, firstName) khi request có token hợp lệ.")
     void getProfile_shouldReturn200_whenAuthenticated() {
         String token = loginAndGetToken();
 
@@ -159,6 +180,9 @@ class DoctorApiControllerIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("getProfile_shouldReturn401_whenNoToken")
+    @Story("Xem hồ sơ bác sĩ khi không có token")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra API trả về HTTP 401 khi request không có token xác thực.")
     void getProfile_shouldReturn401_whenNoToken() {
         ResponseEntity<Map> response = restTemplate.getForEntity("/api/doctor/profile", Map.class);
 
@@ -170,6 +194,9 @@ class DoctorApiControllerIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("updateProfile_shouldReturn200_whenValid")
+    @Story("Cập nhật hồ sơ bác sĩ thành công")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra API cập nhật hồ sơ trả về HTTP 200 và dữ liệu được lưu đúng trong cơ sở dữ liệu khi thông tin hợp lệ.")
     void updateProfile_shouldReturn200_whenValid() {
         String token = loginAndGetToken();
 

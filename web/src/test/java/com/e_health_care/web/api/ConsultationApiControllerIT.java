@@ -15,6 +15,15 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Description;
+
+@Epic("Doctor Management")
+@Feature("Doctor Consultation API")
 class ConsultationApiControllerIT extends AbstractIntegrationTest {
 
     @Autowired
@@ -85,6 +94,9 @@ class ConsultationApiControllerIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("getPatientInfo_shouldReturn200_whenDoctorAuthenticated")
+    @Story("Xem thông tin bệnh nhân khi bác sĩ đã xác thực")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra API trả về HTTP 200 kèm thông tin patient và clinicalInfo khi bác sĩ đã đăng nhập hợp lệ.")
     void getPatientInfo_shouldReturn200_whenDoctorAuthenticated() {
         HttpHeaders headers = jsonWithCookie("jwt-doctor-token", doctorToken);
         ResponseEntity<Map> response = restTemplate.exchange(
@@ -101,6 +113,9 @@ class ConsultationApiControllerIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("getPatientInfo_shouldReturn401_whenNoToken")
+    @Story("Xem thông tin bệnh nhân khi không có token")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra API trả về HTTP 401 hoặc 403 khi request không có token xác thực.")
     void getPatientInfo_shouldReturn401_whenNoToken() {
         ResponseEntity<Map> response = restTemplate.getForEntity(
                 baseUrl() + "/api/doctor/patient/" + patientId,
@@ -114,6 +129,9 @@ class ConsultationApiControllerIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("updatePatientClinical_shouldReturn200_whenValid")
+    @Story("Cập nhật bệnh án lâm sàng thành công")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra API cập nhật bệnh án trả về HTTP 200 kèm thông báo thành công khi dữ liệu hợp lệ.")
     void updatePatientClinical_shouldReturn200_whenValid() {
         HttpHeaders headers = jsonWithCookie("jwt-doctor-token", doctorToken);
         Map<String, String> body = Map.of(
@@ -135,6 +153,9 @@ class ConsultationApiControllerIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("updatePatientClinical_shouldReturn400_whenPatientNotFound")
+    @Story("Cập nhật bệnh án cho bệnh nhân không tồn tại")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra API trả về HTTP 400 kèm thông báo lỗi khi patientId không tồn tại trong hệ thống.")
     void updatePatientClinical_shouldReturn400_whenPatientNotFound() {
         HttpHeaders headers = jsonWithCookie("jwt-doctor-token", doctorToken);
         Map<String, String> body = Map.of(
@@ -159,6 +180,9 @@ class ConsultationApiControllerIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("getDashboard_shouldReturn200_whenDoctorAuthenticated")
+    @Story("Xem dashboard bác sĩ khi đã xác thực")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra API dashboard bác sĩ trả về HTTP 200 khi bác sĩ đã đăng nhập hợp lệ.")
     void getDashboard_shouldReturn200_whenDoctorAuthenticated() {
         HttpHeaders headers = jsonWithCookie("jwt-doctor-token", doctorToken);
         ResponseEntity<Object[]> response = restTemplate.exchange(
@@ -173,6 +197,9 @@ class ConsultationApiControllerIT extends AbstractIntegrationTest {
 
     @Test
     @DisplayName("getDashboard_shouldReturn401_whenNoToken")
+    @Story("Xem dashboard bác sĩ khi không có token")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra API dashboard bác sĩ trả về HTTP 401 khi request không có token xác thực.")
     void getDashboard_shouldReturn401_whenNoToken() {
         ResponseEntity<Map> response = restTemplate.getForEntity(
                 baseUrl() + "/api/doctor/dashboard",

@@ -14,7 +14,16 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Description;
+
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+@Epic("Patient Management")
+@Feature("Patient Clinical Info API")
 class PatientClinicalInforControllerIT extends AbstractIntegrationTest {
 
     @Autowired
@@ -69,6 +78,9 @@ class PatientClinicalInforControllerIT extends AbstractIntegrationTest {
     @Test
     @Order(1)
     @DisplayName("IT_CLINICAL_01 — getClinicalInfo: không có token → 401")
+    @Story("Xem thông tin lâm sàng khi không có token")
+    @Severity(SeverityLevel.CRITICAL)
+    @Description("Kiểm tra API trả về HTTP 401 khi request không có token xác thực.")
     void getClinicalInfo_noToken_shouldReturn401() {
         ResponseEntity<Map> response = restTemplate.getForEntity(
                 baseUrl() + "/api/patient/clinical-info/" + patientId,
@@ -80,6 +92,9 @@ class PatientClinicalInforControllerIT extends AbstractIntegrationTest {
     @Test
     @Order(2)
     @DisplayName("IT_CLINICAL_02 — getClinicalInfo: có token, chưa có record → 200 với DTO rỗng")
+    @Story("Xem thông tin lâm sàng khi chưa có dữ liệu")
+    @Severity(SeverityLevel.NORMAL)
+    @Description("Kiểm tra API trả về HTTP 200 kèm DTO rỗng khi bệnh nhân đã xác thực nhưng chưa có bản ghi thông tin lâm sàng.")
     void getClinicalInfo_noRecord_shouldReturn200WithEmptyDTO() {
         HttpHeaders headers = jsonWithCookie("jwt-patient-token", patientToken);
         ResponseEntity<Map> response = restTemplate.exchange(
@@ -95,6 +110,9 @@ class PatientClinicalInforControllerIT extends AbstractIntegrationTest {
     @Test
     @Order(3)
     @DisplayName("IT_CLINICAL_03 — getClinicalInfo: có token, có record → 200 với data")
+    @Story("Xem thông tin lâm sàng khi đã có dữ liệu")
+    @Severity(SeverityLevel.BLOCKER)
+    @Description("Kiểm tra API trả về HTTP 200 kèm đúng dữ liệu thông tin lâm sàng (nhóm máu) khi bệnh nhân đã có bản ghi.")
     void getClinicalInfo_withRecord_shouldReturn200WithData() {
         // Seed clinical info
         Patient p = patientRepository.findByEmail("it_patient@test.com").get();
