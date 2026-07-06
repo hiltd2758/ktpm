@@ -15,6 +15,10 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+
 /**
  * Equivalence Partitioning + Boundary Value Analysis
  * cho updateDoctorProfile() — DoctorService
@@ -34,6 +38,8 @@ import static org.mockito.Mockito.*;
  *   B3 = phone 11 ký tự (biên trên trong – hợp lệ)
  *   B4 = phone 12 ký tự (biên trên ngoài – không hợp lệ)
  */
+@Epic("Doctor Management")
+@Feature("Update Doctor Profile (EP/BVA)")
 class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
 
     @Mock
@@ -59,6 +65,7 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // TC01 — V1,V2,V3,V4,V5,V6 — nominal hoàn toàn hợp lệ, không upload ảnh
     // -----------------------------------------------------------------------
     @Test
+    @Story("Nominal - toàn bộ dữ liệu hợp lệ")
     @DisplayName("TC01 [V1,V2,V3,V4,V5,V6]: tất cả hợp lệ, không upload ảnh -> cập nhật thành công")
     void tc01_allValid_noAvatar_shouldUpdateSuccessfully() {
         Doctor existing = new Doctor();
@@ -81,6 +88,7 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // TC02 — X1 — doctorId không tồn tại
     // -----------------------------------------------------------------------
     @Test
+    @Story("doctorId không tồn tại")
     @DisplayName("TC02 [X1]: doctorId không tồn tại -> throw 'Không tìm thấy bác sĩ'")
     void tc02_doctorNotFound_shouldThrow() {
         when(doctorRepository.findById(999L)).thenReturn(Optional.empty());
@@ -97,6 +105,7 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // TC03 — X2 — firstName rỗng
     // -----------------------------------------------------------------------
     @Test
+    @Story("firstName rỗng")
     @DisplayName("TC03 [X2]: firstName rỗng -> throw validation error")
     void tc03_emptyFirstName_shouldThrow() {
         Doctor existing = new Doctor();
@@ -114,6 +123,7 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // TC04 — X3 — lastName null
     // -----------------------------------------------------------------------
     @Test
+    @Story("lastName null")
     @DisplayName("TC04 [X3]: lastName null -> throw validation error")
     void tc04_nullLastName_shouldThrow() {
         Doctor existing = new Doctor();
@@ -131,6 +141,7 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // TC05 — X4,B1 — phone 9 ký tự (biên dưới ngoài – không hợp lệ)
     // -----------------------------------------------------------------------
     @Test
+    @Story("Phone boundary validation")
     @DisplayName("TC05 [X4,B1]: phone 9 ký tự -> throw validation error (biên dưới ngoài)")
     void tc05_phone9Chars_shouldThrow() {
         Doctor existing = new Doctor();
@@ -148,6 +159,7 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // TC06 — V4,B2 — phone 10 ký tự (biên dưới trong – hợp lệ)
     // -----------------------------------------------------------------------
     @Test
+    @Story("Phone boundary validation")
     @DisplayName("TC06 [V4,B2]: phone 10 ký tự -> hợp lệ (biên dưới trong)")
     void tc06_phone10Chars_shouldSucceed() {
         Doctor existing = new Doctor();
@@ -165,6 +177,7 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // TC07 — V4,B3 — phone 11 ký tự (biên trên trong – hợp lệ)
     // -----------------------------------------------------------------------
     @Test
+    @Story("Phone boundary validation")
     @DisplayName("TC07 [V4,B3]: phone 11 ký tự -> hợp lệ (biên trên trong)")
     void tc07_phone11Chars_shouldSucceed() {
         Doctor existing = new Doctor();
@@ -182,6 +195,7 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // TC08 — X4,B4 — phone 12 ký tự (biên trên ngoài – không hợp lệ)
     // -----------------------------------------------------------------------
     @Test
+    @Story("Phone boundary validation")
     @DisplayName("TC08 [X4,B4]: phone 12 ký tự -> throw validation error (biên trên ngoài)")
     void tc08_phone12Chars_shouldThrow() {
         Doctor existing = new Doctor();
@@ -199,6 +213,7 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // TC09 — X5 — field rỗng
     // -----------------------------------------------------------------------
     @Test
+    @Story("field rỗng")
     @DisplayName("TC09 [X5]: field rỗng -> throw validation error")
     void tc09_emptyField_shouldThrow() {
         Doctor existing = new Doctor();
@@ -216,6 +231,7 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // TC10 — V1,V7 — upload avatar hợp lệ (image/jpeg)
     // -----------------------------------------------------------------------
     @Test
+    @Story("Upload avatar")
     @DisplayName("TC10 [V1,V7]: upload avatar hợp lệ (image/jpeg) -> cập nhật avatar thành công")
     void tc10_validAvatarUpload_shouldSaveAvatar() {
         Doctor existing = new Doctor();
@@ -238,6 +254,7 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // TC11 — X6 — upload file không phải ảnh (text/plain)
     // -----------------------------------------------------------------------
     @Test
+    @Story("Upload avatar")
     @DisplayName("TC11 [X6]: upload file không phải ảnh (text/plain) -> throw error")
     void tc11_invalidFileType_shouldThrow() {
         Doctor existing = new Doctor();
@@ -259,6 +276,7 @@ class JIRAUpdateDoctorProfileEpBvaTest extends BaseServiceTest {
     // TC12 — X1 (ưu tiên) — nhiều điều kiện sai: doctorId không tồn tại + firstName rỗng
     // -----------------------------------------------------------------------
     @Test
+    @Story("Nhiều điều kiện sai cùng lúc")
     @DisplayName("TC12 [X1]: nhiều điều kiện sai -> chỉ throw lỗi doctor not found (kiểm tra đầu tiên)")
     void tc12_multipleInvalid_shouldThrowDoctorNotFoundFirst() {
         when(doctorRepository.findById(999L)).thenReturn(Optional.empty());
