@@ -20,6 +20,14 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
+import io.qameta.allure.Story;
+import io.qameta.allure.Severity;
+import io.qameta.allure.SeverityLevel;
+import io.qameta.allure.Description;
+
+
 /**
  * Equivalence Partitioning + Boundary Value Analysis
  * cho bookAppointment() — PatientAppointmentService
