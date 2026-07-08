@@ -3,7 +3,7 @@
 |                      |                                                                                |
 | -------------------- | ------------------------------------------------------------------------------ |
 | **Module**           | E-HealthCare System — `DoctorService`                                          |
-| **Tác giả**          |                                                                                |
+| **Tác giả**          | Lê Đức Huy                                                                     |
 | **Jira Task**        | EHC (Black-box: EP/BVA)                                                        |
 | **Kỹ thuật áp dụng** | Equivalence Partitioning, Boundary Value Analysis, White-box Coverage Analysis |
 | **Công cụ**          | JUnit 5, Mockito, JaCoCo 0.8.12                                                |
