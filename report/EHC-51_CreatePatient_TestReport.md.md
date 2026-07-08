@@ -94,22 +94,39 @@ Sơ đồ luồng điều khiển (Control Flow Graph) của hàm `createPatient
 
 ```mermaid
 flowchart TD
-    Start([Bắt đầu createPatient]) --> CheckValid{Email hợp lệ\n(không null/rỗng/sai format)?}
 
-    CheckValid -->|Không| ThrowValid[Throw: Validation Error]
-    CheckValid -->|Có| CheckExist{Email đã tồn tại\ntrong DB chưa?}
+    Start([Start])
 
-    CheckExist -->|Có| ThrowExist[Throw: Email already exists]
-    CheckExist -->|Không| SaveDB[Lưu Patient vào DB]
+    CheckValid{"Email hợp lệ?"}
 
-    SaveDB --> End([Kết thúc — Trả về Patient])
+    ThrowValid["Validation Error"]
 
-    ThrowValid --> EndErr([Kết thúc — Exception])
-    ThrowExist --> EndErr
+    CheckExist{"Email đã tồn tại?"}
 
-    style ThrowValid fill:#fadbd8
-    style ThrowExist fill:#fadbd8
-    style SaveDB fill:#d5f5e3
+    ThrowExist["Email already exists"]
+
+    Save["Save Patient"]
+
+    EndSuccess([Return Patient])
+
+    EndError([Exception])
+
+    Start --> CheckValid
+
+    CheckValid -- Không --> ThrowValid
+    CheckValid -- Có --> CheckExist
+
+    CheckExist -- Có --> ThrowExist
+    CheckExist -- Không --> Save
+
+    Save --> EndSuccess
+
+    ThrowValid --> EndError
+    ThrowExist --> EndError
+
+    style ThrowValid fill:#f8d7da
+    style ThrowExist fill:#f8d7da
+    style Save fill:#d4edda
 ```
 
 ## Tính Cyclomatic Complexity
